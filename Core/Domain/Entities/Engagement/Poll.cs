@@ -1,12 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.RegularExpressions;
 
 namespace Domain.Entities.Engagement
 {
-    internal class Poll
+    public class Poll : BaseEntity<int>
     {
+        public string Question { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime? ExpiresAt { get; set; }
+
+        #region Relations
+        public int GroupId { get; set; }
+        [ForeignKey(nameof(GroupId))]
+        public virtual Group Group { get; set; }
+
+        public ICollection<PollOption> PollOptions { get; set; } = new List<PollOption>();
+        #endregion
     }
 }

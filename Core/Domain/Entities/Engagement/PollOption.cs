@@ -1,12 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Domain.Entities.Engagement
+﻿namespace Domain.Entities.Engagement
 {
-    internal class PollOption
+    public class PollOption : BaseEntity<int>
     {
+        public string OptionText { get; set; }
+        public int VotesCount { get; set; } = 0;
+
+        #region Relations
+        public int PollId { get; set; }
+        public virtual Poll Poll { get; set; }
+
+        public virtual ICollection<PollVote> PollVotes { get; set; } = new List<PollVote>();
+        #endregion
     }
 }
