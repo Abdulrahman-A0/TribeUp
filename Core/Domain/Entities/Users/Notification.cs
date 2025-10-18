@@ -1,12 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Entities.Users
 {
-    internal class Notification
+    public class Notification : BaseEntity<int>
     {
+        public string Message { get; set; }
+        public bool IsRead { get; set; }
+        public DateTime CreateAt { get; set; } = DateTime.Now;
+
+        #region Relations
+        public int UserId { get; set; }
+        [ForeignKey(nameof(UserId))]
+        public virtual ApplicationUser User { get; set; }
+
+        #endregion
     }
 }

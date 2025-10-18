@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities.Groups
 {
-    internal class GroupScore
+    public class GroupScore
     {
     }
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities.Media
 {
-    internal class Media
+    public class Media
     {
     }
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities.Posts
 {
-    internal class Tag
+    public class Tag
     {
     }
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities.Stories
 {
-    internal class StoryView
+    public class StoryView
     {
     }
 }
