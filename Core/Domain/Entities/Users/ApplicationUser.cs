@@ -8,8 +8,10 @@ namespace Domain.Entities.Users
 {
     public class ApplicationUser : IdentityUser
     {
-        public string ProfilePicture { get; set; }
-        public string Avatar { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string? ProfilePicture { get; set; }
+        public string? Avatar { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public bool IsDeleted { get; set; } = false;
 
