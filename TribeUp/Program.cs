@@ -1,7 +1,9 @@
+using Domain.Contracts;
 using Domain.Entities.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Data.Contexts;
+using TribeUp.Extensions;
 
 namespace TribeUp
 {
@@ -13,21 +15,22 @@ namespace TribeUp
 
             // Add services to the container.
 
+            #region DI Container
+            //Web Api Services
+
+            //Infrastructure Services
+            builder.Services.AddInfrastructureServices(builder.Configuration);
+
+            //Core Services
+            #endregion
+
+
+
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            builder.Services.AddDbContext<AppDbContext>(options =>
-            {
-                options.UseSqlServer(builder.Configuration.GetConnectionString("constr"));
-            });
-
-            builder.Services.AddIdentity<ApplicationUser, IdentityRole>(op =>
-            {
-                op.Password.RequiredLength = 8;
-                op.User.RequireUniqueEmail = true;
-            }).AddEntityFrameworkStores<AppDbContext>();
 
             var app = builder.Build();
 
@@ -39,14 +42,11 @@ namespace TribeUp
             }
 
             app.UseHttpsRedirection();
-
             app.UseStaticFiles();
-
+            app.UseRouting();
+            app.UseAuthentication();
             app.UseAuthorization();
-
-
             app.MapControllers();
-
             app.Run();
         }
     }
