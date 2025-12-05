@@ -16,23 +16,20 @@ namespace TribeUp
             // Add services to the container.
 
             #region DI Container
-            //Web Api Services
+            //WebApi Services
+            builder.Services.AddWebApiServices();
 
             //Infrastructure Services
             builder.Services.AddInfrastructureServices(builder.Configuration);
 
             //Core Services
+            builder.Services.AddCoreServices(builder.Configuration);
             #endregion
 
-
-
-            builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-
-
             var app = builder.Build();
+
+            #region Middlewares
+            app.UseExceptionHandlingMiddleware();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -48,6 +45,7 @@ namespace TribeUp
             app.UseAuthorization();
             app.MapControllers();
             app.Run();
+            #endregion
         }
     }
 }
