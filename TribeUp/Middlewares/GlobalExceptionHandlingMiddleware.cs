@@ -1,5 +1,6 @@
 ﻿
 using Domain.Exceptions.UnAuthorized;
+using Domain.Exceptions.Validation;
 using Shared.ErrorModels;
 
 namespace TribeUp.Middlewares
@@ -42,12 +43,14 @@ namespace TribeUp.Middlewares
             context.Response.StatusCode = ex switch
             {
                 UnAuthorizedException => StatusCodes.Status401Unauthorized,
+                ValidationException validationException => HandleValidationException(validationException, response),
                 _ => StatusCodes.Status500InternalServerError
             };
 
             response.StatusCode = context.Response.StatusCode;
             await context.Response.WriteAsync(response.ToString());
         }
+
 
         private async Task HandleNotFoundApiAsync(HttpContext context)
         {
@@ -60,6 +63,11 @@ namespace TribeUp.Middlewares
             }.ToString();
 
             await context.Response.WriteAsync(response);
+        }
+        private int HandleValidationException(ValidationException validationException, ErrorDetails response)
+        {
+            response.Errors = validationException.Errors;
+            return StatusCodes.Status400BadRequest;
         }
     }
 }
