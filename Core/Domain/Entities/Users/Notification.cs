@@ -9,7 +9,7 @@ namespace Domain.Entities.Users
         public DateTime CreateAt { get; set; } = DateTime.Now;
 
         #region Relations
-        public int UserId { get; set; }
+        public string UserId { get; set; }
         [ForeignKey(nameof(UserId))]
         public virtual ApplicationUser User { get; set; }
 

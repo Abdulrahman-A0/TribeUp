@@ -1,4 +1,5 @@
-﻿using Shared.Enums;
+﻿using Domain.Entities.Users;
+using Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -16,10 +17,13 @@ namespace Domain.Entities.Groups
 
 
         #region Navigation properties
+        public int GroupId { get; set; }
+        [ForeignKey(nameof(GroupId))]
         public virtual Group Group { get; set; }
 
-        [ForeignKey("UserID")]
-        public virtual User User { get; set; }
+        public string UserId { get; set; }
+        [ForeignKey(nameof(UserId))]
+        public virtual ApplicationUser User { get; set; }
 
         #endregion
     }

@@ -1,13 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+﻿using Domain.Entities.Groups;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace Domain.Entities.Stories
 {
@@ -32,10 +29,10 @@ namespace Domain.Entities.Stories
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime? ExpiresAt { get; set; } = DateTime.Now.AddDays(1);
         public int ViewsCount { get; set; } = 0;
-        public AccessibilityType Accessibility { get; set; } 
+        public AccessibilityType Accessibility { get; set; }
 
         // Navigation properties
-        [ForeignKey("PostId")]
+        [ForeignKey(nameof(GroupId))]
         public virtual Group Group { get; set; }
         public int GroupId { get; set; }
         public virtual ICollection<StoryView> StoryViews { get; set; } = new List<StoryView>();

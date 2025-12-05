@@ -11,6 +11,7 @@ namespace Domain.Entities.Users
         public string ProfilePicture { get; set; }
         public string Avatar { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public bool IsDeleted { get; set; } = false;
 
         #region Relations
         public ICollection<GroupMember> GroupMembers { get; set; }
@@ -21,7 +22,8 @@ namespace Domain.Entities.Users
         public ICollection<PollVote> PollVotes { get; set; }
         public ICollection<Recommendation> Recommendations { get; set; }
         public ICollection<StoryView> StoryViews { get; set; }
-
+        public ICollection<GroupJoinRequest> GroupJoinRequests { get; set; }
+        public ICollection<GroupFollower> GroupFollowers { get; set; }
         #endregion
     }
 }

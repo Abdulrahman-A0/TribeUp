@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Domain.Entities.Groups;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -16,8 +17,10 @@ namespace Domain.Entities.Media
 
 
         #region Navigation properties
+        public int GroupId { get; set; }
+        [ForeignKey(nameof(GroupId))]
         public virtual Group Group { get; set; }
-        public virtual ICollection<Media> Media { get; set; }
+        public virtual ICollection<MediaItem> Media { get; set; }
 
         #endregion
     }

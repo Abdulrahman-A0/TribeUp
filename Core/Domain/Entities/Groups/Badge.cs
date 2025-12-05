@@ -16,6 +16,9 @@ namespace Domain.Entities.Groups
 
 
         #region Navigation properties
+        public int GroupId { get; set; }
+
+        [ForeignKey(nameof(GroupId))]
         public virtual Group Group { get; set; }
 
         #endregion

@@ -30,7 +30,7 @@ namespace Persistence.Data.Contexts
         public DbSet<StoryView> StoryViews { get; set; }
 
         public DbSet<Album> Albums { get; set; }
-        public DbSet<Media> Media { get; set; }
+        public DbSet<MediaItem> Media { get; set; }
 
         public DbSet<Event> Events { get; set; }
         public DbSet<Poll> Polls { get; set; }

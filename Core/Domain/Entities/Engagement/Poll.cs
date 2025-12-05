@@ -1,5 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.RegularExpressions;
+﻿using Domain.Entities.Groups;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Entities.Engagement
 {

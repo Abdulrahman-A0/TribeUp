@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Domain.Entities.Groups;
+using Domain.Entities.Media;
 using Shared.Enums;
 using System;
 using System.Collections.Generic;
@@ -6,7 +7,6 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Domain.Entities.Posts
@@ -29,9 +29,6 @@ namespace Domain.Entities.Posts
         #endregion
         public string? Caption { get; set; }
 
-        [StringLength(255)]
-        public string? MediaURL { get; set; } = string.Empty;
-
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         public AccessibilityType Accessibility { get; set; } = AccessibilityType.Public;
@@ -46,6 +43,7 @@ namespace Domain.Entities.Posts
         public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
         public virtual ICollection<Like> Likes { get; set; } = new List<Like>();
         public virtual ICollection<Tag> Tags { get; set; } = new List<Tag>();
-       
+        public virtual ICollection<MediaItem> MediaItems { get; set; } = new List<MediaItem>();
+
     }
 }
