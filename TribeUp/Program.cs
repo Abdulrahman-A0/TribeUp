@@ -17,7 +17,7 @@ namespace TribeUp
 
             #region DI Container
             //WebApi Services
-            builder.Services.AddWebApiServices();
+            builder.Services.AddWebApiServices(builder.Configuration);
 
             //Infrastructure Services
             builder.Services.AddInfrastructureServices(builder.Configuration);
@@ -32,14 +32,14 @@ namespace TribeUp
             app.UseExceptionHandlingMiddleware();
 
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+            //if (app.Environment.IsDevelopment())
+            //{
+            app.UseSwaggerMiddleware();
+            //}
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
+            app.UseCors("FrontPolicy");
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();

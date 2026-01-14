@@ -11,6 +11,7 @@ namespace Shared.DTOs.IdentityModule
         [EmailAddress]
         public string Email { get; init; }
 
+        [DisplayFormat(ConvertEmptyStringToNull = true)]
         [Phone]
         public string? PhoneNumber { get; init; }
         public string? ProfilePicture { get; init; }
