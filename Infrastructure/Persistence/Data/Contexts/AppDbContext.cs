@@ -13,6 +13,7 @@ namespace Persistence.Data.Contexts
     {
         #region DbSets
         public DbSet<ApplicationUser> Users { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<Group> Groups { get; set; }
         public DbSet<GroupMember> GroupMembers { get; set; }
         public DbSet<GroupScore> GroupScores { get; set; }

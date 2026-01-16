@@ -26,6 +26,7 @@ namespace Domain.Entities.Users
         public ICollection<StoryView> StoryViews { get; set; }
         public ICollection<GroupJoinRequest> GroupJoinRequests { get; set; }
         public ICollection<GroupFollower> GroupFollowers { get; set; }
+        public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
         #endregion
     }
 }
