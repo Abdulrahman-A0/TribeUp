@@ -2,6 +2,7 @@
 using Domain.Contracts;
 using Domain.Entities.Posts;
 using Service.Specifications;
+using Service.Specifications.PostSpecifications;
 using ServiceAbstraction.Contracts;
 using Shared.DTOs.Posts;
 
@@ -26,6 +27,9 @@ namespace Service.Implementations
             await _unitOfWork
                 .GetRepository<Post, int>()
                 .AddAsync(post);
+
+            await _unitOfWork.SaveChangesAsync();
+
         }
         public async Task<IEnumerable<FeedPostDTO>> GetFeedAsync()
         {

@@ -6,16 +6,16 @@ namespace Presentation.Controller
 {
     public class PostsController(IServiceManager service) : ApiController
     {
-        [HttpPost]
-        public async Task<IActionResult> CreatePost(CreatePostDTO dto)
+        [HttpPost("create")]
+        public async Task<ActionResult> CreatePost(CreatePostDTO dto)
         {
             await service.PostService.CreatePostAsync(dto, User.Identity!.Name!);
 
             return Ok();
         }
 
-        [HttpDelete("feed")]
-        public async Task<IActionResult> GetFeed()
+        [HttpPost("feed")]
+        public async Task<ActionResult> GetFeed()
         {
             var feed = await service.PostService.GetFeedAsync();
 
@@ -23,7 +23,7 @@ namespace Presentation.Controller
         }
 
         [HttpPost("{id}/like")]
-        public async Task<IActionResult> LikePost(int id)
+        public async Task<ActionResult> LikePost(int id)
         {
             await service.PostService.LikePostAsync(id, User.Identity!.Name!);
 
@@ -31,7 +31,7 @@ namespace Presentation.Controller
         }
 
         [HttpPost("{id}/comment")]
-        public async Task<IActionResult> Comment(int id, CreateCommentDTO dto)
+        public async Task<ActionResult> Comment(int id, CreateCommentDTO dto)
         {
             await service.PostService.AddCommentAsync(id, dto, User.Identity!.Name!);
 

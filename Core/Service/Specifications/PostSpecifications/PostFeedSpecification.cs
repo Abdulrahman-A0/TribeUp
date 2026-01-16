@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Shared.Enums;
 
-namespace Service.Specifications
+namespace Service.Specifications.PostSpecifications
 {
     internal class PostFeedSpecification : BaseSpecifications<Post,int>
     {
@@ -18,6 +18,7 @@ namespace Service.Specifications
             AddIncludes(p => p.Likes);
             AddIncludes(p => p.Comments);
             AddIncludes(p => p.MediaItems);
+
         }
     }
 }

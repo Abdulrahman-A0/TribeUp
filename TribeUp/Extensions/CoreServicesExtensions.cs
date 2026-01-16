@@ -13,10 +13,16 @@ namespace TribeUp.Extensions
 
             services.AddScoped<IServiceManager, ServiceManager>();
             services.AddScoped<IAuthenticationService, AuthenticationService>();
+            services.AddScoped<IPostService, PostService>();
 
             services.AddScoped<Func<IAuthenticationService>>(provider =>
             () => provider.GetRequiredService<IAuthenticationService>()
             );
+
+            services.AddScoped<Func<IPostService>>(provider =>
+                () => provider.GetRequiredService<IPostService>()
+            );
+
 
             services.Configure<JwtOptions>(configuration.GetSection("JWT"));
 
