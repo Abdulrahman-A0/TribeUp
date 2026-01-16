@@ -9,7 +9,7 @@ namespace Shared.DTOs.Posts
     public class FeedPostDTO
     {
         public int PostId { get; set; }
-        public string Caption { get; set; }
+        public string? Caption { get; set; }
         public string MediaUrl { get; set; }
         public string GroupName { get; set; }
         public int LikesCount { get; set; }

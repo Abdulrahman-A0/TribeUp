@@ -17,6 +17,7 @@ namespace Service.Specifications
             AddIncludes(p => p.Group);
             AddIncludes(p => p.Likes);
             AddIncludes(p => p.Comments);
+            AddIncludes(p => p.MediaItems);
         }
     }
 }
