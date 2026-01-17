@@ -10,7 +10,7 @@ namespace ServiceAbstraction.Contracts
     {
         Task CreatePostAsync(CreatePostDTO dto, string userId);
         Task<IEnumerable<FeedPostDTO>> GetFeedAsync();
-        Task LikePostAsync(int postId, string userId);
+        Task<bool> LikePostAsync(int postId, string userId);
         Task AddCommentAsync(int postId, CreateCommentDTO dto, string userId);
     }
 }

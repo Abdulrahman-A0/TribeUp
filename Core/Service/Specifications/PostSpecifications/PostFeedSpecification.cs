@@ -9,7 +9,7 @@ using Shared.Enums;
 
 namespace Service.Specifications.PostSpecifications
 {
-    internal class PostFeedSpecification : BaseSpecifications<Post,int>
+    public class PostFeedSpecification : BaseSpecifications<Post,int>
     {
         public PostFeedSpecification() 
             :base(p => p.Accessibility == AccessibilityType.Public &&

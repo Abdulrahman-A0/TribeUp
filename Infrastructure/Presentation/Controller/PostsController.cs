@@ -32,9 +32,15 @@ namespace Presentation.Controller
         [HttpPost("{id}/like")]
         public async Task<ActionResult> LikePost(int id)
         {
-            await service.PostService.LikePostAsync(id, User.Identity!.Name!);
+            bool isLiked = await service.PostService.LikePostAsync(id, User.Identity!.Name!);
 
-            return Ok();
+            return Ok(new
+            {
+                liked = isLiked,
+                message = isLiked
+            ? "Post liked"
+            : "Like removed"
+            });
         }
 
         [HttpPost("{id}/comment")]

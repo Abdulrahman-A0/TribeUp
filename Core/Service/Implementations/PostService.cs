@@ -75,22 +75,38 @@ namespace Service.Implementations
 
             return _mapper.Map<IEnumerable<FeedPostDTO>>(posts);
         }
-        public async Task LikePostAsync(int postId, string userId)
+        public async Task<bool> LikePostAsync(int postId, string userId)
         {
-            var like = new Like
+            var likeRepo = _unitOfWork.GetRepository<Like, int>();
+
+            var spec = new LikeByPostAndUserSpecification(postId, userId);
+
+            var existingLike = await likeRepo.GetByIdAsync(spec);
+
+            if (existingLike is null)
             {
-                PostId = postId,
-                UserId = userId
-            };
+                // like
+                var like = new Like
+                {
+                    PostId = postId,
+                    UserId = userId
+                };
 
-            await _unitOfWork
-                .GetRepository<Like, int>()
-                .AddAsync(like);
+                await likeRepo.AddAsync(like);
+                await _unitOfWork.SaveChangesAsync();
 
+                return true;
+            }
+
+            // unlike
+            likeRepo.Delete(existingLike);
             await _unitOfWork.SaveChangesAsync();
 
+            return false;
         }
-       
+
+
+
         public async Task AddCommentAsync(int postId, CreateCommentDTO dto, string userId)
         {
             var comment = new Comment
