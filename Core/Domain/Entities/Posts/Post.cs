@@ -34,8 +34,6 @@ namespace Domain.Entities.Posts
         public AccessibilityType Accessibility { get; set; } = AccessibilityType.Public;
 
 
-        public ContentStatus ContentStatus { get; set; } = ContentStatus.Accepted;
-
         // Navigation properties
         [ForeignKey("GroupId")]
         public virtual Group Group { get; set; }

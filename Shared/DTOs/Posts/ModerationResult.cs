@@ -6,7 +6,7 @@ namespace ServiceAbstraction.Models
     {
         public string DetectedIssue { get; set; } = string.Empty;
         public double ConfidenceScore { get; set; }
-        public ContentStatus Status { get; set; }
+        public bool IsAccepted { get; set; }
     }
 
 }

@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Persistence.AI;
 using Persistence.Data.Contexts;
 using Persistence.Repositories;
+using ServiceAbstraction.Contracts;
 using Shared.Common;
 using System.Text;
 
@@ -19,6 +21,8 @@ namespace TribeUp.Extensions
             {
                 options.UseSqlServer(configuration.GetConnectionString("constr"));
             });
+
+            services.AddHttpClient<IContentModerationService, PerspectiveModerationService>();
 
             services.AddIdentity<ApplicationUser, IdentityRole>(options =>
             {

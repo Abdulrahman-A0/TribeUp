@@ -12,12 +12,15 @@ namespace Service.Specifications.PostSpecifications
     internal class PostFeedSpecification : BaseSpecifications<Post,int>
     {
         public PostFeedSpecification() 
-            :base(p => p.Accessibility == AccessibilityType.Public)
+            :base(p => p.Accessibility == AccessibilityType.Public &&
+                  (p.AI_Moderation == null ||
+                    p.AI_Moderation.Status != ContentStatus.Denied))
         {
             AddIncludes(p => p.Group);
             AddIncludes(p => p.Likes);
             AddIncludes(p => p.Comments);
-            AddIncludes(p => p.MediaItems);
+            AddIncludes(p => p.MediaItems); 
+            AddIncludes(p => p.AI_Moderation);
 
         }
     }

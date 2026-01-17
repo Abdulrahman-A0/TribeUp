@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ServiceAbstraction.Contracts;
 using Shared.DTOs.Posts;
+using System.ComponentModel.DataAnnotations;
 
 namespace Presentation.Controller
 {
@@ -9,9 +10,15 @@ namespace Presentation.Controller
         [HttpPost("create")]
         public async Task<ActionResult> CreatePost(CreatePostDTO dto)
         {
-            await service.PostService.CreatePostAsync(dto, User.Identity!.Name!);
-
-            return Ok();
+            try
+            {
+                await service.PostService.CreatePostAsync(dto, User.Identity!.Name!);
+                return Ok(new { message = "Post created successfully." });
+            }
+            catch (ValidationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpPost("feed")]
