@@ -28,5 +28,18 @@ namespace Service.Specifications
         }
         #endregion
 
+
+        #region ThenInclude
+        private readonly List<Func<IQueryable<TEntity>, IQueryable<TEntity>>> thenIncludeExpressions
+            = new();
+
+        public List<Func<IQueryable<TEntity>, IQueryable<TEntity>>> ThenIncludeExpressions => thenIncludeExpressions;
+
+        protected void AddThenIncludes(Func<IQueryable<TEntity>, IQueryable<TEntity>> thenInclude)
+        {
+            thenIncludeExpressions.Add(thenInclude);
+        }
+        #endregion
+
     }
 }
