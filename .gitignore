@@ -361,3 +361,44 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+
+
+
+####################################
+# ASP.NET Core / Application Secrets
+####################################
+
+# App settings (DO NOT COMMIT REAL VALUES)
+appsettings.json
+appsettings.*.json
+
+# User Secrets
+**/secrets.json
+
+# Environment variables
+.env
+.env.*
+
+# Certificates
+*.pfx
+*.pem
+*.key
+
+####################################
+# Logs
+####################################
+logs/
+*.log
+
+####################################
+# OS files
+####################################
+.DS_Store
+Thumbs.db
+
+####################################
+# Rider / VS Code
+####################################
+.idea/
+.vscode/

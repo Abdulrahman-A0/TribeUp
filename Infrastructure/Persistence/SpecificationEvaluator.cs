@@ -19,7 +19,17 @@ namespace Persistence
 
 
             if (specifications.IncludeExpressions is not null && specifications.IncludeExpressions.Count > 0)
-                inputQuery = specifications.IncludeExpressions.Aggregate(inputQuery, (currentQuery, expression) => currentQuery.Include(expression));
+                inputQuery = specifications.IncludeExpressions.Aggregate(inputQuery,
+                    (currentQuery, expression) => currentQuery.Include(expression));
+
+
+            if (specifications.ThenIncludeExpressions != null && specifications.ThenIncludeExpressions.Count > 0)
+            {
+                foreach (var thenInclude in specifications.ThenIncludeExpressions)
+                {
+                    inputQuery = thenInclude(inputQuery);
+                }
+            }
 
             return inputQuery;
         }

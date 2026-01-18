@@ -2,13 +2,17 @@
 
 namespace Service.Implementations
 {
-    public class ServiceManager(
-        Func<IAuthenticationService> _authFactory,
-        Func<IPostService> _postFactory
-        ) : IServiceManager
+    public class ServiceManager
+        (Func<IAuthenticationService> authFactory,
+         Func<IGroupService> groupServiceFactory,
+         Func<IGroupMemberService> groupMemberFactory,
+         Func<IGroupJoinRequestService> groupJoinRequestFactory,
+        Func<IPostService> _postFactory) : IServiceManager
     {
-        public IAuthenticationService AuthenticationService => _authFactory.Invoke();
-
+        public IAuthenticationService AuthenticationService => authFactory.Invoke();
+        public IGroupService GroupService => groupServiceFactory.Invoke();
+        public IGroupMemberService GroupMemberService => groupMemberFactory.Invoke();
+        public IGroupJoinRequestService GroupJoinRequestService => groupJoinRequestFactory.Invoke();
         public IPostService PostService => _postFactory.Invoke();
     }
 }

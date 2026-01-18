@@ -7,7 +7,7 @@ namespace Domain.Entities.Groups
     public class GroupJoinRequest : BaseEntity<int>
     {
         public JoinRequestStatus Status { get; set; } = JoinRequestStatus.Pending;
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public string UserId { get; set; }
         [ForeignKey(nameof(UserId))]

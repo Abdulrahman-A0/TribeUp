@@ -10,12 +10,28 @@ namespace TribeUp.Extensions
         public static IServiceCollection AddCoreServices(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddAutoMapper(cfg => { }, typeof(AssemblyReference).Assembly);
-
             services.AddScoped<IServiceManager, ServiceManager>();
+
+
             services.AddScoped<IAuthenticationService, AuthenticationService>();
+            services.AddScoped<IGroupService, GroupService>();
+            services.AddScoped<IGroupMemberService, GroupMemberService>();
+            services.AddScoped<IGroupJoinRequestService, GroupJoinRequestService>();
             services.AddScoped<IPostService, PostService>();
 
+
+
             services.AddScoped<Func<IAuthenticationService>>(provider =>
+            () => provider.GetRequiredService<IAuthenticationService>());
+
+            services.AddScoped<Func<IGroupService>>(provider =>
+            () => provider.GetRequiredService<IGroupService>());
+
+            services.AddScoped<Func<IGroupMemberService>>(provider =>
+            () => provider.GetRequiredService<IGroupMemberService>());
+
+            services.AddScoped<Func<IGroupJoinRequestService>>(provider =>
+            () => provider.GetRequiredService<IGroupJoinRequestService>());
             () => provider.GetRequiredService<IAuthenticationService>()
             );
 
