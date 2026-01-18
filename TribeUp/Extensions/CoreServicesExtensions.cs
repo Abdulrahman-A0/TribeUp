@@ -32,8 +32,7 @@ namespace TribeUp.Extensions
 
             services.AddScoped<Func<IGroupJoinRequestService>>(provider =>
             () => provider.GetRequiredService<IGroupJoinRequestService>());
-            () => provider.GetRequiredService<IAuthenticationService>()
-            );
+
 
             services.AddScoped<Func<IPostService>>(provider =>
                 () => provider.GetRequiredService<IPostService>()
