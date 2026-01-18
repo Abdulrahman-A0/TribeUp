@@ -35,10 +35,8 @@ namespace Presentation.Controller
         [HttpPost("Logout")]
         public async Task<IActionResult> LogoutAsync([FromHeader(Name = "X-Device-Id")] string deviceId)
         {
-            var userId = GetCurrentUserId();
-
             await serviceManager.AuthenticationService
-                .LogoutAsync(userId!, deviceId);
+                .LogoutAsync(UserId!, deviceId);
 
             return NoContent();
         }
@@ -48,7 +46,7 @@ namespace Presentation.Controller
         public async Task<IActionResult> ChangePassword(ChangePasswordDTO changePasswordDTO)
         {
             await serviceManager.AuthenticationService
-                .ChangePasswordAsync(GetCurrentUserId(), changePasswordDTO);
+                .ChangePasswordAsync(UserId, changePasswordDTO);
 
             return NoContent();
         }

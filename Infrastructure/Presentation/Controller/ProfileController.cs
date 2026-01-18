@@ -11,15 +11,13 @@ namespace Presentation.Controller
     {
         [HttpGet("Me")]
         public async Task<ActionResult<UserProfileDTO>> GetMyProfileAsync()
-            => Ok(await serviceManager.ProfileService.GetMyProfileAsync(GetCurrentUserId()));
+            => Ok(await serviceManager.ProfileService.GetMyProfileAsync(UserId));
 
         [HttpPut("Name")]
         public async Task<IActionResult> UpdateProfile(UpdateProfileDTO updateProfileDTO)
         {
-            var userId = GetCurrentUserId();
-
             await serviceManager.ProfileService
-                .UpdateProfileAsync(userId, updateProfileDTO);
+                .UpdateProfileAsync(UserId, updateProfileDTO);
 
             return NoContent();
         }
@@ -27,10 +25,8 @@ namespace Presentation.Controller
         [HttpPut("Avatar")]
         public async Task<IActionResult> UpdateAvatar(UpdateAvatarDTO updateAvatarDTO)
         {
-            var userId = GetCurrentUserId();
-
             await serviceManager.ProfileService
-                .UpdateAvatarAsync(userId, updateAvatarDTO);
+                .UpdateAvatarAsync(UserId, updateAvatarDTO);
 
             return NoContent();
         }
@@ -40,7 +36,7 @@ namespace Presentation.Controller
         public async Task<IActionResult> UpdateProfilePicture([FromForm] UpdateProfilePictureDTO updateProfilePictureDTO)
         {
             await serviceManager.ProfileService
-                .UpdateProfilePictureAsync(GetCurrentUserId(), updateProfilePictureDTO);
+                .UpdateProfilePictureAsync(UserId, updateProfilePictureDTO);
 
             return NoContent();
         }
@@ -49,7 +45,7 @@ namespace Presentation.Controller
         [HttpDelete("Picture/Delete")]
         public async Task<IActionResult> DeleteProfilePicture()
         {
-            await serviceManager.ProfileService.DeleteProfilePictureAsync(GetCurrentUserId());
+            await serviceManager.ProfileService.DeleteProfilePictureAsync(UserId);
             return NoContent();
         }
 
@@ -58,7 +54,7 @@ namespace Presentation.Controller
         public async Task<IActionResult> UpdatePhone(UpdatePhoneNumberDTO updatePhoneNumberDTO)
         {
             await serviceManager.ProfileService
-                .UpdatePhoneNumberAsync(GetCurrentUserId(), updatePhoneNumberDTO);
+                .UpdatePhoneNumberAsync(UserId, updatePhoneNumberDTO);
 
             return NoContent();
         }
@@ -68,7 +64,7 @@ namespace Presentation.Controller
         public async Task<IActionResult> DeletePhone()
         {
             await serviceManager.ProfileService
-                .DeletePhoneNumberAsync(GetCurrentUserId());
+                .DeletePhoneNumberAsync(UserId);
 
             return NoContent();
         }
