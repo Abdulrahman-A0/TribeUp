@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using ServiceAbstraction.Contracts;
 using Shared.DTOs.Posts;
 using System.ComponentModel.DataAnnotations;
@@ -22,9 +23,9 @@ namespace Presentation.Controller
         }
 
         [HttpPost("feed")]
-        public async Task<ActionResult> GetFeed()
+        public async Task<ActionResult> GetFeed(int page = 1, int pageSize = 20)
         {
-            var feed = await service.PostService.GetFeedAsync();
+            var feed = await service.PostService.GetFeedAsync(User.Identity!.Name!, page, pageSize);
 
             return Ok(feed);
         }

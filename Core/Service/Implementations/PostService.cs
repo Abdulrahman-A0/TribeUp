@@ -65,15 +65,99 @@ namespace Service.Implementations
 
         }
 
-        public async Task<IEnumerable<FeedPostDTO>> GetFeedAsync()
+        public async Task<PagedResult<PostFeedDTO>> GetFeedAsync(string userId, int page, int pageSize)
         {
-            var spec = new PostFeedSpecification();
+            // Fetch visible & approved posts
+            var spec = new PostFeedSpecification(userId);
 
             var posts = await _unitOfWork
                 .GetRepository<Post, int>()
                 .GetAllAsync(spec);
 
-            return _mapper.Map<IEnumerable<FeedPostDTO>>(posts);
+            // Score posts (IN-MEMORY ONLY)
+            var scored = posts.Select(post =>
+            {
+                // Group relation
+                GroupRelationType relation =
+                    post.Group.GroupMembers.Any(m => m.UserId == userId)
+                        ? GroupRelationType.Member
+                        : post.Group.GroupFollowers.Any(f => f.UserId == userId)
+                            ? GroupRelationType.Follower
+                            : GroupRelationType.None;
+
+                // Group priority
+                int groupPriority = relation switch
+                {
+                    GroupRelationType.Member => 50,
+                    GroupRelationType.Follower => 25,
+                    _ => 5
+                };
+
+                // Engagement
+                int engagementScore =
+                    (post.Likes.Count * 2) +
+                    (post.Comments.Count * 3);
+
+                // Time decay
+                double ageHours =
+                    (DateTime.UtcNow - post.CreatedAt).TotalHours;
+
+                double timePenalty = ageHours * 0.2;
+
+                // Liked penalty
+                bool likedByUser =
+                    post.Likes.Any(l => l.UserId == userId);
+
+                int likedPenalty = likedByUser ? 15 : 0;
+
+                // Final score
+                double feedScore =
+                    groupPriority +
+                    engagementScore -
+                    timePenalty -
+                    likedPenalty;
+
+                return new
+                {
+                    Post = post,
+                    Relation = relation,
+                    FeedScore = feedScore,
+                    IsLikedByUser = likedByUser
+                };
+            });
+
+            // Order by relevance
+            var ordered = scored
+                .OrderByDescending(x => x.FeedScore)
+                .ThenByDescending(x => x.Post.CreatedAt)
+                .ToList();
+
+            // Pagination
+            int totalCount = ordered.Count;
+
+            var paged = ordered
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            // Map to DTO
+            var result = paged.Select(x =>
+            {
+                var dto = _mapper.Map<PostFeedDTO>(x.Post);
+                dto.IsLikedByCurrentUser = x.IsLikedByUser;
+                dto.GroupRelation = x.Relation;
+                dto.FeedScore = x.FeedScore;
+                return dto;
+            }).ToList();
+
+            return new PagedResult<PostFeedDTO>
+            {
+                Items = result,
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = totalCount
+            };
+
         }
         public async Task<bool> LikePostAsync(int postId, string userId)
         {
@@ -104,9 +188,6 @@ namespace Service.Implementations
 
             return false;
         }
-
-
-
         public async Task AddCommentAsync(int postId, CreateCommentDTO dto, string userId)
         {
             var comment = new Comment
@@ -123,8 +204,6 @@ namespace Service.Implementations
             await _unitOfWork.SaveChangesAsync();
 
         }
-
-
 
     }
 }

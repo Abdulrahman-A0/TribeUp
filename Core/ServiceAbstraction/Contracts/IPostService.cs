@@ -9,7 +9,7 @@ namespace ServiceAbstraction.Contracts
     public interface IPostService
     {
         Task CreatePostAsync(CreatePostDTO dto, string userId);
-        Task<IEnumerable<FeedPostDTO>> GetFeedAsync();
+        Task<PagedResult<PostFeedDTO>> GetFeedAsync(string userId, int page, int pageSize);
         Task<bool> LikePostAsync(int postId, string userId);
         Task AddCommentAsync(int postId, CreateCommentDTO dto, string userId);
     }
