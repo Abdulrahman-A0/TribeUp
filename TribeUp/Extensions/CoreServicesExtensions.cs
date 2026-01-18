@@ -10,10 +10,19 @@ namespace TribeUp.Extensions
         public static IServiceCollection AddCoreServices(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddAutoMapper(cfg => { }, typeof(AssemblyReference).Assembly);
+
+            services.Configure<JwtOptions>(configuration.GetSection("JWT"));
+            services.Configure<EmailOptions>(configuration.GetSection("Email"));
+
             services.AddScoped<IServiceManager, ServiceManager>();
 
 
             services.AddScoped<IAuthenticationService, AuthenticationService>();
+            services.AddScoped<IRefreshTokenCleanupService, RefreshTokenCleanupService>();
+            services.AddScoped<IProfileService, ProfileService>();
+            services.AddScoped<IEmailService, SmtpEmailService>();
+            services.AddScoped<IMediaUrlService, MediaUrlService>();
+
             services.AddScoped<IGroupService, GroupService>();
             services.AddScoped<IGroupMemberService, GroupMemberService>();
             services.AddScoped<IGroupJoinRequestService, GroupJoinRequestService>();
@@ -37,9 +46,10 @@ namespace TribeUp.Extensions
             services.AddScoped<Func<IPostService>>(provider =>
                 () => provider.GetRequiredService<IPostService>()
             );
+            services.AddScoped<Func<IProfileService>>(provider =>
+            () => provider.GetRequiredService<IProfileService>()
+            );
 
-
-            services.Configure<JwtOptions>(configuration.GetSection("JWT"));
 
             return services;
         }
