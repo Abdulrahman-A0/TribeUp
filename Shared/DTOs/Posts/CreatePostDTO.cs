@@ -10,6 +10,6 @@ namespace Shared.DTOs.Posts
     {
         public int GroupId { get; set; }
         public string? Caption { get; set; }
-        public string? MediaUrl { get; set; }
+        public List<CreateMediaItemDTO>? MediaItems { get; set; }
     }
 }

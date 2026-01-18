@@ -26,7 +26,8 @@ namespace Shared.DTOs.Posts
 
         public DateTime CreatedAt { get; set; }
 
-        public IReadOnlyCollection<MediaItemDTO> Media { get; set; }
-            = new List<MediaItemDTO>();
+        public IReadOnlyCollection<MediaItemFeedDTO> Media { get; set; }
+                 = new List<MediaItemFeedDTO>();
+
     }
 }

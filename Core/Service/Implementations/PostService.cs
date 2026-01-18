@@ -28,6 +28,13 @@ namespace Service.Implementations
         {
             var post = _mapper.Map<Post>(dto);
             post.CreatedAt = DateTime.UtcNow;
+            
+            if (string.IsNullOrWhiteSpace(post.Caption) && !post.MediaItems.Any())
+            {
+                throw new ValidationException(
+                    "Post must contain at least text or one media item."
+                );
+            }
 
             await _unitOfWork
                 .GetRepository<Post, int>()

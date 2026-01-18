@@ -22,7 +22,7 @@ namespace Presentation.Controller
             }
         }
 
-        [HttpPost("feed")]
+        [HttpGet("feed")]
         public async Task<ActionResult> GetFeed(int page = 1, int pageSize = 20)
         {
             var feed = await service.PostService.GetFeedAsync(User.Identity!.Name!, page, pageSize);
@@ -49,7 +49,7 @@ namespace Presentation.Controller
         {
             await service.PostService.AddCommentAsync(id, dto, User.Identity!.Name!);
 
-            return Ok();
+            return Ok(new { message = "Comment created successfully." });
         }
     }
 }

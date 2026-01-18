@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace Shared.DTOs.Posts
 {
-    public class MediaItemDTO
+    public class CreateMediaItemDTO
     {
         public string MediaURL { get; set; }
         public string Type { get; set; }
+        public int Order { get; set; }
     }
 }

@@ -9,6 +9,8 @@ namespace Service.MappingProfiles
     {
         public PostPorfile()
         {
+            //Feed
+
             CreateMap<Post, PostFeedDTO>()
                  .ForMember(dest => dest.PostId,
                      opt => opt.MapFrom(src => src.Id))
@@ -40,9 +42,18 @@ namespace Service.MappingProfiles
                  .ForMember(dest => dest.FeedScore,
                      opt => opt.Ignore());
 
-            CreateMap<CreatePostDTO, Post>();
+            // More Thna One Media in the Post Feed
+            
+            CreateMap<MediaItem, MediaItemFeedDTO>();
 
-            CreateMap<MediaItem, MediaItemDTO>();
+            // Create
+
+            CreateMap<CreatePostDTO, Post>()
+                  .ForMember(dest => dest.MediaItems,
+                      opt => opt.MapFrom(src => src.MediaItems.OrderBy(m => m.Order)));
+
+
+            CreateMap<CreateMediaItemDTO, MediaItem>();
         }
     }
 }
