@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using Domain.Entities.Users;
+using Service.MappingProfiles.MediaResolvers;
 using Shared.DTOs.IdentityModule;
+using Shared.DTOs.ProfileModule;
 
 namespace Service.MappingProfiles
 {
@@ -8,11 +10,12 @@ namespace Service.MappingProfiles
     {
         public UserProfile()
         {
-            CreateMap<ApplicationUser, UserResultDTO>()
-                .ForMember(dest => dest.FullName, options => options.MapFrom(src => $"{src.FirstName} {src.LastName}"));
+            CreateMap<ApplicationUser, UserProfileDTO>()
+                .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.FirstName} {src.LastName}"))
+                .ForMember(dest => dest.ProfilePicture, opt => opt.MapFrom<UserProfilePictureResolver>());
 
             CreateMap<RegisterDTO, ApplicationUser>()
-                .ForMember(dest => dest.PasswordHash, options => options.Ignore());
+                .ForMember(dest => dest.PasswordHash, opt => opt.Ignore());
         }
     }
 }
