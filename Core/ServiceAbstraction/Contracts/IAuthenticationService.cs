@@ -8,5 +8,9 @@ namespace ServiceAbstraction.Contracts
         Task<AuthResponseDTO> LoginAsync(LoginDTO loginDTO, string deviceId);
         Task<AuthResponseDTO> RefreshAsync(RefreshTokenRequestDTO refreshTokenDTO);
         Task LogoutAsync(string userId, string deviceId);
+        Task ChangePasswordAsync(string userId, ChangePasswordDTO changePasswordDTO);
+        Task ForgotPasswordAsync(ForgotPasswordDTO forgotPasswordDTO);
+        Task ResetPasswordAsync(ResetPasswordDTO resetPasswordDTO);
+
     }
 }

@@ -5,6 +5,7 @@ using Domain.Exceptions.UnAuthorized;
 using Domain.Exceptions.Validation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Service.Specifications;
@@ -20,7 +21,8 @@ using System.Text;
 namespace Service.Implementations
 {
     public class AuthenticationService(UserManager<ApplicationUser> _userManager,
-        IOptions<JwtOptions> _options, IMapper _mapper, IUnitOfWork unitOfWork) : IAuthenticationService
+        IOptions<JwtOptions> _options, IMapper _mapper, IUnitOfWork unitOfWork,
+        IConfiguration configuration, IEmailService emailService) : IAuthenticationService
     {
         public async Task<AuthResponseDTO> LoginAsync(LoginDTO loginDTO, string deviceId)
         {
@@ -132,6 +134,70 @@ namespace Service.Implementations
             await unitOfWork.SaveChangesAsync();
         }
 
+        public async Task ChangePasswordAsync(string userId, ChangePasswordDTO changePasswordDTO)
+        {
+            if (changePasswordDTO.NewPassword != changePasswordDTO.ConfirmNewPassword)
+                throw new ValidationException(["Passwords do not match"]);
+
+            var user = await _userManager.FindByIdAsync(userId)
+                ?? throw new UnAuthorizedException();
+
+            var result = await _userManager.ChangePasswordAsync(
+                user,
+                changePasswordDTO.CurrentPassword,
+                changePasswordDTO.NewPassword);
+
+            if (!result.Succeeded)
+                throw new ValidationException(result.Errors.Select(e => e.Description).ToList());
+
+
+            foreach (var token in user.RefreshTokens)
+                token.IsRevoked = true;
+
+            await _userManager.UpdateAsync(user);
+        }
+
+        public async Task ForgotPasswordAsync(ForgotPasswordDTO forgotPasswordDTO)
+        {
+            var user = await _userManager.FindByEmailAsync(forgotPasswordDTO.Email);
+            if (user is null)
+                return;
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            var resetLink =
+                $"{configuration.GetSection("URLs:FrontUrl")}/reset-password" +
+                $"?email={Uri.EscapeDataString(user.Email!)}" +
+                $"&token={Uri.EscapeDataString(token)}";
+
+            await emailService.SendPasswordResetAsync(user.Email!, resetLink);
+        }
+
+        public async Task ResetPasswordAsync(ResetPasswordDTO dto)
+        {
+            if (dto.NewPassword != dto.ConfirmPassword)
+                throw new ValidationException(["Passwords do not match"]);
+
+            var user = await _userManager.FindByEmailAsync(dto.Email)
+                ?? throw new UnAuthorizedException();
+
+            var decodedToken = Uri.UnescapeDataString(dto.Token);
+
+            var result = await _userManager.ResetPasswordAsync(
+                user,
+                decodedToken,
+                dto.NewPassword);
+
+            if (!result.Succeeded)
+                throw new ValidationException(result.Errors.Select(e => e.Description).ToList());
+
+            foreach (var token in user.RefreshTokens)
+                token.IsRevoked = true;
+
+            await _userManager.UpdateAsync(user);
+        }
+
+
 
         private async Task<string> CreateTokenAsync(ApplicationUser user)
         {
@@ -139,8 +205,8 @@ namespace Service.Implementations
 
             var claims = new List<Claim>
             {
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
                 new Claim(JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.NameIdentifier,user.Id),
                 new Claim(ClaimTypes.Email,user.Email),
             };
 
