@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Shared.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,8 @@ namespace Shared.DTOs.Posts
     {
         public int GroupId { get; set; }
         public string? Caption { get; set; }
+        public AccessibilityType Accessibility { get; set; }
+
         public List<CreateMediaItemDTO>? MediaItems { get; set; }
     }
 }
