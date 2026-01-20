@@ -28,8 +28,9 @@ namespace Service.Implementations
         public async Task<CreatePostResultDTO> CreatePostAsync(CreatePostDTO dto, string userId)
         {
             var post = _mapper.Map<Post>(dto);
-            post.CreatedAt = DateTime.UtcNow;
-            
+            post.CreatedAt = DateTime.UtcNow; 
+            post.CreatedByUserId = userId;
+
             if (string.IsNullOrWhiteSpace(post.Caption) && !post.MediaItems.Any())
             {
                 return new CreatePostResultDTO

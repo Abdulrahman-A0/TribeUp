@@ -1,5 +1,6 @@
 ﻿using Domain.Entities.Groups;
 using Domain.Entities.Media;
+using Domain.Entities.Users;
 using Shared.Enums;
 using System;
 using System.Collections.Generic;
@@ -39,6 +40,10 @@ namespace Domain.Entities.Posts
         public virtual Group Group { get; set; }
         [Required]
         public int GroupId { get; set; }
+
+        [Required]
+        public string CreatedByUserId { get; set; }   
+        public virtual ApplicationUser CreatedByUser { get; set; }
 
         public virtual AIModeration AI_Moderation { get; set; } = null!;
         public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();

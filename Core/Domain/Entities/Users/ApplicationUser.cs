@@ -16,6 +16,7 @@ namespace Domain.Entities.Users
         public bool IsDeleted { get; set; } = false;
 
         #region Relations
+        public ICollection<Post> Posts { get; set; } = new List<Post>();
         public ICollection<GroupMember> GroupMembers { get; set; }
         public ICollection<Comment> Comments { get; set; }
         public ICollection<Like> Likes { get; set; }

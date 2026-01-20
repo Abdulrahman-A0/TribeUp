@@ -50,8 +50,9 @@ namespace Service.MappingProfiles
 
             CreateMap<CreatePostDTO, Post>()
                   .ForMember(dest => dest.MediaItems,
-                      opt => opt.MapFrom(src => src.MediaItems.OrderBy(m => m.Order)));
-
+                      opt => opt.MapFrom(src => src.MediaItems.OrderBy(m => m.Order)))
+                  .ForMember(dest => dest.CreatedByUserId,
+                      opt => opt.Ignore());
 
             CreateMap<CreateMediaItemDTO, MediaItem>();
         }
