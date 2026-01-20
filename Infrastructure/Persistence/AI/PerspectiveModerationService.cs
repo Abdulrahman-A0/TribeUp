@@ -33,7 +33,7 @@ namespace Persistence.AI
                 languages = new[] { "en" },
                 requestedAttributes = new
                 {
-                    TOXICITY = new { },
+                    //TOXICITY = new { },
                     INSULT = new { },
                     THREAT = new { },
                     SEXUALLY_EXPLICIT = new { }
@@ -52,22 +52,35 @@ namespace Persistence.AI
             var jsonString = await response.Content.ReadAsStringAsync();
             using var document = JsonDocument.Parse(jsonString);
 
-            var toxicity = document
-                .RootElement
-                .GetProperty("attributeScores")
-                .GetProperty("TOXICITY")
-                .GetProperty("summaryScore")
-                .GetProperty("value")
-                .GetDouble();
+            var attributeScores =
+                document.RootElement.GetProperty("attributeScores");
 
-            bool denied = toxicity >= 0.7;
+            string detectedIssue = "NONE";
+            double highestScore = 0;
+
+            foreach (var attribute in attributeScores.EnumerateObject())
+            {
+                double score = attribute.Value
+                    .GetProperty("summaryScore")
+                    .GetProperty("value")
+                    .GetDouble();
+
+                if (score > highestScore)
+                {
+                    highestScore = score;
+                    detectedIssue = attribute.Name;
+                }
+            }
+
+            bool denied = highestScore >= 0.7;
 
             return new ModerationResult
             {
                 IsAccepted = !denied,
-                DetectedIssue = denied ? "TOXICITY" : "NONE",
-                ConfidenceScore = toxicity
+                DetectedIssue = denied ? detectedIssue : "NONE",
+                ConfidenceScore = highestScore
             };
+
         }
     }
 }

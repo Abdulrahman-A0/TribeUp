@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using ServiceAbstraction.Contracts;
 using Shared.DTOs.Posts;
@@ -6,6 +7,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Presentation.Controller
 {
+    [Authorize]
     public class PostsController(IServiceManager service) : ApiController
     {
         [HttpPost("CreatePost")]
