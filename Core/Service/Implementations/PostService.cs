@@ -4,6 +4,7 @@ using Domain.Entities.Posts;
 using Service.Specifications;
 using Service.Specifications.PostSpecifications;
 using ServiceAbstraction.Contracts;
+using Shared.DTOs.PostModule;
 using Shared.DTOs.Posts;
 using Shared.Enums;
 using System.ComponentModel.DataAnnotations;
@@ -24,16 +25,19 @@ namespace Service.Implementations
             _contentModerationService = contentModerationService;
         }
 
-        public async Task CreatePostAsync(CreatePostDTO dto, string userId)
+        public async Task<CreatePostResultDTO> CreatePostAsync(CreatePostDTO dto, string userId)
         {
             var post = _mapper.Map<Post>(dto);
             post.CreatedAt = DateTime.UtcNow;
             
             if (string.IsNullOrWhiteSpace(post.Caption) && !post.MediaItems.Any())
             {
-                throw new ValidationException(
-                    "Post must contain at least text or one media item."
-                );
+                return new CreatePostResultDTO
+                {
+                    IsCreated = false,
+                    Status = ContentStatus.Denied,
+                    Message = "Post must contian text or media."
+                };
             }
 
             await _unitOfWork
@@ -64,11 +68,20 @@ namespace Service.Implementations
 
                 await _unitOfWork.SaveChangesAsync();
 
-                // Stop execution and inform the controller
-                throw new ValidationException(
-                    "Post content violates community guidelines."
-                );
+                return new CreatePostResultDTO
+                {
+                    IsCreated = false,
+                    Status = ContentStatus.Denied,
+                    Message = "Post violates community guidelines."
+                };
             }
+
+            return new CreatePostResultDTO
+            {
+                IsCreated = true,
+                Status = ContentStatus.Accepted,
+                Message = "Post created successfully."
+            };
 
         }
 
@@ -195,7 +208,7 @@ namespace Service.Implementations
 
             return false;
         }
-        public async Task AddCommentAsync(int postId, CreateCommentDTO dto, string userId)
+        public async Task<int> AddCommentAsync(int postId, CreateCommentDTO dto, string userId)
         {
             var comment = new Comment
             {
@@ -208,7 +221,7 @@ namespace Service.Implementations
                 .GetRepository<Comment, int>()
                 .AddAsync(comment);
 
-            await _unitOfWork.SaveChangesAsync();
+            return(await _unitOfWork.SaveChangesAsync());
 
         }
 
