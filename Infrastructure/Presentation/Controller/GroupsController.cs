@@ -22,16 +22,30 @@ namespace Presentation.Controller
         public async Task<ActionResult<GroupDetailsResultDTO>> GetGroupByIdAsync(int Id)
             => Ok(await serviceManager.GroupService.GetGroupByIdAsync(Id));
 
+
         [HttpPost("CreateGroup")]
         public async Task<ActionResult<GroupResultDTO>> CreateGroupAsync([FromBody] CreateGroupDTO createGroupDTO)
             => Ok(await serviceManager.GroupService.CreateGroupAsync(createGroupDTO, UserId));
+
 
         [HttpPut("UpdateGroup/{Id:int}")]
         public async Task<ActionResult<GroupResultDTO>> UpdateGroupAsync(int Id ,[FromBody] UpdateGroupDTO updateGroupDTO)
             => Ok(await serviceManager.GroupService.UpdateGroupAsync(Id, updateGroupDTO, UserId));
 
+
         [HttpDelete("DeleteGroup/{Id:int}")]
         public async Task<ActionResult> DeleteGroupAsync(int Id)
             => Ok(await serviceManager.GroupService.DeleteGroupAsync(Id, UserId));
+
+
+        [HttpPut("UpdateGroupPicture/{Id:int}")]
+        //[Consumes("multipart/form-data")]
+        public async Task<ActionResult<GroupResultDTO>> UpdateGroupPictureAsync(int Id, [FromForm] UpdateGroupPictureDTO updateGroupPictureDTO)
+            => Ok(await serviceManager.GroupService.UpdateGroupPictureAsync(Id, updateGroupPictureDTO, UserId));
+
+
+        [HttpDelete("DeleteGroupPicture/{Id:int}")]
+        public async Task<ActionResult> DeleteGroupPictureAsync(int Id)
+            => Ok(await serviceManager.GroupService.DeleteGroupPictureAsync(Id, UserId));
     }
 }

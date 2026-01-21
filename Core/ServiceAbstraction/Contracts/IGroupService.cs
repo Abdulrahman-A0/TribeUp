@@ -15,5 +15,7 @@ namespace ServiceAbstraction.Contracts
         Task<GroupResultDTO> CreateGroupAsync(CreateGroupDTO createGroupDTO, string userId);
         Task<GroupResultDTO> UpdateGroupAsync(int Id, UpdateGroupDTO updateGroupDTO, string userId);
         Task<bool> DeleteGroupAsync(int groupId, string userId);
+        Task<GroupResultDTO> UpdateGroupPictureAsync(int groupId, UpdateGroupPictureDTO updateGroupPictureDTO, string userId);
+        Task<bool> DeleteGroupPictureAsync(int groupId, string userId);
     }
 }

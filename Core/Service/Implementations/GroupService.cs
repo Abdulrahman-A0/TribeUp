@@ -3,6 +3,10 @@ using Domain.Contracts;
 using Domain.Entities.Groups;
 using Domain.Exceptions.GroupExceptions;
 using Domain.Exceptions.GroupMemberExceptions;
+using Domain.Exceptions.Validation;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting;
 using Service.Specifications.GroupMemberSpecs;
 using Service.Specifications.GroupSpecs;
 using ServiceAbstraction.Contracts;
@@ -17,7 +21,7 @@ using System.Threading.Tasks;
 
 namespace Service.Implementations
 {
-    public class GroupService(IUnitOfWork unitOfWork, IMapper mapper) : IGroupService
+    public class GroupService(IUnitOfWork unitOfWork, IMapper mapper, IWebHostEnvironment environment) : IGroupService
     {
         public async Task<List<GroupResultDTO>> GetAllGroupsAsync()
         {
@@ -25,6 +29,8 @@ namespace Service.Implementations
             var groups = await repo.GetAllAsync(asNoTracking: true);
             return mapper.Map<List<GroupResultDTO>>(groups);
         }
+
+
 
         public async Task<GroupDetailsResultDTO> GetGroupByIdAsync(int groupId)
         {
@@ -35,6 +41,8 @@ namespace Service.Implementations
                 ?? throw new GroupNotFoundException(groupId);
             return mapper.Map<GroupDetailsResultDTO>(group);
         }
+
+
 
 
         public async Task<GroupResultDTO> CreateGroupAsync(CreateGroupDTO createGroupDTO, string userId)
@@ -63,6 +71,7 @@ namespace Service.Implementations
 
 
 
+
         public async Task<GroupResultDTO> UpdateGroupAsync(int groupId, UpdateGroupDTO updateGroupDTO, string userId)
         {
 
@@ -81,6 +90,8 @@ namespace Service.Implementations
         }
 
         
+
+
         public async Task<bool> DeleteGroupAsync(int groupId, string userId)
         {
 
@@ -94,6 +105,60 @@ namespace Service.Implementations
             await unitOfWork.SaveChangesAsync();
             return true;
         }
+        
+
+
+
+        public async Task<GroupResultDTO> UpdateGroupPictureAsync(int groupId, UpdateGroupPictureDTO updateGroupPictureDTO, string userId)
+        {
+            var groupRepo = unitOfWork.GetRepository<Group, int>();
+
+            var group = await groupRepo.GetByIdAsync(groupId)
+                ?? throw new GroupNotFoundException(groupId);
+
+            await EnsureUserIsAdmin(groupId, userId);
+
+            ValidateImage(updateGroupPictureDTO.Picture);
+
+            var newRelativePath = await SaveGroupPictureAsync(updateGroupPictureDTO.Picture);
+
+            if(!string.IsNullOrWhiteSpace(group.GroupProfilePicture))
+                DeleteFileIfExists(group.GroupProfilePicture);
+
+            group.GroupProfilePicture = newRelativePath;
+
+            groupRepo.Update(group);
+            await unitOfWork.SaveChangesAsync();
+
+            return mapper.Map<GroupResultDTO>(group);
+        }
+
+
+
+
+        public async Task<bool> DeleteGroupPictureAsync(int groupId, string userId)
+        {
+            var groupRepo = unitOfWork.GetRepository<Group, int>();
+
+            var group = await groupRepo.GetByIdAsync(groupId)
+                ?? throw new GroupNotFoundException(groupId);
+
+            await EnsureUserIsAdmin(groupId, userId);
+
+            if(string.IsNullOrWhiteSpace(group.GroupProfilePicture))
+                return true;
+
+            DeleteFileIfExists(group.GroupProfilePicture);
+
+            group.GroupProfilePicture = null;
+
+            groupRepo.Update(group);
+            await unitOfWork.SaveChangesAsync();
+
+            return true;
+        }
+
+
 
 
 
@@ -109,6 +174,45 @@ namespace Service.Implementations
                 throw new UnauthorizedAccessException("Only group admins can perform this action");
 
             return member;
+        }
+
+        private static void ValidateImage(IFormFile file)
+        {
+            var allowedTypes = new[] { "image/jpg", "image/jpeg", "image/png", "image/webp" };
+
+            if (!allowedTypes.Contains(file.ContentType))
+                throw new ValidationException(["Invalid image type"]);
+
+            if (file.Length > 2 * 1024 * 1024)
+                throw new ValidationException(["Image size must be under 2MB"]);
+        }
+
+        private async Task<string> SaveGroupPictureAsync(IFormFile file)
+        {
+            var uploadsRoot = Path.Combine(
+                environment.WebRootPath,
+                "images",
+                "ProfilePictures",
+                "Groups");
+
+            Directory.CreateDirectory(uploadsRoot);
+
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            var fullPath = Path.Combine(uploadsRoot, fileName);
+
+            await using var stream = new FileStream(fullPath, FileMode.Create);
+            await file.CopyToAsync(stream);
+
+
+            return $"images/ProfilePictures/Groups/{fileName}";
+        }
+
+        private void DeleteFileIfExists(string relativePath)
+        {
+            var fullPath = Path.Combine(environment.WebRootPath, relativePath);
+
+            if (File.Exists(fullPath))
+                File.Delete(fullPath);
         }
     }
 }
