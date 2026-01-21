@@ -26,8 +26,13 @@ namespace Presentation.Controller
 
 
         [HttpPost("{postId:int}/AddComment")]
-        public async Task<ActionResult> Comment(int id, CreateCommentDTO dto)
-            => Ok(await service.PostService.AddCommentAsync(id, dto, UserId));
+        public async Task<ActionResult> Comment(int postId, CreateCommentDTO dto)
+            => Ok(await service.PostService.AddCommentAsync(postId, dto, UserId));
+
+
+        [HttpGet("{postId:int}/Comments")]
+        public async Task<ActionResult> GetComments(int postId, int page = 1, int pageSize = 20)
+            => Ok(await service.PostService.GetCommentsByPostIdAsync(postId, page, pageSize));
 
     }
 }

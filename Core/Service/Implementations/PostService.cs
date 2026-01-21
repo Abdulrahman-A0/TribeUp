@@ -161,6 +161,9 @@ namespace Service.Implementations
                 .Take(pageSize)
                 .ToList();
 
+            var hasMore = paged.Count > pageSize;
+
+
             // Map to DTO
             var result = paged.Select(x =>
             {
@@ -176,10 +179,12 @@ namespace Service.Implementations
                 Items = result,
                 Page = page,
                 PageSize = pageSize,
-                TotalCount = totalCount
+                TotalCount = totalCount,
+                HasMore = hasMore
             };
 
         }
+        
         public async Task<bool> LikePostAsync(int postId, string userId)
         {
             var likeRepo = _unitOfWork.GetRepository<Like, int>();
@@ -209,6 +214,7 @@ namespace Service.Implementations
 
             return false;
         }
+        
         public async Task<int> AddCommentAsync(int postId, CreateCommentDTO dto, string userId)
         {
             var comment = new Comment
@@ -223,6 +229,40 @@ namespace Service.Implementations
                 .AddAsync(comment);
 
             return(await _unitOfWork.SaveChangesAsync());
+
+        }
+
+        public async Task<PagedResult<CommentResultDTO>> GetCommentsByPostIdAsync(int postId, int page, int pageSize)
+        {
+            var spec = new CommentsByPostIdSpecification(postId);
+
+            var comments = await _unitOfWork
+                .GetRepository<Comment, int>()
+                .GetAllAsync(spec);
+
+            var totalCount = comments.Count();
+
+            var pagedComments = comments
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize + 1) 
+                .ToList();
+
+            var hasMore = pagedComments.Count > pageSize;
+
+            var finalComments = pagedComments
+                .Take(pageSize)
+                .ToList();
+
+            var mapped = _mapper.Map<List<CommentResultDTO>>(finalComments);
+
+            return new PagedResult<CommentResultDTO>
+            {
+                Items = mapped,
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = totalCount,
+                HasMore = hasMore
+            };
 
         }
 
