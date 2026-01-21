@@ -88,14 +88,12 @@ namespace Service.Implementations
 
         public async Task<PagedResult<PostFeedDTO>> GetFeedAsync(string userId, int page, int pageSize)
         {
-            // Fetch visible & approved posts
             var spec = new PostFeedSpecification(userId);
 
             var posts = await _unitOfWork
                 .GetRepository<Post, int>()
                 .GetAllAsync(spec);
 
-            // Score posts (IN-MEMORY ONLY)
             var scored = posts.Select(post =>
             {
                 // Group relation
@@ -147,13 +145,11 @@ namespace Service.Implementations
                 };
             });
 
-            // Order by relevance
             var ordered = scored
                 .OrderByDescending(x => x.FeedScore)
                 .ThenByDescending(x => x.Post.CreatedAt)
                 .ToList();
 
-            // Pagination
             int totalCount = ordered.Count;
 
             var paged = ordered
@@ -163,8 +159,6 @@ namespace Service.Implementations
 
             var hasMore = paged.Count > pageSize;
 
-
-            // Map to DTO
             var result = paged.Select(x =>
             {
                 var dto = _mapper.Map<PostFeedDTO>(x.Post);
@@ -185,6 +179,94 @@ namespace Service.Implementations
 
         }
         
+        public async Task<PagedResult<PostFeedDTO>> GetGroupFeedAsync(string userId, int groupId, int page, int pageSize)
+        {
+            var spec = new GroupPostFeedSpecification(userId,groupId);
+
+            var posts = await _unitOfWork
+                .GetRepository<Post, int>()
+                .GetAllAsync(spec);
+
+            var scored = posts.Select(post =>
+            {
+                GroupRelationType relation =
+                    post.Group.GroupMembers.Any(m => m.UserId == userId)
+                        ? GroupRelationType.Member
+                        : post.Group.GroupFollowers.Any(f => f.UserId == userId)
+                            ? GroupRelationType.Follower
+                            : GroupRelationType.None;
+
+                int groupPriority = relation switch
+                {
+                    GroupRelationType.Member => 50,
+                    GroupRelationType.Follower => 25,
+                    _ => 5
+                };
+
+                int engagementScore =
+                    (post.Likes.Count * 2) +
+                    (post.Comments.Count * 3);
+
+                double ageHours =
+                    (DateTime.UtcNow - post.CreatedAt).TotalHours;
+
+                double timePenalty = ageHours * 0.2;
+
+                bool likedByUser =
+                    post.Likes.Any(l => l.UserId == userId);
+
+                int likedPenalty = likedByUser ? 15 : 0;
+
+                double feedScore =
+                    groupPriority +
+                    engagementScore -
+                    timePenalty -
+                    likedPenalty;
+
+                return new
+                {
+                    Post = post,
+                    Relation = relation,
+                    FeedScore = feedScore,
+                    IsLikedByUser = likedByUser
+                };
+            });
+
+            var ordered = scored
+                .OrderByDescending(x => x.FeedScore)
+                .ThenByDescending(x => x.Post.CreatedAt)
+                .ToList();
+
+            int totalCount = ordered.Count;
+
+            var paged = ordered
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize + 1)
+                .ToList();
+
+            var hasMore = paged.Count > pageSize;
+
+            var finalPage = paged.Take(pageSize).ToList();
+
+            var result = finalPage.Select(x =>
+            {
+                var dto = _mapper.Map<PostFeedDTO>(x.Post);
+                dto.IsLikedByCurrentUser = x.IsLikedByUser;
+                dto.GroupRelation = x.Relation;
+                dto.FeedScore = x.FeedScore;
+                return dto;
+            }).ToList();
+
+            return new PagedResult<PostFeedDTO>
+            {
+                Items = result,
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = totalCount,
+                HasMore = hasMore
+            };
+
+        }
         public async Task<bool> LikePostAsync(int postId, string userId)
         {
             var likeRepo = _unitOfWork.GetRepository<Like, int>();

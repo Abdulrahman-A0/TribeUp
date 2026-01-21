@@ -20,6 +20,11 @@ namespace Presentation.Controller
             =>Ok(await service.PostService.GetFeedAsync(UserId, page, pageSize));
 
 
+        [HttpGet("{groupId}/GroupFeed")]
+        public async Task<ActionResult> GetGroupFeed(int groupId, int page = 1, int pageSize = 20)
+            => Ok(await service.PostService.GetGroupFeedAsync(UserId, groupId, page, pageSize));
+
+
         [HttpPost("{postId:int}/Like")]
         public async Task<ActionResult> LikePost(int id)
             => Ok(await service.PostService.LikePostAsync(id, UserId));
