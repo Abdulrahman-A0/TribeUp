@@ -42,8 +42,8 @@ namespace Domain.Entities.Posts
         public int GroupId { get; set; }
 
         [Required]
-        public string CreatedByUserId { get; set; }   
-        public virtual ApplicationUser CreatedByUser { get; set; }
+        public string UserId { get; set; }   
+        public virtual ApplicationUser User { get; set; }
 
         public virtual AIModeration AI_Moderation { get; set; } = null!;
         public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();

@@ -541,7 +541,7 @@ namespace Persistence.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatedByUserId")
+                    b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
@@ -553,7 +553,7 @@ namespace Persistence.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedByUserId");
+                    b.HasIndex("UserId");
 
                     b.HasIndex("GroupId");
 
@@ -1191,9 +1191,9 @@ namespace Persistence.Data.Migrations
 
             modelBuilder.Entity("Domain.Entities.Posts.Post", b =>
                 {
-                    b.HasOne("Domain.Entities.Users.ApplicationUser", "CreatedByUser")
+                    b.HasOne("Domain.Entities.Users.ApplicationUser", "User")
                         .WithMany("Posts")
-                        .HasForeignKey("CreatedByUserId")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -1207,7 +1207,7 @@ namespace Persistence.Data.Migrations
                         .WithMany("Posts")
                         .HasForeignKey("GroupId1");
 
-                    b.Navigation("CreatedByUser");
+                    b.Navigation("User");
 
                     b.Navigation("Group");
                 });

@@ -9,24 +9,25 @@ namespace Service.Specifications.PostSpecifications
             : base(p =>
                 (
                     p.AI_Moderation.Status != ContentStatus.Denied ||
-                    p.CreatedByUserId == userId
+                    p.UserId == userId
                 ) &&
                 
                 (
                     p.Group.Accessibility == AccessibilityType.Public ||
                     p.Group.GroupMembers.Any(m => m.UserId == userId) ||
                     p.Group.GroupFollowers.Any(f => f.UserId == userId) ||
-                    p.CreatedByUserId == userId
+                    p.UserId == userId
                 ) &&
                 
                 (
                     p.Accessibility == AccessibilityType.Public ||
                     p.Group.GroupMembers.Any(m => m.UserId == userId) ||
                     p.Group.GroupFollowers.Any(f => f.UserId == userId) ||
-                    p.CreatedByUserId == userId
+                    p.UserId == userId
                 )
             )   
-        {   
+        {
+            AddIncludes(p => p.User);
 
             AddIncludes(p => p.Group);
             AddIncludes(p => p.Group.GroupMembers);

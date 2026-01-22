@@ -29,7 +29,7 @@ namespace Service.Implementations
         {
             var post = _mapper.Map<Post>(dto);
             post.CreatedAt = DateTime.UtcNow; 
-            post.CreatedByUserId = userId;
+            post.UserId = userId;
 
             if (string.IsNullOrWhiteSpace(post.Caption) && !post.MediaItems.Any())
             {

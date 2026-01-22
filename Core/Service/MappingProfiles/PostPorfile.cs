@@ -15,6 +15,12 @@ namespace Service.MappingProfiles
             CreateMap<Post, PostFeedDTO>()
                  .ForMember(dest => dest.PostId,
                      opt => opt.MapFrom(src => src.Id))
+                 .ForMember(dest => dest.UserId,
+                     opt => opt.MapFrom(src => src.User.Id))
+                 .ForMember(dest => dest.FirstName,
+                     opt => opt.MapFrom(src => src.User.FirstName))
+                 .ForMember(dest => dest.LastName,
+                     opt => opt.MapFrom(src => src.User.LastName))
                  .ForMember(dest => dest.GroupId,
                      opt => opt.MapFrom(src => src.GroupId))
                  .ForMember(dest => dest.GroupName,
@@ -29,10 +35,8 @@ namespace Service.MappingProfiles
                      opt => opt.MapFrom(src => src.MediaItems))
                  .ForMember(dest => dest.IsLikedByCurrentUser,
                      opt => opt.Ignore())
-
                  .ForMember(dest => dest.GroupRelation,
                      opt => opt.Ignore())
-
                  .ForMember(dest => dest.FeedScore,
                      opt => opt.Ignore());
 
@@ -45,7 +49,7 @@ namespace Service.MappingProfiles
             CreateMap<CreatePostDTO, Post>()
                   .ForMember(dest => dest.MediaItems,
                       opt => opt.MapFrom(src => src.MediaItems.OrderBy(m => m.Order)))
-                  .ForMember(dest => dest.CreatedByUserId,
+                  .ForMember(dest => dest.UserId,
                       opt => opt.Ignore());
 
             CreateMap<CreateMediaItemDTO, MediaItem>();
@@ -59,6 +63,10 @@ namespace Service.MappingProfiles
                     opt => opt.MapFrom(src => src.PostId))
                 .ForMember(dest => dest.UserId,
                     opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.FirstName,
+                    opt => opt.MapFrom(src => src.User.FirstName))
+                .ForMember(dest => dest.LastName,
+                    opt => opt.MapFrom(src => src.User.LastName))
                 .ForMember(dest => dest.Content,
                     opt => opt.MapFrom(src => src.Content))
                 .ForMember(dest => dest.CreatedAt,

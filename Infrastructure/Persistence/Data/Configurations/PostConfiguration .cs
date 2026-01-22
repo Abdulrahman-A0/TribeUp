@@ -11,15 +11,15 @@ namespace Infrastructure.Persistence.Configurations
         {
             builder.HasKey(p => p.Id);
 
-            builder.Property(p => p.CreatedByUserId)
+            builder.Property(p => p.UserId)
                    .IsRequired();
 
             builder.Property(p => p.GroupId)
                    .IsRequired();
 
-            builder.HasOne<ApplicationUser>(p => p.CreatedByUser)
+            builder.HasOne<ApplicationUser>(p => p.User)
                    .WithMany(u => u.Posts)
-                   .HasForeignKey(p => p.CreatedByUserId)
+                   .HasForeignKey(p => p.UserId)
                    .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(p => p.Group)

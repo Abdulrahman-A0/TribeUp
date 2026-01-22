@@ -11,7 +11,7 @@ namespace Persistence.Data.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
-                name: "CreatedByUserId",
+                name: "UserId",
                 table: "Posts",
                 type: "nvarchar(450)",
                 nullable: false,
@@ -26,7 +26,7 @@ namespace Persistence.Data.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Posts_CreatedByUserId",
                 table: "Posts",
-                column: "CreatedByUserId");
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Posts_GroupId1",
@@ -36,7 +36,7 @@ namespace Persistence.Data.Migrations
             migrationBuilder.AddForeignKey(
                 name: "FK_Posts_AspNetUsers_CreatedByUserId",
                 table: "Posts",
-                column: "CreatedByUserId",
+                column: "UserId",
                 principalTable: "AspNetUsers",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Restrict);
@@ -69,7 +69,7 @@ namespace Persistence.Data.Migrations
                 table: "Posts");
 
             migrationBuilder.DropColumn(
-                name: "CreatedByUserId",
+                name: "UserId",
                 table: "Posts");
 
             migrationBuilder.DropColumn(
