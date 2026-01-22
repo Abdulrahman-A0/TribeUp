@@ -296,7 +296,40 @@ namespace Service.Implementations
 
             return false;
         }
-        
+
+        public async Task<PagedResult<LikeResultDTO>> GetLikesByPostIdAsync(int postId, int page, int pageSize)
+        {
+            var spec = new LikesByPostIdSpecification(postId);
+
+            var likes = await _unitOfWork
+                .GetRepository<Like, int>()
+                .GetAllAsync(spec);
+
+            var totalCount = likes.Count();
+            
+            var pagedLikes = likes
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize + 1)
+                .ToList();
+
+            var hasMore = pagedLikes.Count > pageSize;
+
+            var finalLikes = pagedLikes
+                .Take(pageSize)
+                .ToList();
+
+            var mapped = _mapper.Map<List<LikeResultDTO>>(finalLikes);
+
+            return new PagedResult<LikeResultDTO>
+            {
+                Items = mapped,
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = totalCount,
+                HasMore = hasMore
+            };
+
+        }
         public async Task<int> AddCommentAsync(int postId, CreateCommentDTO dto, string userId)
         {
             var comment = new Comment

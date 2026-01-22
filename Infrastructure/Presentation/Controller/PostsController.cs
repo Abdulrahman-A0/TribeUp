@@ -25,9 +25,13 @@ namespace Presentation.Controller
             => Ok(await service.PostService.GetGroupFeedAsync(UserId, groupId, page, pageSize));
 
 
-        [HttpPost("{postId:int}/Like")]
-        public async Task<ActionResult> LikePost(int id)
-            => Ok(await service.PostService.LikePostAsync(id, UserId));
+        [HttpPost("{postId:int}/AddLike")]
+        public async Task<ActionResult> LikePost(int postId)
+            => Ok(await service.PostService.LikePostAsync(postId, UserId));
+
+        [HttpGet("{postId:int}/Likes")]
+        public async Task<ActionResult> GetLikes(int postId, int page = 1, int pageSize = 20)
+            => Ok(await service.PostService.GetLikesByPostIdAsync(postId, page, pageSize));
 
 
         [HttpPost("{postId:int}/AddComment")]

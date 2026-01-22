@@ -62,7 +62,17 @@ namespace Service.MappingProfiles
                 .ForMember(dest => dest.Content,
                     opt => opt.MapFrom(src => src.Content))
                 .ForMember(dest => dest.CreatedAt,
-                    opt => opt.MapFrom(src => src.CreatedAt)); ; 
+                    opt => opt.MapFrom(src => src.CreatedAt));
+
+
+            // Get Likes
+            CreateMap<Like, LikeResultDTO>()
+                .ForMember(dest => dest.UserId,
+                    opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.FirstName,
+                    opt => opt.MapFrom(src => src.User.FirstName))
+                .ForMember(dest => dest.LastName,
+                    opt => opt.MapFrom(src => src.User.LastName));
 
         }
     }
