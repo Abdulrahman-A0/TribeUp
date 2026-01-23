@@ -19,6 +19,18 @@ namespace Service.Specifications
         public Expression<Func<TEntity, bool>>? Criteria { get; private set; }
         #endregion
 
+        #region Pagination
+        public int Take { get; private set; }
+        public int Skip { get; private set; }
+        public bool IsPaginated { get; private set; }
+
+        protected void ApplyPagination(int pageSize, int pageIndex)
+        {
+            IsPaginated = true;
+            Take = pageSize;
+            Skip = (pageIndex - 1) * pageSize;
+        }
+        #endregion
 
         #region Include
         public List<Expression<Func<TEntity, object>>> IncludeExpressions { get; } = new();
@@ -40,6 +52,8 @@ namespace Service.Specifications
             thenIncludeExpressions.Add(thenInclude);
         }
         #endregion
+
+
 
     }
 }

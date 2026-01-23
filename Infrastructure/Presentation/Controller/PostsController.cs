@@ -16,9 +16,9 @@ namespace Presentation.Controller
             => Ok(await service.PostService.CreatePostAsync(dto, UserId));
 
 
-        //[HttpGet("Feed")]
-        //public async Task<ActionResult<PagedResult<PostFeedDTO>>> GetFeed(int page = 1, int pageSize = 20)
-        //    =>Ok(await service.PostService.GetFeedAsync(UserId, page, pageSize));
+        [HttpGet("Feed")]
+        public async Task<ActionResult<PagedResult<PostFeedDTO>>> GetFeed(int page = 1, int pageSize = 20)
+            => Ok(await service.PostService.GetFeedAsync(UserId, page, pageSize));
 
 
         //[HttpGet("{groupId}/GroupFeed")]

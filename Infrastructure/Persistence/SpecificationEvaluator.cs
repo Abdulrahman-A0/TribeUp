@@ -1,6 +1,9 @@
 ﻿using Domain.Contracts;
 using Domain.Entities;
+using Domain.Entities.Posts;
 using Microsoft.EntityFrameworkCore;
+using Service.Specifications.PostSpecifications;
+using Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +19,7 @@ namespace Persistence
         {
             if(specifications.Criteria is not null)
                 inputQuery = inputQuery.Where(specifications.Criteria);
-
+         
 
             if (specifications.IncludeExpressions is not null && specifications.IncludeExpressions.Count > 0)
                 inputQuery = specifications.IncludeExpressions.Aggregate(inputQuery,
@@ -29,6 +32,13 @@ namespace Persistence
                 {
                     inputQuery = thenInclude(inputQuery);
                 }
+            }
+
+            if (specifications.IsPaginated)
+            {
+                inputQuery = inputQuery
+                    .Skip(specifications.Skip)
+                    .Take(specifications.Take);
             }
 
             return inputQuery;

@@ -1,42 +1,38 @@
 ﻿using Domain.Entities.Posts;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Shared.Enums;
 
 namespace Service.Specifications.PostSpecifications
 {
     public class PostFeedSpecification : BaseSpecifications<Post, int>
     {
-        public PostFeedSpecification(string userId)
+        public string CurrentUserId { get; }
+
+        public PostFeedSpecification(string currentUserId, int page, int pageSize)
             : base(p =>
                 (
-                    //p.AI_Moderation.Status != ContentStatus.Denied ||
-                    p.UserId == userId
-                ) &&
-                
-                (
                     p.Group.Accessibility == AccessibilityType.Public ||
-                    p.Group.GroupMembers.Any(m => m.UserId == userId) ||
-                    //p.Group.GroupFollowers.Any(f => f.UserId == userId) ||
-                    p.UserId == userId
-                ) &&
-                
+                    p.Group.GroupMembers.Any(m => m.UserId == currentUserId) ||
+                    p.UserId == currentUserId
+                )
+                &&
                 (
                     p.Accessibility == AccessibilityType.Public ||
-                    p.Group.GroupMembers.Any(m => m.UserId == userId) ||
-                    //p.Group.GroupFollowers.Any(f => f.UserId == userId) ||
-                    p.UserId == userId
+                    p.Group.GroupMembers.Any(m => m.UserId == currentUserId) ||
+                    p.UserId == currentUserId
                 )
-            )   
+            )
         {
-            AddIncludes(p => p.User);
+            CurrentUserId = currentUserId;
 
+            AddIncludes(p => p.User);
             AddIncludes(p => p.Group);
             AddIncludes(p => p.Group.GroupMembers);
-            //AddIncludes(p => p.Group.GroupFollowers);
-
             AddIncludes(p => p.Likes);
             AddIncludes(p => p.Comments);
             AddIncludes(p => p.MediaItems);
-            //AddIncludes(p => p.AI_Moderation);
+
+            ApplyPagination(pageSize, page);
         }
     }
 }

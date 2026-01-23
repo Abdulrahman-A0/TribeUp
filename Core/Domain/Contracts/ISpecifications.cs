@@ -13,6 +13,9 @@ namespace Domain.Contracts
         public Expression<Func<TEntity, bool>>? Criteria { get; }
         public List<Expression<Func<TEntity, object>>> IncludeExpressions { get; }
         public List<Func<IQueryable<TEntity>, IQueryable<TEntity>>> ThenIncludeExpressions { get; }
+        int Take { get; }
+        int Skip { get; }
+        bool IsPaginated { get; }
 
     }
 }

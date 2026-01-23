@@ -77,7 +77,7 @@ namespace Service.Implementations
 
         public async Task<PagedResult<PostFeedDTO>> GetFeedAsync(string userId, int page, int pageSize)
         {
-            var spec = new PostFeedSpecification(userId);
+            var spec = new PostFeedSpecification(userId, page, pageSize);
 
             var posts = await _unitOfWork
                 .GetRepository<Post, int>()
@@ -85,40 +85,31 @@ namespace Service.Implementations
 
             var scored = posts.Select(post =>
             {
-                // Group relation
-                GroupRelationType relation =
-                    post.Group.GroupMembers.Any(m => m.UserId == userId)
-                        ? GroupRelationType.Member
-                        : post.Group.GroupFollowers.Any(f => f.UserId == userId)
-                            ? GroupRelationType.Follower
-                            : GroupRelationType.None;
+                var member = post.Group.GroupMembers
+                    .FirstOrDefault(m => m.UserId == userId);
 
-                // Group priority
-                int groupPriority = relation switch
+                int groupPriority = member?.Role switch
                 {
-                    GroupRelationType.Member => 50,
-                    GroupRelationType.Follower => 25,
-                    _ => 5
+                    RoleType.Admin => 60,
+                    RoleType.Member => 40,
+                    RoleType.Follower => 20,
+                    _ => 5 
                 };
 
-                // Engagement
                 int engagementScore =
                     (post.Likes.Count * 2) +
                     (post.Comments.Count * 3);
 
-                // Time decay
                 double ageHours =
                     (DateTime.UtcNow - post.CreatedAt).TotalHours;
 
                 double timePenalty = ageHours * 0.2;
 
-                // Liked penalty
                 bool likedByUser =
                     post.Likes.Any(l => l.UserId == userId);
 
                 int likedPenalty = likedByUser ? 15 : 0;
 
-                // Final score
                 double feedScore =
                     groupPriority +
                     engagementScore -
@@ -128,7 +119,6 @@ namespace Service.Implementations
                 return new
                 {
                     Post = post,
-                    Relation = relation,
                     FeedScore = feedScore,
                     IsLikedByUser = likedByUser
                 };
@@ -139,33 +129,19 @@ namespace Service.Implementations
                 .ThenByDescending(x => x.Post.CreatedAt)
                 .ToList();
 
-            int totalCount = ordered.Count;
-
-            var paged = ordered
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
-
-            var hasMore = paged.Count > pageSize;
-
-            var result = paged.Select(x =>
-            {
-                var dto = _mapper.Map<PostFeedDTO>(x.Post);
-                dto.IsLikedByCurrentUser = x.IsLikedByUser;
-                dto.GroupRelation = x.Relation;
-                dto.FeedScore = x.FeedScore;
-                return dto;
-            }).ToList();
-
             return new PagedResult<PostFeedDTO>
             {
-                Items = result,
+                Items = ordered.Select(x =>
+                {
+                    var dto = _mapper.Map<PostFeedDTO>(x.Post);
+                    dto.IsLikedByCurrentUser = x.IsLikedByUser;
+                    dto.FeedScore = x.FeedScore;
+                    return dto;
+                }).ToList(),
                 Page = page,
                 PageSize = pageSize,
-                TotalCount = totalCount,
-                HasMore = hasMore
+                HasMore = ordered.Count == pageSize
             };
-
         }
 
         //public async Task<PagedResult<PostFeedDTO>> GetGroupFeedAsync(string userId, int groupId, int page, int pageSize)
