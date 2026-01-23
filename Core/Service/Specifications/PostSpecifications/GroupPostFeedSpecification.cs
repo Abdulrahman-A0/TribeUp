@@ -10,21 +10,21 @@ namespace Service.Specifications.PostSpecifications
                     p.GroupId == groupId &&
 
                 (
-                    p.AI_Moderation.Status != ContentStatus.Denied ||
+                    //p.AI_Moderation.Status != ContentStatus.Denied ||
                     p.UserId == userId
                 ) &&
 
                 (
                     p.Group.Accessibility == AccessibilityType.Public ||
                     p.Group.GroupMembers.Any(m => m.UserId == userId) ||
-                    p.Group.GroupFollowers.Any(f => f.UserId == userId) ||
+                    //p.Group.GroupFollowers.Any(f => f.UserId == userId) ||
                     p.UserId == userId
                 ) &&
 
                 (
                     p.Accessibility == AccessibilityType.Public ||
                     p.Group.GroupMembers.Any(m => m.UserId == userId) ||
-                    p.Group.GroupFollowers.Any(f => f.UserId == userId) ||
+                    //p.Group.GroupFollowers.Any(f => f.UserId == userId) ||
                     p.UserId == userId
                 )
             )
@@ -33,12 +33,12 @@ namespace Service.Specifications.PostSpecifications
 
             AddIncludes(p => p.Group);
             AddIncludes(p => p.Group.GroupMembers);
-            AddIncludes(p => p.Group.GroupFollowers);
+            //AddIncludes(p => p.Group.GroupFollowers);
 
             AddIncludes(p => p.Likes);
             AddIncludes(p => p.Comments);
             AddIncludes(p => p.MediaItems);
-            AddIncludes(p => p.AI_Moderation);
+            //AddIncludes(p => p.AI_Moderation);
         }
     }
 }

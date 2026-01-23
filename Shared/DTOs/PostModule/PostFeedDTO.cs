@@ -22,8 +22,6 @@ namespace Shared.DTOs.Posts
 
         public bool IsLikedByCurrentUser { get; set; }
 
-        public GroupRelationType GroupRelation { get; set; }
-
         public double FeedScore { get; set; }
 
         public DateTime CreatedAt { get; set; }

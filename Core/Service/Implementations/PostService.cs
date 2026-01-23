@@ -15,20 +15,20 @@ namespace Service.Implementations
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-        private readonly IContentModerationService _contentModerationService;
+        private readonly IAIModerationManager _aiModerationManager;
 
 
-        public PostService(IUnitOfWork unitOfWork, IMapper mapper, IContentModerationService contentModerationService)
+        public PostService(IUnitOfWork unitOfWork, IMapper mapper, IAIModerationManager aiModerationManager)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
-            _contentModerationService = contentModerationService;
+            _aiModerationManager = aiModerationManager;
         }
 
         public async Task<CreatePostResultDTO> CreatePostAsync(CreatePostDTO dto, string userId)
         {
             var post = _mapper.Map<Post>(dto);
-            post.CreatedAt = DateTime.UtcNow; 
+            post.CreatedAt = DateTime.UtcNow;
             post.UserId = userId;
 
             if (string.IsNullOrWhiteSpace(post.Caption) && !post.MediaItems.Any())
@@ -47,28 +47,15 @@ namespace Service.Implementations
 
             await _unitOfWork.SaveChangesAsync(); // PostId generated here
 
-            // AI moderation
-            var moderationResult =
-                await _contentModerationService.AnalyzeAsync(dto.Caption ?? string.Empty);
+            # region AI moderation result
 
-            // If denied ,then save ONLY in AI_Moderation table
+            var moderationResult = await _aiModerationManager.ModerateAsync(
+                post.Caption ?? string.Empty,
+                ModeratedEntityType.Post,
+                post.Id);
+
             if (!moderationResult.IsAccepted)
             {
-                var aiModeration = new AIModeration
-                {
-                    PostId = post.Id,
-                    DetectedIssue = moderationResult.DetectedIssue,
-                    ConfidenceScore = moderationResult.ConfidenceScore,
-                    Status = ContentStatus.Denied,
-                    ReviewedAt = DateTime.UtcNow
-                };
-
-                await _unitOfWork
-                    .GetRepository<AIModeration, int>()
-                    .AddAsync(aiModeration);
-
-                await _unitOfWork.SaveChangesAsync();
-
                 return new CreatePostResultDTO
                 {
                     IsCreated = false,
@@ -76,6 +63,8 @@ namespace Service.Implementations
                     Message = "Post violates community guidelines."
                 };
             }
+
+            #endregion
 
             return new CreatePostResultDTO
             {
@@ -178,208 +167,208 @@ namespace Service.Implementations
             };
 
         }
-        
-        public async Task<PagedResult<PostFeedDTO>> GetGroupFeedAsync(string userId, int groupId, int page, int pageSize)
-        {
-            var spec = new GroupPostFeedSpecification(userId,groupId);
 
-            var posts = await _unitOfWork
-                .GetRepository<Post, int>()
-                .GetAllAsync(spec);
+        //public async Task<PagedResult<PostFeedDTO>> GetGroupFeedAsync(string userId, int groupId, int page, int pageSize)
+        //{
+        //    var spec = new GroupPostFeedSpecification(userId, groupId);
 
-            var scored = posts.Select(post =>
-            {
-                GroupRelationType relation =
-                    post.Group.GroupMembers.Any(m => m.UserId == userId)
-                        ? GroupRelationType.Member
-                        : post.Group.GroupFollowers.Any(f => f.UserId == userId)
-                            ? GroupRelationType.Follower
-                            : GroupRelationType.None;
+        //    var posts = await _unitOfWork
+        //        .GetRepository<Post, int>()
+        //        .GetAllAsync(spec);
 
-                int groupPriority = relation switch
-                {
-                    GroupRelationType.Member => 50,
-                    GroupRelationType.Follower => 25,
-                    _ => 5
-                };
+        //    var scored = posts.Select(post =>
+        //    {
+        //        GroupRelationType relation =
+        //            post.Group.GroupMembers.Any(m => m.UserId == userId)
+        //                ? GroupRelationType.Member
+        //                : post.Group.GroupFollowers.Any(f => f.UserId == userId)
+        //                    ? GroupRelationType.Follower
+        //                    : GroupRelationType.None;
 
-                int engagementScore =
-                    (post.Likes.Count * 2) +
-                    (post.Comments.Count * 3);
+        //        int groupPriority = relation switch
+        //        {
+        //            GroupRelationType.Member => 50,
+        //            GroupRelationType.Follower => 25,
+        //            _ => 5
+        //        };
 
-                double ageHours =
-                    (DateTime.UtcNow - post.CreatedAt).TotalHours;
+        //        int engagementScore =
+        //            (post.Likes.Count * 2) +
+        //            (post.Comments.Count * 3);
 
-                double timePenalty = ageHours * 0.2;
+        //        double ageHours =
+        //            (DateTime.UtcNow - post.CreatedAt).TotalHours;
 
-                bool likedByUser =
-                    post.Likes.Any(l => l.UserId == userId);
+        //        double timePenalty = ageHours * 0.2;
 
-                int likedPenalty = likedByUser ? 15 : 0;
+        //        bool likedByUser =
+        //            post.Likes.Any(l => l.UserId == userId);
 
-                double feedScore =
-                    groupPriority +
-                    engagementScore -
-                    timePenalty -
-                    likedPenalty;
+        //        int likedPenalty = likedByUser ? 15 : 0;
 
-                return new
-                {
-                    Post = post,
-                    Relation = relation,
-                    FeedScore = feedScore,
-                    IsLikedByUser = likedByUser
-                };
-            });
+        //        double feedScore =
+        //            groupPriority +
+        //            engagementScore -
+        //            timePenalty -
+        //            likedPenalty;
 
-            var ordered = scored
-                .OrderByDescending(x => x.FeedScore)
-                .ThenByDescending(x => x.Post.CreatedAt)
-                .ToList();
+        //        return new
+        //        {
+        //            Post = post,
+        //            Relation = relation,
+        //            FeedScore = feedScore,
+        //            IsLikedByUser = likedByUser
+        //        };
+        //    });
 
-            int totalCount = ordered.Count;
+        //    var ordered = scored
+        //        .OrderByDescending(x => x.FeedScore)
+        //        .ThenByDescending(x => x.Post.CreatedAt)
+        //        .ToList();
 
-            var paged = ordered
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize + 1)
-                .ToList();
+        //    int totalCount = ordered.Count;
 
-            var hasMore = paged.Count > pageSize;
+        //    var paged = ordered
+        //        .Skip((page - 1) * pageSize)
+        //        .Take(pageSize + 1)
+        //        .ToList();
 
-            var finalPage = paged.Take(pageSize).ToList();
+        //    var hasMore = paged.Count > pageSize;
 
-            var result = finalPage.Select(x =>
-            {
-                var dto = _mapper.Map<PostFeedDTO>(x.Post);
-                dto.IsLikedByCurrentUser = x.IsLikedByUser;
-                dto.GroupRelation = x.Relation;
-                dto.FeedScore = x.FeedScore;
-                return dto;
-            }).ToList();
+        //    var finalPage = paged.Take(pageSize).ToList();
 
-            return new PagedResult<PostFeedDTO>
-            {
-                Items = result,
-                Page = page,
-                PageSize = pageSize,
-                TotalCount = totalCount,
-                HasMore = hasMore
-            };
+        //    var result = finalPage.Select(x =>
+        //    {
+        //        var dto = _mapper.Map<PostFeedDTO>(x.Post);
+        //        dto.IsLikedByCurrentUser = x.IsLikedByUser;
+        //        dto.GroupRelation = x.Relation;
+        //        dto.FeedScore = x.FeedScore;
+        //        return dto;
+        //    }).ToList();
 
-        }
-        public async Task<bool> LikePostAsync(int postId, string userId)
-        {
-            var likeRepo = _unitOfWork.GetRepository<Like, int>();
+        //    return new PagedResult<PostFeedDTO>
+        //    {
+        //        Items = result,
+        //        Page = page,
+        //        PageSize = pageSize,
+        //        TotalCount = totalCount,
+        //        HasMore = hasMore
+        //    };
 
-            var spec = new LikeByPostAndUserSpecification(postId, userId);
+        //}
+        //public async Task<bool> LikePostAsync(int postId, string userId)
+        //{
+        //    var likeRepo = _unitOfWork.GetRepository<Like, int>();
 
-            var existingLike = await likeRepo.GetByIdAsync(spec);
+        //    var spec = new LikeByPostAndUserSpecification(postId, userId);
 
-            if (existingLike is null)
-            {
-                // like
-                var like = new Like
-                {
-                    PostId = postId,
-                    UserId = userId
-                };
+        //    var existingLike = await likeRepo.GetByIdAsync(spec);
 
-                await likeRepo.AddAsync(like);
-                await _unitOfWork.SaveChangesAsync();
+        //    if (existingLike is null)
+        //    {
+        //        // like
+        //        var like = new Like
+        //        {
+        //            PostId = postId,
+        //            UserId = userId
+        //        };
 
-                return true;
-            }
+        //        await likeRepo.AddAsync(like);
+        //        await _unitOfWork.SaveChangesAsync();
 
-            // unlike
-            likeRepo.Delete(existingLike);
-            await _unitOfWork.SaveChangesAsync();
+        //        return true;
+        //    }
 
-            return false;
-        }
+        //    // unlike
+        //    likeRepo.Delete(existingLike);
+        //    await _unitOfWork.SaveChangesAsync();
 
-        public async Task<PagedResult<LikeResultDTO>> GetLikesByPostIdAsync(int postId, int page, int pageSize)
-        {
-            var spec = new LikesByPostIdSpecification(postId);
+        //    return false;
+        //}
 
-            var likes = await _unitOfWork
-                .GetRepository<Like, int>()
-                .GetAllAsync(spec);
+        //public async Task<PagedResult<LikeResultDTO>> GetLikesByPostIdAsync(int postId, int page, int pageSize)
+        //{
+        //    var spec = new LikesByPostIdSpecification(postId);
 
-            var totalCount = likes.Count();
-            
-            var pagedLikes = likes
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize + 1)
-                .ToList();
+        //    var likes = await _unitOfWork
+        //        .GetRepository<Like, int>()
+        //        .GetAllAsync(spec);
 
-            var hasMore = pagedLikes.Count > pageSize;
+        //    var totalCount = likes.Count();
 
-            var finalLikes = pagedLikes
-                .Take(pageSize)
-                .ToList();
+        //    var pagedLikes = likes
+        //        .Skip((page - 1) * pageSize)
+        //        .Take(pageSize + 1)
+        //        .ToList();
 
-            var mapped = _mapper.Map<List<LikeResultDTO>>(finalLikes);
+        //    var hasMore = pagedLikes.Count > pageSize;
 
-            return new PagedResult<LikeResultDTO>
-            {
-                Items = mapped,
-                Page = page,
-                PageSize = pageSize,
-                TotalCount = totalCount,
-                HasMore = hasMore
-            };
+        //    var finalLikes = pagedLikes
+        //        .Take(pageSize)
+        //        .ToList();
 
-        }
-        public async Task<int> AddCommentAsync(int postId, CreateCommentDTO dto, string userId)
-        {
-            var comment = new Comment
-            {
-                PostId = postId,
-                UserId = userId,
-                Content = dto.Content
-            };
+        //    var mapped = _mapper.Map<List<LikeResultDTO>>(finalLikes);
 
-            await _unitOfWork
-                .GetRepository<Comment, int>()
-                .AddAsync(comment);
+        //    return new PagedResult<LikeResultDTO>
+        //    {
+        //        Items = mapped,
+        //        Page = page,
+        //        PageSize = pageSize,
+        //        TotalCount = totalCount,
+        //        HasMore = hasMore
+        //    };
 
-            return(await _unitOfWork.SaveChangesAsync());
+        //}
+        //public async Task<int> AddCommentAsync(int postId, CreateCommentDTO dto, string userId)
+        //{
+        //    var comment = new Comment
+        //    {
+        //        PostId = postId,
+        //        UserId = userId,
+        //        Content = dto.Content
+        //    };
 
-        }
+        //    await _unitOfWork
+        //        .GetRepository<Comment, int>()
+        //        .AddAsync(comment);
 
-        public async Task<PagedResult<CommentResultDTO>> GetCommentsByPostIdAsync(int postId, int page, int pageSize)
-        {
-            var spec = new CommentsByPostIdSpecification(postId);
+        //    return (await _unitOfWork.SaveChangesAsync());
 
-            var comments = await _unitOfWork
-                .GetRepository<Comment, int>()
-                .GetAllAsync(spec);
+        //}
 
-            var totalCount = comments.Count();
+        //public async Task<PagedResult<CommentResultDTO>> GetCommentsByPostIdAsync(int postId, int page, int pageSize)
+        //{
+        //    var spec = new CommentsByPostIdSpecification(postId);
 
-            var pagedComments = comments
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize + 1) 
-                .ToList();
+        //    var comments = await _unitOfWork
+        //        .GetRepository<Comment, int>()
+        //        .GetAllAsync(spec);
 
-            var hasMore = pagedComments.Count > pageSize;
+        //    var totalCount = comments.Count();
 
-            var finalComments = pagedComments
-                .Take(pageSize)
-                .ToList();
+        //    var pagedComments = comments
+        //        .Skip((page - 1) * pageSize)
+        //        .Take(pageSize + 1)
+        //        .ToList();
 
-            var mapped = _mapper.Map<List<CommentResultDTO>>(finalComments);
+        //    var hasMore = pagedComments.Count > pageSize;
 
-            return new PagedResult<CommentResultDTO>
-            {
-                Items = mapped,
-                Page = page,
-                PageSize = pageSize,
-                TotalCount = totalCount,
-                HasMore = hasMore
-            };
+        //    var finalComments = pagedComments
+        //        .Take(pageSize)
+        //        .ToList();
 
-        }
+        //    var mapped = _mapper.Map<List<CommentResultDTO>>(finalComments);
+
+        //    return new PagedResult<CommentResultDTO>
+        //    {
+        //        Items = mapped,
+        //        Page = page,
+        //        PageSize = pageSize,
+        //        TotalCount = totalCount,
+        //        HasMore = hasMore
+        //    };
+
+        //}
 
     }
 }
