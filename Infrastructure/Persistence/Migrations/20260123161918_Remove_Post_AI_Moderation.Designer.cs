@@ -9,11 +9,11 @@ using Persistence.Data.Contexts;
 
 #nullable disable
 
-namespace Persistence.Data.Migrations
+namespace Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251205213942_ModifiedApplicationUserEntity")]
-    partial class ModifiedApplicationUserEntity
+    [Migration("20260123161918_Remove_Post_AI_Moderation")]
+    partial class Remove_Post_AI_Moderation
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -228,33 +228,6 @@ namespace Persistence.Data.Migrations
                     b.ToTable("Groups");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Groups.GroupFollower", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("FollowedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("GroupId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GroupId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("GroupFollower");
-                });
-
             modelBuilder.Entity("Domain.Entities.Groups.GroupJoinRequest", b =>
                 {
                     b.Property<int>("Id")
@@ -452,7 +425,10 @@ namespace Persistence.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PostId")
+                    b.Property<int>("EntityId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EntityType")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("ReviewedAt")
@@ -462,9 +438,6 @@ namespace Persistence.Data.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("PostId")
-                        .IsUnique();
 
                     b.ToTable("AIModerations");
                 });
@@ -544,9 +517,15 @@ namespace Persistence.Data.Migrations
                     b.Property<int>("GroupId")
                         .HasColumnType("int");
 
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("GroupId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Posts");
                 });
@@ -649,8 +628,14 @@ namespace Persistence.Data.Migrations
                     b.Property<string>("Avatar")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Bio")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CoverPicture")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -781,6 +766,40 @@ namespace Persistence.Data.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Recommendations");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Users.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DeviceId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRevoked")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -990,25 +1009,6 @@ namespace Persistence.Data.Migrations
                     b.Navigation("Group");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Groups.GroupFollower", b =>
-                {
-                    b.HasOne("Domain.Entities.Groups.Group", "Group")
-                        .WithMany("GroupFollowers")
-                        .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Domain.Entities.Users.ApplicationUser", "User")
-                        .WithMany("GroupFollowers")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Group");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Domain.Entities.Groups.GroupJoinRequest", b =>
                 {
                     b.HasOne("Domain.Entities.Groups.Group", "Group")
@@ -1095,17 +1095,6 @@ namespace Persistence.Data.Migrations
                     b.Navigation("Post");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Posts.AIModeration", b =>
-                {
-                    b.HasOne("Domain.Entities.Posts.Post", "Post")
-                        .WithOne("AI_Moderation")
-                        .HasForeignKey("Domain.Entities.Posts.AIModeration", "PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Post");
-                });
-
             modelBuilder.Entity("Domain.Entities.Posts.Comment", b =>
                 {
                     b.HasOne("Domain.Entities.Posts.Post", "Post")
@@ -1152,7 +1141,15 @@ namespace Persistence.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Domain.Entities.Users.ApplicationUser", "User")
+                        .WithMany("Posts")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Group");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Domain.Entities.Posts.Tag", b =>
@@ -1234,6 +1231,17 @@ namespace Persistence.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Users.RefreshToken", b =>
+                {
+                    b.HasOne("Domain.Entities.Users.ApplicationUser", "User")
+                        .WithMany("RefreshTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -1305,8 +1313,6 @@ namespace Persistence.Data.Migrations
 
                     b.Navigation("Events");
 
-                    b.Navigation("GroupFollowers");
-
                     b.Navigation("GroupJoinRequests");
 
                     b.Navigation("GroupMembers");
@@ -1330,9 +1336,6 @@ namespace Persistence.Data.Migrations
 
             modelBuilder.Entity("Domain.Entities.Posts.Post", b =>
                 {
-                    b.Navigation("AI_Moderation")
-                        .IsRequired();
-
                     b.Navigation("Comments");
 
                     b.Navigation("Likes");
@@ -1351,8 +1354,6 @@ namespace Persistence.Data.Migrations
                 {
                     b.Navigation("Comments");
 
-                    b.Navigation("GroupFollowers");
-
                     b.Navigation("GroupJoinRequests");
 
                     b.Navigation("GroupMembers");
@@ -1363,7 +1364,11 @@ namespace Persistence.Data.Migrations
 
                     b.Navigation("PollVotes");
 
+                    b.Navigation("Posts");
+
                     b.Navigation("Recommendations");
+
+                    b.Navigation("RefreshTokens");
 
                     b.Navigation("StoryViews");
 

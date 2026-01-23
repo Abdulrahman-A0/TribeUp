@@ -34,7 +34,6 @@ namespace Domain.Entities.Groups
         public virtual ICollection<ActivityLog> ActivityLogs { get; set; }
         public virtual ICollection<Story> Stories { get; set; }
         public virtual ICollection<GroupJoinRequest> GroupJoinRequests { get; set; }
-        public virtual ICollection<GroupFollower> GroupFollowers { get; set; }
 
         #endregion
     }

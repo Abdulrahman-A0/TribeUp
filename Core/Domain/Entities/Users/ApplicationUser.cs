@@ -12,6 +12,8 @@ namespace Domain.Entities.Users
         public string LastName { get; set; }
         public string? ProfilePicture { get; set; }
         public string? Avatar { get; set; }
+        public string? CoverPicture { get; set; }
+        public string? Bio { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public bool IsDeleted { get; set; } = false;
 
@@ -26,7 +28,6 @@ namespace Domain.Entities.Users
         public ICollection<Recommendation> Recommendations { get; set; }
         public ICollection<StoryView> StoryViews { get; set; }
         public ICollection<GroupJoinRequest> GroupJoinRequests { get; set; }
-        public ICollection<GroupFollower> GroupFollowers { get; set; }
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
         #endregion
     }

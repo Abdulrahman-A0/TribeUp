@@ -11,16 +11,14 @@ namespace Domain.Entities.Posts
 {
     public class AIModeration : BaseEntity<int>
     {
+        public ModeratedEntityType EntityType { get; set; }
+        public int EntityId { get; set; }
+
         public string DetectedIssue { get; set; } = string.Empty;
         public double? ConfidenceScore { get; set; }
         public ContentStatus Status { get; set; } = ContentStatus.Accepted;
-        public DateTime ReviewedAt { get; set; } = DateTime.Now;
+        public DateTime ReviewedAt { get; set; } = DateTime.UtcNow;
+ 
 
-
-        // Navigation properties
-        [ForeignKey("PostId")]
-        public virtual Post Post { get; set; }
-        [Required]
-        public int PostId { get; set; }
     }
 }

@@ -30,7 +30,7 @@ namespace Domain.Entities.Posts
         #endregion
         public string? Caption { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public AccessibilityType Accessibility { get; set; } = AccessibilityType.Public;
 
@@ -45,7 +45,7 @@ namespace Domain.Entities.Posts
         public string UserId { get; set; }   
         public virtual ApplicationUser User { get; set; }
 
-        public virtual AIModeration AI_Moderation { get; set; } = null!;
+        //public virtual AIModeration AI_Moderation { get; set; } = null!;
         public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
         public virtual ICollection<Like> Likes { get; set; } = new List<Like>();
         public virtual ICollection<Tag> Tags { get; set; } = new List<Tag>();

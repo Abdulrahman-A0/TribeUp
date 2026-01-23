@@ -10,6 +10,6 @@ namespace Shared.Enums
     {
         Member = 0,
         Admin = 1,
-        Moderator = 2
+        Follower = 2
     }
 }

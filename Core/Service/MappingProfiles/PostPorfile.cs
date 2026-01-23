@@ -35,8 +35,6 @@ namespace Service.MappingProfiles
                      opt => opt.MapFrom(src => src.MediaItems))
                  .ForMember(dest => dest.IsLikedByCurrentUser,
                      opt => opt.Ignore())
-                 .ForMember(dest => dest.GroupRelation,
-                     opt => opt.Ignore())
                  .ForMember(dest => dest.FeedScore,
                      opt => opt.Ignore());
 
