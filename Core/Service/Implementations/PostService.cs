@@ -263,7 +263,7 @@ namespace Service.Implementations
 
         public async Task<PagedResult<LikeResultDTO>> GetLikesByPostIdAsync(int postId, int page, int pageSize)
         {
-            var spec = new LikesByPostIdSpecification(postId, page , pageSize);
+            var spec = new LikesByPostIdSpecification(postId, page, pageSize);
 
             var likes = await _unitOfWork
                 .GetRepository<Like, int>()
@@ -283,6 +283,7 @@ namespace Service.Implementations
             };
 
         }
+        
         //public async Task<int> AddCommentAsync(int postId, CreateCommentDTO dto, string userId)
         //{
         //    var comment = new Comment

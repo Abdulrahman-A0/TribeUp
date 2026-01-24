@@ -13,12 +13,12 @@ namespace Service.Implementations
         public async Task<string> SaveAsync(IFormFile file)
         {
             var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-            var path = Path.Combine("wwwroot/uploads", fileName);
+            var path = Path.Combine("wwwroot/images/PostUploads", fileName);
 
             using var stream = new FileStream(path, FileMode.Create);
             await file.CopyToAsync(stream);
 
-            return $"/uploads/{fileName}";
+            return $"images/PostUploads/{fileName}";
         }
     }
 }

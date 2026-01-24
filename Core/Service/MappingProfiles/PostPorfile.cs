@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Domain.Entities.Media;
 using Domain.Entities.Posts;
+using Service.MappingProfiles.MediaResolvers;
 using Shared.DTOs.PostModule;
 using Shared.DTOs.Posts;
 
@@ -36,17 +37,15 @@ namespace Service.MappingProfiles
                  .ForMember(dest => dest.FeedScore,
                      opt => opt.Ignore());
 
-            // More Thna One Media in the Post Feed
-
-            CreateMap<MediaItem, MediaItemFeedDTO>();
-
             // Create Post
 
             CreateMap<CreatePostDTO, Post>()
                   .ForMember(dest => dest.UserId,
                       opt => opt.Ignore());
 
-            CreateMap<CreateMediaItemDTO, MediaItem>();
+            CreateMap<MediaItem, MediaItemFeedDTO>()
+                .ForMember(dest => dest.MediaURL,
+                    opt => opt.MapFrom<PostMediaResolver>());
 
 
             // Create Comment
