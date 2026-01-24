@@ -9,10 +9,12 @@ namespace Service.Specifications.PostSpecifications
 {
     public class LikesByPostIdSpecification : BaseSpecifications<Like ,int>
     {
-        public LikesByPostIdSpecification(int postId)
+        public LikesByPostIdSpecification(int postId, int page, int pageSize)
             :base(l => l.PostId == postId)
         {
             AddIncludes(l => l.User);
+
+            ApplyPagination(page, pageSize);
         }
     }
 }

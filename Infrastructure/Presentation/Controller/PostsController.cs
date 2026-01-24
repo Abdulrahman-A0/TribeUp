@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using ServiceAbstraction.Contracts;
@@ -12,8 +13,10 @@ namespace Presentation.Controller
     public class PostsController(IServiceManager service) : ApiController
     {
         [HttpPost("CreatePost")]
-        public async Task<ActionResult<CreatePostResultDTO>> CreatePost(CreatePostDTO dto)
-            => Ok(await service.PostService.CreatePostAsync(dto, UserId));
+        public async Task<ActionResult<CreatePostResultDTO>> CreatePost(
+            [FromForm] CreatePostDTO dto,
+            [FromForm] List<IFormFile> mediaFiles)
+            => Ok(await service.PostService.CreatePostAsync(dto, UserId, mediaFiles));
 
 
         [HttpGet("Feed")]
@@ -31,9 +34,9 @@ namespace Presentation.Controller
             => Ok(await service.PostService.LikePostAsync(postId, UserId));
 
 
-        //[HttpGet("{postId:int}/Likes")]
-        //public async Task<ActionResult<PagedResult<LikeResultDTO>>> GetLikes(int postId, int page = 1, int pageSize = 20)
-        //    => Ok(await service.PostService.GetLikesByPostIdAsync(postId, page, pageSize));
+        [HttpGet("{postId:int}/Likes")]
+        public async Task<ActionResult<PagedResult<LikeResultDTO>>> GetLikes(int postId, int page = 1, int pageSize = 20)
+            => Ok(await service.PostService.GetLikesByPostIdAsync(postId, page, pageSize));
 
 
         //[HttpPost("{postId:int}/AddComment")]

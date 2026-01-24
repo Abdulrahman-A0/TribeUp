@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using Domain.Contracts;
+using Domain.Entities.Media;
 using Domain.Entities.Posts;
+using Microsoft.AspNetCore.Http;
 using Service.Specifications;
 using Service.Specifications.PostSpecifications;
 using ServiceAbstraction.Contracts;
@@ -13,32 +15,47 @@ namespace Service.Implementations
 {
     public class PostService : IPostService
     {
-        private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IFileStorageService _fileStorage;
         private readonly IAIModerationManager _aiModerationManager;
 
 
-        public PostService(IUnitOfWork unitOfWork, IMapper mapper, IAIModerationManager aiModerationManager)
+        public PostService(IUnitOfWork unitOfWork, IMapper mapper, IAIModerationManager aiModerationManager, IFileStorageService fileStorage)
         {
-            _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _unitOfWork = unitOfWork;
+            _fileStorage = fileStorage;
             _aiModerationManager = aiModerationManager;
         }
 
-        public async Task<CreatePostResultDTO> CreatePostAsync(CreatePostDTO dto, string userId)
+        public async Task<CreatePostResultDTO> CreatePostAsync(CreatePostDTO dto, string userId, List<IFormFile> mediaFiles)
         {
             var post = _mapper.Map<Post>(dto);
             post.CreatedAt = DateTime.UtcNow;
             post.UserId = userId;
 
-            if (string.IsNullOrWhiteSpace(post.Caption) && !post.MediaItems.Any())
+            if (string.IsNullOrWhiteSpace(post.Caption) && !mediaFiles.Any())
             {
                 return new CreatePostResultDTO
                 {
                     IsCreated = false,
                     Status = ContentStatus.Denied,
-                    Message = "Post must contian text or media."
+                    Message = "Post must contain text or media."
                 };
+            }
+
+            foreach (var file in mediaFiles)
+            {
+                var savedPath = await _fileStorage.SaveAsync(file);
+
+                post.MediaItems.Add(new MediaItem
+                {
+                    MediaURL = savedPath,
+                    UploadedAt = DateTime.UtcNow,
+                    Type = file.ContentType.StartsWith("video") ? "Video" : "Image",
+                    Order = post.MediaItems.Count
+                });
             }
 
             await _unitOfWork
@@ -244,39 +261,28 @@ namespace Service.Implementations
             return false;
         }
 
-        //public async Task<PagedResult<LikeResultDTO>> GetLikesByPostIdAsync(int postId, int page, int pageSize)
-        //{
-        //    var spec = new LikesByPostIdSpecification(postId);
+        public async Task<PagedResult<LikeResultDTO>> GetLikesByPostIdAsync(int postId, int page, int pageSize)
+        {
+            var spec = new LikesByPostIdSpecification(postId, page , pageSize);
 
-        //    var likes = await _unitOfWork
-        //        .GetRepository<Like, int>()
-        //        .GetAllAsync(spec);
+            var likes = await _unitOfWork
+                .GetRepository<Like, int>()
+                .GetAllAsync(spec);
 
-        //    var totalCount = likes.Count();
+            var totalCount = likes.Count();
 
-        //    var pagedLikes = likes
-        //        .Skip((page - 1) * pageSize)
-        //        .Take(pageSize + 1)
-        //        .ToList();
+            var mapped = _mapper.Map<List<LikeResultDTO>>(likes);
 
-        //    var hasMore = pagedLikes.Count > pageSize;
+            return new PagedResult<LikeResultDTO>
+            {
+                Items = mapped,
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = totalCount,
+                HasMore = likes.Count() == pageSize
+            };
 
-        //    var finalLikes = pagedLikes
-        //        .Take(pageSize)
-        //        .ToList();
-
-        //    var mapped = _mapper.Map<List<LikeResultDTO>>(finalLikes);
-
-        //    return new PagedResult<LikeResultDTO>
-        //    {
-        //        Items = mapped,
-        //        Page = page,
-        //        PageSize = pageSize,
-        //        TotalCount = totalCount,
-        //        HasMore = hasMore
-        //    };
-
-        //}
+        }
         //public async Task<int> AddCommentAsync(int postId, CreateCommentDTO dto, string userId)
         //{
         //    var comment = new Comment

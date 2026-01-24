@@ -32,7 +32,7 @@ namespace Service.Specifications.PostSpecifications
             AddIncludes(p => p.Comments);
             AddIncludes(p => p.MediaItems);
 
-            ApplyPagination(pageSize, page);
+            ApplyPagination(page, pageSize);
         }
     }
 }

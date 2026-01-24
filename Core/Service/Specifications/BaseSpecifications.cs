@@ -24,7 +24,7 @@ namespace Service.Specifications
         public int Skip { get; private set; }
         public bool IsPaginated { get; private set; }
 
-        protected void ApplyPagination(int pageSize, int pageIndex)
+        protected void ApplyPagination(int pageIndex, int pageSize)
         {
             IsPaginated = true;
             Take = pageSize;
