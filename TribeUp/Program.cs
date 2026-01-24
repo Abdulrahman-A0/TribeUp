@@ -44,6 +44,7 @@ namespace TribeUp
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
+            app.MapHubs();
             app.Run();
             #endregion
         }

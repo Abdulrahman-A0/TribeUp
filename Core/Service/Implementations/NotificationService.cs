@@ -1,13 +1,15 @@
 ﻿using AutoMapper;
 using Domain.Contracts;
 using Domain.Entities.Users;
+using Microsoft.AspNetCore.SignalR;
 using Service.Specifications.NotificationSpecifications;
 using ServiceAbstraction.Contracts;
 using Shared.DTOs.NotificationModule;
 
 namespace Service.Implementations
 {
-    public class NotificationService(IUnitOfWork unitOfWork, IMapper mapper) : INotificationService
+    public class NotificationService(IUnitOfWork unitOfWork, IMapper mapper,
+        INotificationPublisher publisher) : INotificationService
     {
         public async Task<PagedNotificationsDTO> GetMyNotificationsAsync(string userId, int pageIndex, int pageSize)
         {
@@ -52,6 +54,10 @@ namespace Service.Implementations
                 .AddAsync(notification);
 
             await unitOfWork.SaveChangesAsync();
+
+            var responseDto = mapper.Map<NotificationResponseDTO>(notification);
+
+            await publisher.PublishAsync(dto.RecipientUserId, responseDto);
         }
     }
 }
