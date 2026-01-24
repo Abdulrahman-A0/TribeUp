@@ -10,5 +10,6 @@ namespace ServiceAbstraction.Contracts
         IGroupJoinRequestService GroupJoinRequestService { get; }
         IPostService PostService { get; }
         IProfileService ProfileService { get; }
+        INotificationService NotificationService { get; }
     }
 }
