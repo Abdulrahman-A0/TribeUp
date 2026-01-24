@@ -26,6 +26,8 @@ namespace TribeUp.Extensions
             services.AddScoped<IGroupService, GroupService>();
             services.AddScoped<IGroupMemberService, GroupMemberService>();
             services.AddScoped<IGroupJoinRequestService, GroupJoinRequestService>();
+            services.AddScoped<IGroupScoreService, GroupScoreService>();
+
             services.AddScoped<IPostService, PostService>();
             services.AddScoped<IAIModerationManager, AIModerationManager>();
             services.AddScoped<IFileStorageService, FileStorageService>();
@@ -43,6 +45,9 @@ namespace TribeUp.Extensions
 
             services.AddScoped<Func<IGroupJoinRequestService>>(provider =>
             () => provider.GetRequiredService<IGroupJoinRequestService>());
+
+            services.AddScoped<Func<IGroupScoreService>>(provider =>
+            () => provider.GetRequiredService<IGroupScoreService>());
 
 
             services.AddScoped<Func<IPostService>>(provider =>
