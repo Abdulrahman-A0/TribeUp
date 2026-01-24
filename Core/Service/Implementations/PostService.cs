@@ -214,35 +214,35 @@ namespace Service.Implementations
 
         }
 
-        //public async Task<bool> LikePostAsync(int postId, string userId)
-        //{
-        //    var likeRepo = _unitOfWork.GetRepository<Like, int>();
+        public async Task<bool> LikePostAsync(int postId, string userId)
+        {
+            var likeRepo = _unitOfWork.GetRepository<Like, int>();
 
-        //    var spec = new LikeByPostAndUserSpecification(postId, userId);
+            var spec = new LikeByPostAndUserSpecification(postId, userId);
 
-        //    var existingLike = await likeRepo.GetByIdAsync(spec);
+            var existingLike = await likeRepo.GetByIdAsync(spec);
 
-        //    if (existingLike is null)
-        //    {
-        //        // like
-        //        var like = new Like
-        //        {
-        //            PostId = postId,
-        //            UserId = userId
-        //        };
+            if (existingLike is null)
+            {
+                // like
+                var like = new Like
+                {
+                    PostId = postId,
+                    UserId = userId
+                };
 
-        //        await likeRepo.AddAsync(like);
-        //        await _unitOfWork.SaveChangesAsync();
+                await likeRepo.AddAsync(like);
+                await _unitOfWork.SaveChangesAsync();
 
-        //        return true;
-        //    }
+                return true;
+            }
 
-        //    // unlike
-        //    likeRepo.Delete(existingLike);
-        //    await _unitOfWork.SaveChangesAsync();
+            // unlike
+            likeRepo.Delete(existingLike);
+            await _unitOfWork.SaveChangesAsync();
 
-        //    return false;
-        //}
+            return false;
+        }
 
         //public async Task<PagedResult<LikeResultDTO>> GetLikesByPostIdAsync(int postId, int page, int pageSize)
         //{
