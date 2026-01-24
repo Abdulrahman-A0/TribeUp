@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using ServiceAbstraction.Contracts;
 using Shared.DTOs.GroupModule;
+using Shared.DTOs.Posts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,11 @@ namespace Presentation.Controller
             => Ok(await serviceManager.GroupService.GetAllGroupsAsync());
 
 
+        [HttpGet("MyGroups")]
+        public async Task<ActionResult<List<GroupResultDTO>>> GetMyGroupsAsync()
+            => Ok(await serviceManager.GroupService.GetMyGroupsAsync(UserId));
+
+
         [HttpGet("GetGroup/{Id:int}")]
         public async Task<ActionResult<GroupDetailsResultDTO>> GetGroupByIdAsync(int Id)
             => Ok(await serviceManager.GroupService.GetGroupByIdAsync(Id));
@@ -29,7 +35,7 @@ namespace Presentation.Controller
 
 
         [HttpPut("UpdateGroup/{Id:int}")]
-        public async Task<ActionResult<GroupResultDTO>> UpdateGroupAsync(int Id ,[FromBody] UpdateGroupDTO updateGroupDTO)
+        public async Task<ActionResult<GroupResultDTO>> UpdateGroupAsync(int Id, [FromBody] UpdateGroupDTO updateGroupDTO)
             => Ok(await serviceManager.GroupService.UpdateGroupAsync(Id, updateGroupDTO, UserId));
 
 
@@ -47,5 +53,15 @@ namespace Presentation.Controller
         [HttpDelete("DeleteGroupPicture/{Id:int}")]
         public async Task<ActionResult> DeleteGroupPictureAsync(int Id)
             => Ok(await serviceManager.GroupService.DeleteGroupPictureAsync(Id, UserId));
+
+
+        [HttpGet("ExploreGroups")]
+        public async Task<ActionResult<PagedResult<GroupResultDTO>>> ExploreGroupsAsync(int page = 1, int pageSize = 20)
+            => Ok(await serviceManager.GroupService.ExploreGroupsAsync(page, pageSize, UserId));
+
+
+        //[HttpGet("Feed")]
+        //public async Task<ActionResult<PagedResult<PostFeedDTO>>> GetFeed(int page = 1, int pageSize = 20)
+        //    => Ok(await service.PostService.GetFeedAsync(UserId, page, pageSize));
     }
 }

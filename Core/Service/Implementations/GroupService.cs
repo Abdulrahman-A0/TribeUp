@@ -12,6 +12,7 @@ using Service.Specifications.GroupSpecs;
 using ServiceAbstraction.Contracts;
 using Shared.DTOs.GroupMemberModule;
 using Shared.DTOs.GroupModule;
+using Shared.DTOs.Posts;
 using Shared.Enums;
 using System;
 using System.Collections.Generic;
@@ -29,6 +30,18 @@ namespace Service.Implementations
             var groups = await repo.GetAllAsync(asNoTracking: true);
             return mapper.Map<List<GroupResultDTO>>(groups);
         }
+
+
+
+
+        public async Task<List<GroupResultDTO>> GetMyGroupsAsync(string userId)
+        {
+            var groupRepo = unitOfWork.GetRepository<Group, int>();
+            var spec = new GroupsByUserSpec(userId);
+            var groups = await groupRepo.GetAllAsync(spec);
+            return mapper.Map<List<GroupResultDTO>>(groups);
+        }
+
 
 
 
@@ -51,6 +64,12 @@ namespace Service.Implementations
             var memberRepo = unitOfWork.GetRepository<GroupMember, int>();
 
             var group = mapper.Map<Group>(createGroupDTO);
+
+            group.GroupScore = new GroupScore
+            {
+                TotalPoints = 0,
+                LastUpdated = DateTime.UtcNow
+            };
 
             await groupRepo.AddAsync(group);
 
@@ -161,6 +180,47 @@ namespace Service.Implementations
 
 
 
+        public async Task<PagedResult<GroupResultDTO>> ExploreGroupsAsync(int page, int pageSize, string userId)
+        {
+            var spec = new ExploreGroupsSpec(page, pageSize);
+            var groups = await unitOfWork.GetRepository<Group, int>().GetAllAsync(spec);
+
+            const int memberBonus = 5;        
+            const int membershipPenalty = 1000;
+
+            var scored =
+                groups.Select(group =>
+                {
+                    int baseScore = group.GroupScore?.TotalPoints ?? 0;
+                    int popularityScore = group.GroupMembers.Count * memberBonus;
+                    bool isMember = group.GroupMembers.Any(m => m.UserId == userId);
+
+
+                    int exploreScore = baseScore + popularityScore - (isMember ? membershipPenalty : 0);
+
+                    return new
+                    {
+                        Group = group,
+                        ExploreScore = exploreScore
+                    };
+                });
+
+            var ordered = scored
+               .OrderByDescending(x => x.ExploreScore).ToList();
+
+            return new PagedResult<GroupResultDTO>
+            {
+                Items = ordered
+                .Select(x => mapper.Map<GroupResultDTO>(x.Group))
+                .ToList(),
+                Page = page,
+                PageSize = pageSize,
+                HasMore = ordered.Count == pageSize
+            };
+        }
+
+
+
 
         private async Task<GroupMember> EnsureUserIsAdmin(int groupId, string userId)
         {
@@ -214,6 +274,8 @@ namespace Service.Implementations
             if (File.Exists(fullPath))
                 File.Delete(fullPath);
         }
+
+        
     }
 }
 

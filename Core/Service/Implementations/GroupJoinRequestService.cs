@@ -21,14 +21,15 @@ namespace Service.Implementations
     {
         private readonly IUnitOfWork unitOfWork;
         private readonly IMapper mapper;
+        private readonly IGroupScoreService groupScoreService;
         private readonly IGenericRepository<GroupJoinRequest, int> requestRepo;
         private readonly IGenericRepository<Group, int> groupRepo;
         private readonly IGenericRepository<GroupMember, int> memberRepo;
-
-        public GroupJoinRequestService(IUnitOfWork unitOfWork, IMapper mapper)
+        public GroupJoinRequestService(IUnitOfWork unitOfWork, IMapper mapper, IGroupScoreService groupScoreService)
         {
             this.unitOfWork = unitOfWork;
             this.mapper = mapper;
+            this.groupScoreService = groupScoreService;
             requestRepo = unitOfWork.GetRepository<GroupJoinRequest, int>();
             groupRepo = unitOfWork.GetRepository<Group, int>();
             memberRepo = unitOfWork.GetRepository<GroupMember, int>();
@@ -71,6 +72,7 @@ namespace Service.Implementations
         }
 
 
+
         public async Task<List<GroupJoinRequestResultDTO>> GetPendingRequestsAsync(int groupId, string userId)
         {
             var memberSpec = new GroupMemberByGroupAndUserSpec(groupId, userId);
@@ -83,6 +85,8 @@ namespace Service.Implementations
 
             return mapper.Map<List<GroupJoinRequestResultDTO>>(requests.ToList());
         }
+
+
 
         public async Task<GroupJoinRequestResultDTO> GetRequestByIdAsync(int requestId, string userId)
         {
@@ -100,6 +104,7 @@ namespace Service.Implementations
 
             return mapper.Map<GroupJoinRequestResultDTO>(request);
         }
+
 
 
         public async Task<bool> ApproveJoinRequestAsync(int requestId, string userId)
@@ -128,8 +133,10 @@ namespace Service.Implementations
             };
 
             await memberRepo.AddAsync(newMember);
+            await groupScoreService.IncreaseOnJoinAsync(request.GroupId, 10);
             return await unitOfWork.SaveChangesAsync() > 0;
         }
+
 
 
         public async Task<bool> RejectJoinRequestAsync(int requestId, string userId)
@@ -151,6 +158,7 @@ namespace Service.Implementations
 
             return await unitOfWork.SaveChangesAsync() > 0;
         }
+
 
 
         public async Task<List<GroupJoinRequestResultDTO>> GetUserRequestsAsync(string userId)

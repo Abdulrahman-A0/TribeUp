@@ -22,12 +22,14 @@ namespace Service.Implementations
         private readonly IUnitOfWork unitOfWork;
         private readonly IMapper mapper;
         private readonly IGroupJoinRequestService groupJoinRequestService;
+        private readonly IGroupScoreService groupScoreService;
 
-        public GroupMemberService(IUnitOfWork unitOfWork,IMapper mapper,IGroupJoinRequestService groupJoinRequestService)
+        public GroupMemberService(IUnitOfWork unitOfWork,IMapper mapper,IGroupJoinRequestService groupJoinRequestService, IGroupScoreService groupScoreService)
         {
             this.unitOfWork = unitOfWork;
             this.mapper = mapper;
             this.groupJoinRequestService = groupJoinRequestService;
+            this.groupScoreService = groupScoreService;
         }
 
         // JoinGroup
@@ -55,6 +57,7 @@ namespace Service.Implementations
                 };
 
                 await memberRepo.AddAsync(member);
+                await groupScoreService.IncreaseOnJoinAsync(groupId, 10);
                 await unitOfWork.SaveChangesAsync();
 
                 var memberResult = mapper.Map<GroupMemberResultDTO>(member);
@@ -108,6 +111,8 @@ namespace Service.Implementations
 
             memberRepo.Delete(leavingMember);
             members.Remove(leavingMember);
+
+            await groupScoreService.DecreaseOnLeaveAsync(groupId, 10);
 
             if (!members.Any())
             {
