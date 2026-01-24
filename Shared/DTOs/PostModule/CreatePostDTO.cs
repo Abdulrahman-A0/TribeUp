@@ -13,6 +13,5 @@ namespace Shared.DTOs.Posts
         public string? Caption { get; set; }
         public AccessibilityType Accessibility { get; set; }
 
-        public List<CreateMediaItemDTO>? MediaItems { get; set; }
     }
 }

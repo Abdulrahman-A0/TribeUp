@@ -28,6 +28,7 @@ namespace TribeUp.Extensions
             services.AddScoped<IGroupJoinRequestService, GroupJoinRequestService>();
             services.AddScoped<IPostService, PostService>();
             services.AddScoped<IAIModerationManager, AIModerationManager>();
+            services.AddScoped<IFileStorageService, FileStorageService>();
 
 
 

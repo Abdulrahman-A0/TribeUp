@@ -43,8 +43,6 @@ namespace Service.MappingProfiles
             // Create Post
 
             CreateMap<CreatePostDTO, Post>()
-                  .ForMember(dest => dest.MediaItems,
-                      opt => opt.MapFrom(src => src.MediaItems.OrderBy(m => m.Order)))
                   .ForMember(dest => dest.UserId,
                       opt => opt.Ignore());
 
@@ -73,10 +71,8 @@ namespace Service.MappingProfiles
             CreateMap<Like, LikeResultDTO>()
                 .ForMember(dest => dest.UserId,
                     opt => opt.MapFrom(src => src.UserId))
-                .ForMember(dest => dest.FirstName,
-                    opt => opt.MapFrom(src => src.User.FirstName))
-                .ForMember(dest => dest.LastName,
-                    opt => opt.MapFrom(src => src.User.LastName));
+                .ForMember(dest => dest.Username,
+                    opt => opt.MapFrom(src => src.User.UserName));
 
         }
     }
