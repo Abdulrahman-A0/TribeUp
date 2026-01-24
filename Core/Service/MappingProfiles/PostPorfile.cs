@@ -17,10 +17,8 @@ namespace Service.MappingProfiles
                      opt => opt.MapFrom(src => src.Id))
                  .ForMember(dest => dest.UserId,
                      opt => opt.MapFrom(src => src.User.Id))
-                 .ForMember(dest => dest.FirstName,
-                     opt => opt.MapFrom(src => src.User.FirstName))
-                 .ForMember(dest => dest.LastName,
-                     opt => opt.MapFrom(src => src.User.LastName))
+                 .ForMember(dest => dest.Username,
+                     opt => opt.MapFrom(src => src.User.UserName))
                  .ForMember(dest => dest.GroupId,
                      opt => opt.MapFrom(src => src.GroupId))
                  .ForMember(dest => dest.GroupName,
@@ -39,7 +37,7 @@ namespace Service.MappingProfiles
                      opt => opt.Ignore());
 
             // More Thna One Media in the Post Feed
-            
+
             CreateMap<MediaItem, MediaItemFeedDTO>();
 
             // Create Post

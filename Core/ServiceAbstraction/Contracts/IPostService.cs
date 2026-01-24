@@ -12,7 +12,7 @@ namespace ServiceAbstraction.Contracts
     {
         Task<CreatePostResultDTO> CreatePostAsync(CreatePostDTO dto, string userId);
         Task<PagedResult<PostFeedDTO>> GetFeedAsync(string userId, int page, int pageSize);
-        //Task<PagedResult<PostFeedDTO>> GetGroupFeedAsync(string userId, int groupId, int page, int pageSize);
+        Task<PagedResult<PostFeedDTO>> GetGroupFeedAsync(string userId, int groupId, int page, int pageSize);
         //Task<bool> LikePostAsync(int postId, string userId);
         //Task<PagedResult<LikeResultDTO>> GetLikesByPostIdAsync(int postId, int page, int pageSize);
         //Task<int> AddCommentAsync(int postId, CreateCommentDTO dto, string userId);

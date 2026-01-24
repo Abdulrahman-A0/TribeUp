@@ -5,40 +5,28 @@ namespace Service.Specifications.PostSpecifications
 {
     public class GroupPostFeedSpecification : BaseSpecifications<Post, int>
     {
-        public GroupPostFeedSpecification(string userId, int groupId)
+        public string CurrentUserId { get; }
+
+        public GroupPostFeedSpecification(string currentUserId, int groupId, int page, int pageSize)
             : base(p =>
-                    p.GroupId == groupId &&
-
+                    p.GroupId == groupId
+                  &&
                 (
-                    //p.AI_Moderation.Status != ContentStatus.Denied ||
-                    p.UserId == userId
-                ) &&
-
-                (
-                    p.Group.Accessibility == AccessibilityType.Public ||
-                    p.Group.GroupMembers.Any(m => m.UserId == userId) ||
-                    //p.Group.GroupFollowers.Any(f => f.UserId == userId) ||
-                    p.UserId == userId
-                ) &&
-
-                (
-                    p.Accessibility == AccessibilityType.Public ||
-                    p.Group.GroupMembers.Any(m => m.UserId == userId) ||
-                    //p.Group.GroupFollowers.Any(f => f.UserId == userId) ||
-                    p.UserId == userId
+                    //p.Group.GroupMembers.Any(m => m.UserId == currentUserId) ||
+                    p.UserId == currentUserId
                 )
             )
         {
-            AddIncludes(p => p.User);
+            CurrentUserId = currentUserId;
 
+            AddIncludes(p => p.User);
             AddIncludes(p => p.Group);
             AddIncludes(p => p.Group.GroupMembers);
-            //AddIncludes(p => p.Group.GroupFollowers);
-
             AddIncludes(p => p.Likes);
             AddIncludes(p => p.Comments);
             AddIncludes(p => p.MediaItems);
-            //AddIncludes(p => p.AI_Moderation);
+
+            ApplyPagination(pageSize, page);
         }
     }
 }

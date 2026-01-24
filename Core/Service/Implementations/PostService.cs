@@ -93,7 +93,7 @@ namespace Service.Implementations
                     RoleType.Admin => 60,
                     RoleType.Member => 40,
                     RoleType.Follower => 20,
-                    _ => 5 
+                    _ => 5
                 };
 
                 int engagementScore =
@@ -144,94 +144,76 @@ namespace Service.Implementations
             };
         }
 
-        //public async Task<PagedResult<PostFeedDTO>> GetGroupFeedAsync(string userId, int groupId, int page, int pageSize)
-        //{
-        //    var spec = new GroupPostFeedSpecification(userId, groupId);
+        public async Task<PagedResult<PostFeedDTO>> GetGroupFeedAsync(string userId, int groupId, int page, int pageSize)
+        {
+            var spec = new GroupPostFeedSpecification(userId, groupId, page, pageSize);
 
-        //    var posts = await _unitOfWork
-        //        .GetRepository<Post, int>()
-        //        .GetAllAsync(spec);
+            var posts = await _unitOfWork
+                .GetRepository<Post, int>()
+                .GetAllAsync(spec);
 
-        //    var scored = posts.Select(post =>
-        //    {
-        //        GroupRelationType relation =
-        //            post.Group.GroupMembers.Any(m => m.UserId == userId)
-        //                ? GroupRelationType.Member
-        //                : post.Group.GroupFollowers.Any(f => f.UserId == userId)
-        //                    ? GroupRelationType.Follower
-        //                    : GroupRelationType.None;
+            var scored = posts.Select(post =>
+            {
+                var member = post.Group.GroupMembers
+                    .FirstOrDefault(m => m.UserId == userId);
 
-        //        int groupPriority = relation switch
-        //        {
-        //            GroupRelationType.Member => 50,
-        //            GroupRelationType.Follower => 25,
-        //            _ => 5
-        //        };
+                int groupPriority = member?.Role switch
+                {
+                    RoleType.Admin => 60,
+                    RoleType.Member => 40,
+                    RoleType.Follower => 20,
+                    _ => 5
+                };
 
-        //        int engagementScore =
-        //            (post.Likes.Count * 2) +
-        //            (post.Comments.Count * 3);
+                int engagementScore =
+                    (post.Likes.Count * 2) +
+                    (post.Comments.Count * 3);
 
-        //        double ageHours =
-        //            (DateTime.UtcNow - post.CreatedAt).TotalHours;
+                double ageHours =
+                    (DateTime.UtcNow - post.CreatedAt).TotalHours;
 
-        //        double timePenalty = ageHours * 0.2;
+                double timePenalty = ageHours * 0.2;
 
-        //        bool likedByUser =
-        //            post.Likes.Any(l => l.UserId == userId);
+                bool likedByUser =
+                    post.Likes.Any(l => l.UserId == userId);
 
-        //        int likedPenalty = likedByUser ? 15 : 0;
+                int likedPenalty = likedByUser ? 15 : 0;
 
-        //        double feedScore =
-        //            groupPriority +
-        //            engagementScore -
-        //            timePenalty -
-        //            likedPenalty;
+                double feedScore =
+                    groupPriority +
+                    engagementScore -
+                    timePenalty -
+                    likedPenalty;
 
-        //        return new
-        //        {
-        //            Post = post,
-        //            Relation = relation,
-        //            FeedScore = feedScore,
-        //            IsLikedByUser = likedByUser
-        //        };
-        //    });
+                return new
+                {
+                    Post = post,
+                    FeedScore = feedScore,
+                    IsLikedByUser = likedByUser
+                };
+            });
 
-        //    var ordered = scored
-        //        .OrderByDescending(x => x.FeedScore)
-        //        .ThenByDescending(x => x.Post.CreatedAt)
-        //        .ToList();
+            var ordered = scored
+                .OrderByDescending(x => x.FeedScore)
+                .ThenByDescending(x => x.Post.CreatedAt)
+                .ToList();
 
-        //    int totalCount = ordered.Count;
+            return new PagedResult<PostFeedDTO>
+            {
+                Items = ordered.Select(x =>
+                {
+                    var dto = _mapper.Map<PostFeedDTO>(x.Post);
+                    dto.IsLikedByCurrentUser = x.IsLikedByUser;
+                    dto.FeedScore = x.FeedScore;
+                    return dto;
+                }).ToList(),
+                Page = page,
+                PageSize = pageSize,
+                HasMore = ordered.Count == pageSize
+            };
 
-        //    var paged = ordered
-        //        .Skip((page - 1) * pageSize)
-        //        .Take(pageSize + 1)
-        //        .ToList();
+        }
 
-        //    var hasMore = paged.Count > pageSize;
-
-        //    var finalPage = paged.Take(pageSize).ToList();
-
-        //    var result = finalPage.Select(x =>
-        //    {
-        //        var dto = _mapper.Map<PostFeedDTO>(x.Post);
-        //        dto.IsLikedByCurrentUser = x.IsLikedByUser;
-        //        dto.GroupRelation = x.Relation;
-        //        dto.FeedScore = x.FeedScore;
-        //        return dto;
-        //    }).ToList();
-
-        //    return new PagedResult<PostFeedDTO>
-        //    {
-        //        Items = result,
-        //        Page = page,
-        //        PageSize = pageSize,
-        //        TotalCount = totalCount,
-        //        HasMore = hasMore
-        //    };
-
-        //}
         //public async Task<bool> LikePostAsync(int postId, string userId)
         //{
         //    var likeRepo = _unitOfWork.GetRepository<Like, int>();

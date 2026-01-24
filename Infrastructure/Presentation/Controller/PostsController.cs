@@ -21,9 +21,9 @@ namespace Presentation.Controller
             => Ok(await service.PostService.GetFeedAsync(UserId, page, pageSize));
 
 
-        //[HttpGet("{groupId}/GroupFeed")]
-        //public async Task<ActionResult<PagedResult<PostFeedDTO>>> GetGroupFeed(int groupId, int page = 1, int pageSize = 20)
-        //    => Ok(await service.PostService.GetGroupFeedAsync(UserId, groupId, page, pageSize));
+        [HttpGet("{groupId}/GroupFeed")]
+        public async Task<ActionResult<PagedResult<PostFeedDTO>>> GetGroupFeed(int groupId, int page = 1, int pageSize = 20)
+            => Ok(await service.PostService.GetGroupFeedAsync(UserId, groupId, page, pageSize));
 
 
         //[HttpPost("{postId:int}/AddLike")]

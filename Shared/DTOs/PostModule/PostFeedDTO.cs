@@ -11,9 +11,10 @@ namespace Shared.DTOs.Posts
     {
         public int PostId { get; set; }
         public string? Caption { get; set; }
+
         public string UserId { get; set; } = null!;
-        public string FirstName { get; set; } = null!;
-        public string LastName { get; set; } = null!;
+        public string Username { get; set; } = null!;
+
         public int GroupId { get; set; }
         public string GroupName { get; set; } = null!;
 
