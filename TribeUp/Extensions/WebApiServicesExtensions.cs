@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
+using Presentation.SignalR;
+using ServiceAbstraction.Contracts;
 using TribeUp.BackgroundServices;
 using TribeUp.Factories;
 using TribeUp.Filters;
@@ -52,6 +54,10 @@ namespace TribeUp.Extensions
             });
 
             services.AddHostedService<RefreshTokenCleanupWorker>();
+
+            services.AddScoped<INotificationPublisher, SignalRNotificationPublisher>();
+
+            services.AddSignalR();
 
             return services;
         }

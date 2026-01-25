@@ -8,6 +8,7 @@ using Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -18,7 +19,7 @@ namespace Persistence.Repositories
     {
         public async Task<IEnumerable<TEntity>> GetAllAsync(bool asNoTracking = false)
         {
-            return  asNoTracking? await dbContext.Set<TEntity>().AsNoTracking().ToListAsync()
+            return asNoTracking ? await dbContext.Set<TEntity>().AsNoTracking().ToListAsync()
                 : await dbContext.Set<TEntity>().AsTracking().ToListAsync();
         }
         public async Task<IEnumerable<Post>> GetAllAsync(ISpecifications<Post, int> spec)
@@ -48,7 +49,7 @@ namespace Persistence.Repositories
         }
         public async Task AddAsync(TEntity entity)
         {
-             await dbContext.Set<TEntity>().AddAsync(entity);
+            await dbContext.Set<TEntity>().AddAsync(entity);
         }
         public void Update(TEntity entity)
         {
@@ -59,6 +60,12 @@ namespace Persistence.Repositories
         {
             dbContext.Set<TEntity>().Remove(entity);
         }
+
+        public async Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate)
+        {
+            return await dbContext.Set<TEntity>().CountAsync(predicate);
+        }
+
 
         #region Specifications
         public async Task<IEnumerable<TEntity>> GetAllAsync(ISpecifications<TEntity, TKey> specifications)
