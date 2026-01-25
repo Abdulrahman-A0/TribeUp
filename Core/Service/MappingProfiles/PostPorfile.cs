@@ -62,10 +62,10 @@ namespace Service.MappingProfiles
                     opt => opt.MapFrom(src => src.PostId))
                 .ForMember(dest => dest.UserId,
                     opt => opt.MapFrom(src => src.UserId))
-                .ForMember(dest => dest.FirstName,
-                    opt => opt.MapFrom(src => src.User.FirstName))
-                .ForMember(dest => dest.LastName,
-                    opt => opt.MapFrom(src => src.User.LastName))
+                .ForMember(dest => dest.Username,
+                    opt => opt.MapFrom(src => src.User.UserName))
+                .ForMember(dest => dest.ProfilePicture,
+                    opt => opt.MapFrom(src => src.User.ProfilePicture))
                 .ForMember(dest => dest.Content,
                     opt => opt.MapFrom(src => src.Content))
                 .ForMember(dest => dest.CreatedAt,

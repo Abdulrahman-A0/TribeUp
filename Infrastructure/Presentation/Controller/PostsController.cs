@@ -44,14 +44,14 @@ namespace Presentation.Controller
             => Ok(await service.PostService.GetLikesByPostIdAsync(postId, page, pageSize));
 
 
-        //[HttpPost("{postId:int}/AddComment")]
-        //public async Task<ActionResult<int>> Comment(int postId, CreateCommentDTO dto)
-        //    => Ok(await service.PostService.AddCommentAsync(postId, dto, UserId));
+        [HttpPost("{postId:int}/AddComment")]
+        public async Task<ActionResult<int>> Comment(int postId, CreateCommentDTO dto)
+            => Ok(await service.PostService.AddCommentAsync(postId, dto, UserId));
 
 
-        //[HttpGet("{postId:int}/Comments")]
-        //public async Task<ActionResult<PagedResult<CommentResultDTO>>> GetComments(int postId, int page = 1, int pageSize = 20)
-        //    => Ok(await service.PostService.GetCommentsByPostIdAsync(postId, page, pageSize));
+        [HttpGet("{postId:int}/Comments")]
+        public async Task<ActionResult<PagedResult<CommentResultDTO>>> GetComments(int postId, int page = 1, int pageSize = 20)
+            => Ok(await service.PostService.GetCommentsByPostIdAsync(postId, page, pageSize));
 
     }
 }
