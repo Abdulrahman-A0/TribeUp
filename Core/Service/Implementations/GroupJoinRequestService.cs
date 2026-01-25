@@ -133,7 +133,18 @@ namespace Service.Implementations
             };
 
             await memberRepo.AddAsync(newMember);
-            await groupScoreService.IncreaseOnJoinAsync(request.GroupId, 10);
+            await groupScoreService.IncreaseOnActionAsync(request.GroupId, 10);
+
+            await notificationService.CreateAsync(new CreateNotificationDTO
+            {
+                RecipientUserId = request.UserId,
+                ActorUserId = userId,
+                Type = NotificationType.GroupJoinApproved,
+                Title = "Join Request Approved",
+                Message = "Your request to join the group was approved.",
+                ReferenceId = request.GroupId
+            });
+
             return await unitOfWork.SaveChangesAsync() > 0;
         }
 
