@@ -17,6 +17,7 @@ namespace Shared.DTOs.Posts
 
         public int GroupId { get; set; }
         public string GroupName { get; set; } = null!;
+        public string GroupProfilePicture { get; set; } = null!;
 
         public int LikesCount { get; set; }
         public int CommentCount { get; set; }
