@@ -8,7 +8,7 @@ namespace ServiceAbstraction.Contracts
 {
     public interface IGroupScoreService
     {
-        Task IncreaseOnJoinAsync(int groupId, int points = 10);
-        Task DecreaseOnLeaveAsync(int groupId, int points = 10);
+        Task IncreaseOnActionAsync(int groupId, int points = 10);
+        Task DecreaseOnActionAsync(int groupId, int points = 10);
     }
 }

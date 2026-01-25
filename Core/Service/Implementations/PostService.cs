@@ -19,14 +19,23 @@ namespace Service.Implementations
         private readonly IMapper _mapper;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IFileStorageService _fileStorage;
+        private readonly IGroupScoreService _groupScoreService;
         private readonly IAIModerationManager _aiModerationManager;
 
 
-        public PostService(IUnitOfWork unitOfWork, IMapper mapper, IAIModerationManager aiModerationManager, IFileStorageService fileStorage)
+        public PostService
+            (
+            IMapper mapper,
+            IUnitOfWork unitOfWork,
+            IFileStorageService fileStorage,
+            IGroupScoreService groupScoreService,
+            IAIModerationManager aiModerationManager
+            )
         {
             _mapper = mapper;
             _unitOfWork = unitOfWork;
             _fileStorage = fileStorage;
+            _groupScoreService = groupScoreService;
             _aiModerationManager = aiModerationManager;
         }
 
@@ -63,6 +72,7 @@ namespace Service.Implementations
                 .GetRepository<Post, int>()
                 .AddAsync(post);
 
+
             await _unitOfWork.SaveChangesAsync(); // PostId generated here
 
             # region AI moderation result
@@ -83,6 +93,8 @@ namespace Service.Implementations
             }
 
             #endregion
+
+            //await _groupScoreService.IncreaseOnActionAsync(dto.GroupId, 5);
 
             return new CreatePostResultDTO
             {

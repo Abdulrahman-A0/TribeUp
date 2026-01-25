@@ -57,7 +57,7 @@ namespace Service.Implementations
                 };
 
                 await memberRepo.AddAsync(member);
-                await groupScoreService.IncreaseOnJoinAsync(groupId, 10);
+                await groupScoreService.IncreaseOnActionAsync(groupId, 10);
                 await unitOfWork.SaveChangesAsync();
 
                 var memberResult = mapper.Map<GroupMemberResultDTO>(member);
@@ -112,7 +112,7 @@ namespace Service.Implementations
             memberRepo.Delete(leavingMember);
             members.Remove(leavingMember);
 
-            await groupScoreService.DecreaseOnLeaveAsync(groupId, 10);
+            await groupScoreService.DecreaseOnActionAsync(groupId, 10);
 
             if (!members.Any())
             {

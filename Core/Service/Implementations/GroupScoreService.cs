@@ -12,7 +12,7 @@ namespace Service.Implementations
 {
     public class GroupScoreService(IUnitOfWork unitOfWork) : IGroupScoreService
     {
-        public async Task IncreaseOnJoinAsync(int groupId, int points = 10)
+        public async Task IncreaseOnActionAsync(int groupId, int points = 10)
         {
             var groupRepo = unitOfWork.GetRepository<Group, int>();
 
@@ -30,7 +30,7 @@ namespace Service.Implementations
         }
 
 
-        public async Task DecreaseOnLeaveAsync(int groupId, int points = 10)
+        public async Task DecreaseOnActionAsync(int groupId, int points = 10)
         {
             var groupRepo = unitOfWork.GetRepository<Group, int>();
 
