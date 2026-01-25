@@ -3,6 +3,7 @@ using Domain.Contracts;
 using Domain.Entities.Media;
 using Domain.Entities.Posts;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Service.Specifications;
 using Service.Specifications.PostSpecifications;
 using ServiceAbstraction.Contracts;
@@ -90,6 +91,19 @@ namespace Service.Implementations
                 Message = "Post created successfully."
             };
 
+        }
+
+        public async Task<PostDTO> GetPostByIdAsync(string userId, int postId)
+        {
+            var spec = new PostByIdSpecification(userId, postId);
+
+            var post = await _unitOfWork
+                .GetRepository<Post, int>()
+                .GetByIdAsync(spec);
+
+            var mapped = _mapper.Map<PostDTO>(post);
+
+            return mapped;
         }
 
         public async Task<PagedResult<PostFeedDTO>> GetFeedAsync(string userId, int page, int pageSize)
@@ -283,7 +297,8 @@ namespace Service.Implementations
             };
 
         }
-        
+
+
         //public async Task<int> AddCommentAsync(int postId, CreateCommentDTO dto, string userId)
         //{
         //    var comment = new Comment

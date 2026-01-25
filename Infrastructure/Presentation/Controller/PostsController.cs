@@ -19,12 +19,17 @@ namespace Presentation.Controller
             => Ok(await service.PostService.CreatePostAsync(dto, UserId, mediaFiles));
 
 
+        [HttpGet("{postId:int}/GetPostById")]
+        public async Task<ActionResult<PostDTO>> GetPostById(int postId)
+            => Ok(await service.PostService.GetPostByIdAsync(UserId, postId));
+
+
         [HttpGet("Feed")]
         public async Task<ActionResult<PagedResult<PostFeedDTO>>> GetFeed(int page = 1, int pageSize = 20)
             => Ok(await service.PostService.GetFeedAsync(UserId, page, pageSize));
 
 
-        [HttpGet("{groupId}/GroupFeed")]
+        [HttpGet("{groupId:int}/GroupFeed")]
         public async Task<ActionResult<PagedResult<PostFeedDTO>>> GetGroupFeed(int groupId, int page = 1, int pageSize = 20)
             => Ok(await service.PostService.GetGroupFeedAsync(UserId, groupId, page, pageSize));
 

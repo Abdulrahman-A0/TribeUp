@@ -1,13 +1,13 @@
-﻿using Shared.Enums;
+﻿using Shared.DTOs.Posts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Shared.DTOs.Posts
+namespace Shared.DTOs.PostModule
 {
-    public class PostFeedDTO
+    public class PostDTO
     {
         public int PostId { get; set; }
         public string? Caption { get; set; }
@@ -23,15 +23,10 @@ namespace Shared.DTOs.Posts
         public int CommentCount { get; set; }
 
         public bool IsLikedByCurrentUser { get; set; }
-
-        public double FeedScore { get; set; }
-
         public DateTime CreatedAt { get; set; }
 
         public IReadOnlyCollection<MediaItemFeedDTO> Media { get; set; }
                  = new List<MediaItemFeedDTO>();
-
-        public string ShareUrl { get; set; } = null!;
 
     }
 }

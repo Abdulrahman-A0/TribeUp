@@ -13,6 +13,7 @@ namespace TribeUp.Extensions
 
             services.Configure<JwtOptions>(configuration.GetSection("JWT"));
             services.Configure<EmailOptions>(configuration.GetSection("Email"));
+            services.Configure<AppSettings>(configuration.GetSection("AppSettings"));
 
             services.AddScoped<IServiceManager, ServiceManager>();
 
@@ -29,6 +30,7 @@ namespace TribeUp.Extensions
             services.AddScoped<IGroupScoreService, GroupScoreService>();
 
             services.AddScoped<IPostService, PostService>();
+            services.AddScoped<IPostUrlService, PostUrlService>();
             services.AddScoped<IAIModerationManager, AIModerationManager>();
             services.AddScoped<IFileStorageService, FileStorageService>();
             services.AddScoped<INotificationService, NotificationService>();
