@@ -23,17 +23,17 @@ namespace Domain.Entities.Groups
 
 
         #region Navigation properties
-        public virtual ICollection<GroupMember> GroupMembers { get; set; }
-        public virtual ICollection<Post> Posts { get; set; }
-        public virtual ICollection<Album> Albums { get; set; }
-        public virtual ICollection<Event> Events { get; set; }
-        public virtual ICollection<Poll> Polls { get; set; }
-        public virtual ICollection<Badge> Badges { get; set; }
-        public virtual ICollection<MemoryReel> MemoryReels { get; set; }
-        public virtual GroupScore GroupScore { get; set; }
-        public virtual ICollection<ActivityLog> ActivityLogs { get; set; }
-        public virtual ICollection<Story> Stories { get; set; }
-        public virtual ICollection<GroupJoinRequest> GroupJoinRequests { get; set; }
+        public virtual ICollection<GroupMember> GroupMembers { get; set; } = new List<GroupMember>();
+        public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
+        public virtual ICollection<Album> Albums { get; set; } = new List<Album>();
+        public virtual ICollection<Event> Events { get; set; } = new List<Event>();
+        public virtual ICollection<Poll> Polls { get; set; } = new List<Poll>();
+        public virtual ICollection<Badge> Badges { get; set; } = new List<Badge>();
+        public virtual ICollection<MemoryReel> MemoryReels { get; set; } = new List<MemoryReel>();
+        public virtual GroupScore GroupScore { get; set; } 
+        public virtual ICollection<ActivityLog> ActivityLogs { get; set; } = new List<ActivityLog>();
+        public virtual ICollection<Story> Stories { get; set; } = new List<Story>();
+        public virtual ICollection<GroupJoinRequest> GroupJoinRequests { get; set; } = new List<GroupJoinRequest>();
 
         #endregion
     }

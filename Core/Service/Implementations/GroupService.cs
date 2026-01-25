@@ -27,7 +27,10 @@ namespace Service.Implementations
         public async Task<List<GroupResultDTO>> GetAllGroupsAsync()
         {
             var repo = unitOfWork.GetRepository<Group, int>();
-            var groups = await repo.GetAllAsync(asNoTracking: true);
+            var spec = new GroupsWithMembersSpec();
+
+            var groups = await repo.GetAllAsync(spec);
+
             return mapper.Map<List<GroupResultDTO>>(groups);
         }
 
@@ -71,17 +74,18 @@ namespace Service.Implementations
                 LastUpdated = DateTime.UtcNow
             };
 
-            await groupRepo.AddAsync(group);
+            group.GroupMembers = new List<GroupMember>();
 
             var adminMember = new GroupMember
             {
-                Group = group,
                 UserId = userId,
                 Role = RoleType.Admin,
                 JoinedAt = DateTime.UtcNow
             };
 
-            await memberRepo.AddAsync(adminMember);
+            group.GroupMembers.Add(adminMember);
+
+            await groupRepo.AddAsync(group);
 
             await unitOfWork.SaveChangesAsync();
 
