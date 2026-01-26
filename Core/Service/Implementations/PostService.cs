@@ -1,15 +1,21 @@
 ﻿using AutoMapper;
 using Domain.Contracts;
+using Domain.Entities.Groups;
 using Domain.Entities.Media;
 using Domain.Entities.Posts;
+using Domain.Exceptions.GroupExceptions;
+using Domain.Exceptions.PostExceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
 using Service.Specifications;
+using Service.Specifications.GroupMemberSpecs;
 using Service.Specifications.PostSpecifications;
 using ServiceAbstraction.Contracts;
 using Shared.DTOs.PostModule;
 using Shared.DTOs.Posts;
 using Shared.Enums;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace Service.Implementations
@@ -107,7 +113,7 @@ namespace Service.Implementations
 
         public async Task<PostFeedDTO> GetPostByIdAsync(string userId, int postId)
         {
-            var spec = new PostByIdSpecification(userId, postId);
+            var spec = new PostByIdSpecification(postId);
 
             var post = await _unitOfWork
                 .GetRepository<Post, int>()
@@ -257,6 +263,7 @@ namespace Service.Implementations
 
         }
 
+
         public async Task<bool> LikePostAsync(int postId, string userId)
         {
             var likeRepo = _unitOfWork.GetRepository<Like, int>();
@@ -286,6 +293,7 @@ namespace Service.Implementations
 
             return false;
         }
+
 
         public async Task<PagedResult<LikeResultDTO>> GetLikesByPostIdAsync(int postId, int page, int pageSize)
         {
@@ -328,6 +336,7 @@ namespace Service.Implementations
 
         }
 
+
         public async Task<PagedResult<CommentResultDTO>> GetCommentsByPostIdAsync(int postId, int page, int pageSize)
         {
             var spec = new CommentsByPostIdSpecification(postId, page, pageSize);
@@ -352,6 +361,63 @@ namespace Service.Implementations
             };
 
         }
+
+
+        public async Task<DeleteEntityResultDTO> DeletePostAsync(string userId, int postId)
+        {
+            var spec = new PostByIdSpecification(postId);
+            var repo = _unitOfWork.GetRepository<Post, int>();
+            var post  = await repo.GetByIdAsync(spec) ?? throw new PostNotFoundException(postId);
+
+            if(post.User.Id != userId)
+                if(!await IsAdminAsync(userId,post.GroupId))
+                    return new DeleteEntityResultDTO
+                    {
+                        Message = "You don't have permission to delete this post"
+                    };
+
+            repo.Delete(post);
+            await _unitOfWork.SaveChangesAsync();
+            return new DeleteEntityResultDTO();
+
+
+        }
+
+
+        public async Task<DeleteEntityResultDTO> DeleteCommentAsync(string userId, int commentId)
+        {
+            var spec = new CommentByPostIdSpecification(commentId);
+            var repo = _unitOfWork.GetRepository<Comment, int>();
+            var comment  = await repo.GetByIdAsync(spec) ?? throw new CommentNotFoundException(commentId);
+
+            if(comment.User.Id != userId)
+                if(!await IsAdminAsync(userId, comment.Post.GroupId))
+                    return new DeleteEntityResultDTO
+                    {
+                        Message = "You don't have permission to delete this comment"
+                    };
+
+            repo.Delete(comment);
+            await _unitOfWork.SaveChangesAsync();
+            return new DeleteEntityResultDTO();
+
+
+        }
+
+
+
+
+        #region Private Methods
+        private async Task<bool> IsAdminAsync(string userId, int groupId)
+        {
+            var groupSpec = new GroupAdminsSpec(groupId);
+            var groupMemberRepo = _unitOfWork.GetRepository<GroupMember, int>();
+            var groupAdmins = await groupMemberRepo.GetAllAsync(groupSpec) ?? throw new GroupNotFoundException(groupId);
+
+            return groupAdmins.Any(a => a.UserId == userId);
+        }
+
+        #endregion
 
     }
 }

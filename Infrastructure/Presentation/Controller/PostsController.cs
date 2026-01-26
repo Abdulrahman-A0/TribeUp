@@ -19,6 +19,11 @@ namespace Presentation.Controller
             => Ok(await service.PostService.CreatePostAsync(dto, UserId, mediaFiles));
 
 
+        [HttpDelete("{postId:int}/DeletePost")]
+        public async Task<ActionResult<DeleteEntityResultDTO>> DeletePost(int postId)
+            => Ok(await service.PostService.DeletePostAsync(UserId, postId));
+
+
         [HttpGet("{postId:int}/GetPostById")]
         public async Task<ActionResult<PostFeedDTO>> GetPostById(int postId)
             => Ok(await service.PostService.GetPostByIdAsync(UserId, postId));
@@ -47,6 +52,11 @@ namespace Presentation.Controller
         [HttpPost("{postId:int}/AddComment")]
         public async Task<ActionResult<int>> Comment(int postId, CreateCommentDTO dto)
             => Ok(await service.PostService.AddCommentAsync(postId, dto, UserId));
+
+
+        [HttpDelete("{commentId:int}/DeleteComment")]
+        public async Task<ActionResult<DeleteEntityResultDTO>> DeleteComment(int commentId)
+           => Ok(await service.PostService.DeleteCommentAsync(UserId, commentId));
 
 
         [HttpGet("{postId:int}/Comments")]
