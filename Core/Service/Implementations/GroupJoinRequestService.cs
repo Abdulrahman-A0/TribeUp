@@ -8,6 +8,7 @@ using Service.Specifications.GroupJoinRequestSpecs;
 using Service.Specifications.GroupMemberSpecs;
 using ServiceAbstraction.Contracts;
 using Shared.DTOs.GroupJoinRequestModule;
+using Shared.DTOs.NotificationModule;
 using Shared.Enums;
 using System;
 using System.Collections.Generic;
@@ -22,14 +23,16 @@ namespace Service.Implementations
         private readonly IUnitOfWork unitOfWork;
         private readonly IMapper mapper;
         private readonly IGroupScoreService groupScoreService;
+        private readonly INotificationService notificationService;
         private readonly IGenericRepository<GroupJoinRequest, int> requestRepo;
         private readonly IGenericRepository<Group, int> groupRepo;
         private readonly IGenericRepository<GroupMember, int> memberRepo;
-        public GroupJoinRequestService(IUnitOfWork unitOfWork, IMapper mapper, IGroupScoreService groupScoreService)
+        public GroupJoinRequestService(IUnitOfWork unitOfWork, IMapper mapper, IGroupScoreService groupScoreService, INotificationService notificationService)
         {
             this.unitOfWork = unitOfWork;
             this.mapper = mapper;
             this.groupScoreService = groupScoreService;
+            this.notificationService = notificationService;
             requestRepo = unitOfWork.GetRepository<GroupJoinRequest, int>();
             groupRepo = unitOfWork.GetRepository<Group, int>();
             memberRepo = unitOfWork.GetRepository<GroupMember, int>();
@@ -65,6 +68,22 @@ namespace Service.Implementations
 
             await requestRepo.AddAsync(newRequest);
             await unitOfWork.SaveChangesAsync();
+
+            var adminsSpec = new GroupAdminsSpec(groupId);
+            var admins = await memberRepo.GetAllAsync(adminsSpec);
+
+            foreach (var admin in admins)
+            {
+                await notificationService.CreateAsync(new CreateNotificationDTO
+                {
+                    RecipientUserId = admin.UserId,
+                    ActorUserId = userId,
+                    Type = NotificationType.GroupJoinRequest,
+                    Title = "New Join Request",
+                    Message = "A user requested to join your group",
+                    ReferenceId = newRequest.Id
+                });
+            }
 
             var detailsSpec = new GroupJoinRequestWithDetailsSpec(newRequest.Id);
             var result = await requestRepo.GetByIdAsync(detailsSpec);
@@ -150,6 +169,13 @@ namespace Service.Implementations
 
 
 
+
+
+
+
+
+
+
         public async Task<bool> RejectJoinRequestAsync(int requestId, string userId)
         {
             var spec = new GroupJoinRequestWithDetailsSpec(requestId);
@@ -166,6 +192,17 @@ namespace Service.Implementations
 
             request.Status = JoinRequestStatus.Rejected;
             requestRepo.Update(request);
+
+
+            await notificationService.CreateAsync(new CreateNotificationDTO
+            {
+                RecipientUserId = request.UserId,
+                ActorUserId = userId,
+                Type = NotificationType.GroupJoinRejected,
+                Title = "Join Request Rejected",
+                Message = "Your request to join the group was rejected.",
+                ReferenceId = request.GroupId
+            });
 
             return await unitOfWork.SaveChangesAsync() > 0;
         }
