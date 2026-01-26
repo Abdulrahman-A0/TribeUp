@@ -128,9 +128,11 @@ namespace Service.Implementations
         {
             var spec = new PostFeedSpecification(userId, page, pageSize);
 
-            var posts = await _unitOfWork
-                .GetRepository<Post, int>()
-                .GetAllAsync(spec);
+            var repo = _unitOfWork.GetRepository<Post, int>();
+            
+            var posts = await repo.GetAllAsync(spec);
+
+            var totalCount = await repo.CountAsync(p => true);
 
             var scored = posts.Select(post =>
             {
@@ -189,7 +191,8 @@ namespace Service.Implementations
                 }).ToList(),
                 Page = page,
                 PageSize = pageSize,
-                HasMore = ordered.Count == pageSize
+                TotalCount = totalCount,
+                HasMore = totalCount > page * pageSize
             };
         }
 
@@ -264,7 +267,7 @@ namespace Service.Implementations
         }
 
 
-        public async Task<bool> LikePostAsync(int postId, string userId)
+        public async Task<bool> ToggeleLikePostAsync(int postId, string userId)
         {
             var likeRepo = _unitOfWork.GetRepository<Like, int>();
 

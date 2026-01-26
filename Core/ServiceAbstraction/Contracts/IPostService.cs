@@ -17,7 +17,7 @@ namespace ServiceAbstraction.Contracts
         Task<PostFeedDTO> GetPostByIdAsync(string userId, int postId);
         Task<PagedResult<PostFeedDTO>> GetFeedAsync(string userId, int page, int pageSize);
         Task<PagedResult<PostFeedDTO>> GetGroupFeedAsync(string userId, int groupId, int page, int pageSize);
-        Task<bool> LikePostAsync(int postId, string userId);
+        Task<bool> ToggeleLikePostAsync(int postId, string userId);
         Task<PagedResult<LikeResultDTO>> GetLikesByPostIdAsync(int postId, int page, int pageSize);
         Task<int> AddCommentAsync(int postId, CreateCommentDTO dto, string userId);
         Task<DeleteEntityResultDTO> DeleteCommentAsync(string userId, int commentId);

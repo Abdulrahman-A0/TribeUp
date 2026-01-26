@@ -39,9 +39,9 @@ namespace Presentation.Controller
             => Ok(await service.PostService.GetGroupFeedAsync(UserId, groupId, page, pageSize));
 
 
-        [HttpPost("{postId:int}/AddLike")]
-        public async Task<ActionResult<bool>> LikePost(int postId)
-            => Ok(await service.PostService.LikePostAsync(postId, UserId));
+        [HttpPost("{postId:int}/ToggleLike")]
+        public async Task<ActionResult<bool>> ToggleLikePost(int postId)
+            => Ok(await service.PostService.ToggeleLikePostAsync(postId, UserId));
 
 
         [HttpGet("{postId:int}/Likes")]

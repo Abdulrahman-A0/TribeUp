@@ -75,7 +75,9 @@ namespace Service.MappingProfiles
                 .ForMember(dest => dest.UserId,
                     opt => opt.MapFrom(src => src.UserId))
                 .ForMember(dest => dest.Username,
-                    opt => opt.MapFrom(src => src.User.UserName));
+                    opt => opt.MapFrom(src => src.User.UserName))
+                .ForMember(dest => dest.ProfilePicture,
+                    opt => opt.MapFrom(src => src.User.ProfilePicture));
 
 
         }
