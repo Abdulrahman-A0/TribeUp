@@ -105,7 +105,7 @@ namespace Service.Implementations
 
         }
 
-        public async Task<PostDTO> GetPostByIdAsync(string userId, int postId)
+        public async Task<PostFeedDTO> GetPostByIdAsync(string userId, int postId)
         {
             var spec = new PostByIdSpecification(userId, postId);
 
@@ -113,7 +113,7 @@ namespace Service.Implementations
                 .GetRepository<Post, int>()
                 .GetByIdAsync(spec);
 
-            var mapped = _mapper.Map<PostDTO>(post);
+            var mapped = _mapper.Map<PostFeedDTO>(post);
 
             return mapped;
         }

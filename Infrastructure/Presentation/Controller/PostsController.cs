@@ -20,7 +20,7 @@ namespace Presentation.Controller
 
 
         [HttpGet("{postId:int}/GetPostById")]
-        public async Task<ActionResult<PostDTO>> GetPostById(int postId)
+        public async Task<ActionResult<PostFeedDTO>> GetPostById(int postId)
             => Ok(await service.PostService.GetPostByIdAsync(UserId, postId));
 
 
