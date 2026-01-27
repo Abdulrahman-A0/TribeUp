@@ -2,6 +2,7 @@
 using Microsoft.OpenApi.Models;
 using Presentation.SignalR;
 using ServiceAbstraction.Contracts;
+using Shared.ErrorModels;
 using TribeUp.BackgroundServices;
 using TribeUp.Factories;
 using TribeUp.Filters;
@@ -31,8 +32,8 @@ namespace TribeUp.Extensions
                 swagger.SwaggerDoc("v1", new OpenApiInfo
                 {
                     Version = "v1",
-                    Title = "Eghal",
-                    Description = "Eghal Blog"
+                    Title = "TribeUp",
+                    Description = "TribeUp Social Media"
                 });
 
                 swagger.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
@@ -50,7 +51,26 @@ namespace TribeUp.Extensions
 
             services.Configure<ApiBehaviorOptions>(options =>
             {
-                options.InvalidModelStateResponseFactory = ApiResponseFactory.CustomValidationErrorResponse;
+                options.InvalidModelStateResponseFactory = context =>
+                {
+                    var errors = context.ModelState
+                        .Where(x => x.Value?.Errors.Any() == true)
+                        .ToDictionary(
+                            x => x.Key,
+                            x => x.Value!.Errors.Select(e => e.ErrorMessage).ToArray()
+                        );
+
+                    var problem = new ApiProblemDetails
+                    {
+                        Status = StatusCodes.Status400BadRequest,
+                        Type = "validation_error",
+                        Title = "Validation failed",
+                        Errors = errors,
+                        TraceId = context.HttpContext.TraceIdentifier
+                    };
+
+                    return new BadRequestObjectResult(problem);
+                };
             });
 
             services.AddHostedService<RefreshTokenCleanupWorker>();

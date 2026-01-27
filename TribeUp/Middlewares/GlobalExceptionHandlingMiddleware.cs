@@ -1,6 +1,4 @@
-﻿
-using Domain.Exceptions.UnAuthorized;
-using Domain.Exceptions.Validation;
+﻿using Domain.Exceptions.Abstraction;
 using Shared.ErrorModels;
 
 namespace TribeUp.Middlewares
@@ -21,53 +19,66 @@ namespace TribeUp.Middlewares
             try
             {
                 await _next(context);
-                if (context.Response.StatusCode == StatusCodes.Status404NotFound)
-                    await HandleNotFoundApiAsync(context);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Something went wrong ==> : {ex.Message}");
                 await HandleExceptionAsync(context, ex);
             }
         }
 
         private async Task HandleExceptionAsync(HttpContext context, Exception ex)
         {
-            context.Response.ContentType = "application/json";
-
-            var response = new ErrorDetails
+            var problem = new ApiProblemDetails
             {
-                Message = ex.Message
+                TraceId = context.TraceIdentifier
             };
 
-            context.Response.StatusCode = ex switch
+            switch (ex)
             {
-                UnAuthorizedException => StatusCodes.Status401Unauthorized,
-                ValidationException validationException => HandleValidationException(validationException, response),
-                _ => StatusCodes.Status500InternalServerError
-            };
+                case ValidationException ve:
+                    problem.Status = StatusCodes.Status400BadRequest;
+                    problem.Type = ErrorTypes.Validation;
+                    problem.Title = "Validation failed";
+                    problem.Errors = ve.Errors;
+                    break;
 
-            response.StatusCode = context.Response.StatusCode;
-            await context.Response.WriteAsync(response.ToString());
-        }
+                case UnauthorizedDomainException auth:
+                    problem.Status = StatusCodes.Status401Unauthorized;
+                    problem.Type = ErrorTypes.Unauthorized;
+                    problem.Title = auth.ErrorCode switch
+                    {
+                        "invalid_credentials" => "Invalid email or password",
+                        _ => "Unauthorized"
+                    };
 
+                    problem.Extensions["code"] = auth.ErrorCode;
+                    break;
 
-        private async Task HandleNotFoundApiAsync(HttpContext context)
-        {
-            context.Response.ContentType = "application/json";
+                case NotFoundException notFound:
+                    problem.Status = StatusCodes.Status404NotFound;
+                    problem.Type = ErrorTypes.NotFound;
+                    problem.Title = notFound.Message;
+                    break;
 
-            var response = new ErrorDetails
-            {
-                StatusCode = StatusCodes.Status404NotFound,
-                Message = $"The endpoint with url: '{context.Request.Path}' not found"
-            }.ToString();
+                case ConflictException conflict:
+                    problem.Status = StatusCodes.Status409Conflict;
+                    problem.Type = ErrorTypes.Conflict;
+                    problem.Title = conflict.Message;
+                    break;
 
-            await context.Response.WriteAsync(response);
-        }
-        private int HandleValidationException(ValidationException validationException, ErrorDetails response)
-        {
-            response.Errors = validationException.Errors;
-            return StatusCodes.Status400BadRequest;
+                default:
+                    _logger.LogError($"Something went wrong ==> : {ex.Message}");
+
+                    problem.Status = StatusCodes.Status500InternalServerError;
+                    problem.Type = ErrorTypes.ServerError;
+                    problem.Title = "Internal server error";
+                    break;
+            }
+
+            context.Response.StatusCode = problem.Status!.Value;
+            context.Response.ContentType = "application/problem+json";
+
+            await context.Response.WriteAsJsonAsync(problem);
         }
     }
 }
