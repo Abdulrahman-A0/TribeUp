@@ -56,6 +56,7 @@ namespace TribeUp.Extensions
             services.AddHostedService<RefreshTokenCleanupWorker>();
 
             services.AddScoped<INotificationPublisher, SignalRNotificationPublisher>();
+            services.AddScoped<IGroupChatNotifier, SignalRGroupChatNotifier>();
 
             services.AddSignalR();
 
