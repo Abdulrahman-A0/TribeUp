@@ -17,6 +17,7 @@ using Shared.DTOs.Posts;
 using Shared.Enums;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 
 namespace Service.Implementations
 {
@@ -45,21 +46,17 @@ namespace Service.Implementations
             _aiModerationManager = aiModerationManager;
         }
 
-        public async Task<CreatePostResultDTO> CreatePostAsync(CreatePostDTO dto, string userId, List<IFormFile> mediaFiles)
+        public async Task<CreateEntityResultDTO> CreatePostAsync(
+            string userId,
+            CreatePostDTO dto,
+            List<IFormFile> mediaFiles)
         {
             var post = _mapper.Map<Post>(dto);
             post.CreatedAt = DateTime.UtcNow;
             post.UserId = userId;
 
             if (string.IsNullOrWhiteSpace(post.Caption) && !mediaFiles.Any())
-            {
-                return new CreatePostResultDTO
-                {
-                    IsCreated = false,
-                    Status = ContentStatus.Denied,
-                    Message = "Post must contain text or media."
-                };
-            }
+                throw new ValidationException("Post must contain text or media.");
 
             foreach (var file in mediaFiles)
             {
@@ -78,7 +75,6 @@ namespace Service.Implementations
                 .GetRepository<Post, int>()
                 .AddAsync(post);
 
-
             await _unitOfWork.SaveChangesAsync(); // PostId generated here
 
             # region AI moderation result
@@ -90,7 +86,7 @@ namespace Service.Implementations
 
             if (!moderationResult.IsAccepted)
             {
-                return new CreatePostResultDTO
+                return new CreateEntityResultDTO
                 {
                     IsCreated = false,
                     Status = ContentStatus.Denied,
@@ -102,7 +98,7 @@ namespace Service.Implementations
 
             //await _groupScoreService.IncreaseOnActionAsync(dto.GroupId, 5);
 
-            return new CreatePostResultDTO
+            return new CreateEntityResultDTO
             {
                 IsCreated = true,
                 Status = ContentStatus.Accepted,
@@ -111,21 +107,32 @@ namespace Service.Implementations
 
         }
 
-        public async Task<PostFeedDTO> GetPostByIdAsync(string userId, int postId)
+
+        public async Task<PostDTO> GetPostByIdAsync(
+            string userId, 
+            int postId)
         {
             var spec = new PostByIdSpecification(postId);
 
             var post = await _unitOfWork
                 .GetRepository<Post, int>()
-                .GetByIdAsync(spec);
+                .GetByIdAsync(spec) 
+                ?? throw new PostNotFoundException(postId);
 
-            var mapped = _mapper.Map<PostFeedDTO>(post);
+            var mapped = _mapper.Map<PostDTO>(post);
 
             return mapped;
         }
 
-        public async Task<PagedResult<PostFeedDTO>> GetFeedAsync(string userId, int page, int pageSize)
+
+        public async Task<PagedResult<PostDTO>> GetFeedAsync(
+            string userId,
+            int page, 
+            int pageSize)
         {
+            if (page <= 0 || pageSize <= 0)
+                throw new ValidationException("Page and PageSize must be greater than zero.");
+
             var moderation = _unitOfWork
                 .GetRepository<AIModeration, int>()
                 .AsQueryable();
@@ -191,11 +198,11 @@ namespace Service.Implementations
                 .ThenByDescending(x => x.Post.CreatedAt)
                 .ToList();
 
-            return new PagedResult<PostFeedDTO>
+            return new PagedResult<PostDTO>
             {
                 Items = ordered.Select(x =>
                 {
-                    var dto = _mapper.Map<PostFeedDTO>(x.Post);
+                    var dto = _mapper.Map<PostDTO>(x.Post);
                     dto.IsLikedByCurrentUser = x.IsLikedByUser;
                     dto.FeedScore = x.FeedScore;
                     return dto;
@@ -207,16 +214,27 @@ namespace Service.Implementations
             };
         }
 
-        public async Task<PagedResult<PostFeedDTO>> GetGroupFeedAsync(string userId, int groupId, int page, int pageSize)
+
+        public async Task<PagedResult<PostDTO>> GetGroupFeedAsync(
+            string userId,
+            int groupId, 
+            int page, 
+            int pageSize)
         {
+            if (page <= 0 || pageSize <= 0)
+                throw new ValidationException("Page and PageSize must be greater than zero.");
+            
+            var group = await _unitOfWork
+                .GetRepository<Domain.Entities.Groups.Group, int>()
+                .GetByIdAsync(groupId)
+                ?? throw new GroupNotFoundException(groupId);
+
             var moderation = _unitOfWork
                 .GetRepository<AIModeration, int>()
                 .AsQueryable();
 
             var spec = new GroupPostFeedSpecification(userId, groupId, moderation, page, pageSize);
-
             var repo = _unitOfWork.GetRepository<Post, int>();
-
             var posts = await repo.GetAllAsync(spec);
 
             var totalCount = await repo.CountAsync(p =>
@@ -274,11 +292,11 @@ namespace Service.Implementations
                 .ThenByDescending(x => x.Post.CreatedAt)
                 .ToList();
 
-            return new PagedResult<PostFeedDTO>
+            return new PagedResult<PostDTO>
             {
                 Items = ordered.Select(x =>
                 {
-                    var dto = _mapper.Map<PostFeedDTO>(x.Post);
+                    var dto = _mapper.Map<PostDTO>(x.Post);
                     dto.IsLikedByCurrentUser = x.IsLikedByUser;
                     dto.FeedScore = x.FeedScore;
                     return dto;
@@ -292,50 +310,69 @@ namespace Service.Implementations
         }
 
 
-        public async Task<bool> ToggeleLikePostAsync(int postId, string userId)
+        public async Task<ToggleLikeDTO> ToggeleLikePostAsync(
+            string userId, 
+            int postId)
         {
-            var likeRepo = _unitOfWork.GetRepository<Like, int>();
+            var post = await _unitOfWork
+                .GetRepository<Post, int>()
+                .GetByIdAsync(postId)
+                ?? throw new PostNotFoundException(postId);
 
-            var spec = new LikeByPostAndUserSpecification(postId, userId);
-
-            var existingLike = await likeRepo.GetByIdAsync(spec);
+            var repo = _unitOfWork.GetRepository<Like, int>();
+            var spec = new LikeByPostAndUserSpecification(userId, postId);
+            var existingLike = await repo.GetByIdAsync(spec);
 
             if (existingLike is null)
             {
-                // like
                 var like = new Like
                 {
                     PostId = postId,
                     UserId = userId
                 };
 
-                await likeRepo.AddAsync(like);
+                await repo.AddAsync(like);
                 await _unitOfWork.SaveChangesAsync();
 
-                return true;
+                return new ToggleLikeDTO 
+                { 
+                    Message = "Liked"
+                };
             }
 
-            // unlike
-            likeRepo.Delete(existingLike);
+            repo.Delete(existingLike);
             await _unitOfWork.SaveChangesAsync();
 
-            return false;
+            return new ToggleLikeDTO 
+            { 
+                Message = "Unliked"
+            };
         }
 
 
-        public async Task<PagedResult<LikeResultDTO>> GetLikesByPostIdAsync(int postId, int page, int pageSize)
+        public async Task<PagedResult<LikesResultDTO>> GetLikesByPostIdAsync(
+            int postId, 
+            int page,
+            int pageSize)
         {
-            var spec = new LikesByPostIdSpecification(postId, page, pageSize);
+            if (page <= 0 || pageSize <= 0)
+                throw new ValidationException("Page and PageSize must be greater than zero.");
+            
+            var post = await _unitOfWork
+                 .GetRepository<Post, int>()
+                 .GetByIdAsync(postId)
+                 ?? throw new PostNotFoundException(postId);
 
+            var spec = new LikesByPostIdSpecification(postId, page, pageSize);
             var likes = await _unitOfWork
                 .GetRepository<Like, int>()
                 .GetAllAsync(spec);
 
             var totalCount = likes.Count();
 
-            var mapped = _mapper.Map<List<LikeResultDTO>>(likes);
+            var mapped = _mapper.Map<List<LikesResultDTO>>(likes);
 
-            return new PagedResult<LikeResultDTO>
+            return new PagedResult<LikesResultDTO>
             {
                 Items = mapped,
                 Page = page,
@@ -347,8 +384,16 @@ namespace Service.Implementations
         }
 
 
-        public async Task<int> AddCommentAsync(int postId, CreateCommentDTO dto, string userId)
-        {
+        public async Task<CreateEntityResultDTO> AddCommentAsync(
+            string userId, 
+            int postId, 
+            CommentDTO dto)
+        {           
+            var post = await _unitOfWork
+                .GetRepository<Post, int>()
+                .GetByIdAsync(postId)
+                ?? throw new PostNotFoundException(postId);
+
             var comment = new Comment
             {
                 PostId = postId,
@@ -359,22 +404,35 @@ namespace Service.Implementations
             await _unitOfWork
                 .GetRepository<Comment, int>()
                 .AddAsync(comment);
+            
+            await _unitOfWork.SaveChangesAsync();
 
-            return (await _unitOfWork.SaveChangesAsync());
+            return new CreateEntityResultDTO
+            {
+                IsCreated = true,
+                Status = ContentStatus.Accepted,
+                Message = "Comment created successfully"
+            };
 
         }
 
 
-        public async Task<PagedResult<CommentResultDTO>> GetCommentsByPostIdAsync(int postId, int page, int pageSize)
+        public async Task<PagedResult<CommentResultDTO>> GetCommentsByPostIdAsync(
+            int postId, 
+            int page, 
+            int pageSize)
         {
+            if (page <= 0 || pageSize <= 0)
+                throw new ValidationException("Page and PageSize must be greater than zero.");
+            var post = await _unitOfWork
+                .GetRepository<Post, int>()
+                .GetByIdAsync(postId)
+                ?? throw new PostNotFoundException(postId);
+
             var spec = new CommentsByPostIdSpecification(postId, page, pageSize);
-
-            var comments = await _unitOfWork
-                .GetRepository<Comment, int>()
-                .GetAllAsync(spec);
-
-            var totalCount = await _unitOfWork
-                .GetRepository<Comment, int>()
+            var repo = _unitOfWork.GetRepository<Comment, int>();
+            var comments = await repo.GetAllAsync(spec);
+            var totalCount = await repo
                 .CountAsync(c => c.PostId == postId);
 
             var mapped = _mapper.Map<List<CommentResultDTO>>(comments);
@@ -391,11 +449,14 @@ namespace Service.Implementations
         }
 
 
-        public async Task<DeleteEntityResultDTO> DeletePostAsync(string userId, int postId)
+        public async Task<DeleteEntityResultDTO> DeletePostAsync(
+            string userId, 
+            int postId)
         {
             var spec = new PostByIdSpecification(postId);
             var repo = _unitOfWork.GetRepository<Post, int>();
-            var post  = await repo.GetByIdAsync(spec) ?? throw new PostNotFoundException(postId);
+            var post  = await repo.GetByIdAsync(spec)
+                ?? throw new PostNotFoundException(postId);
 
             if(post.User.Id != userId)
                 if(!await IsAdminAsync(userId,post.GroupId))
@@ -406,17 +467,22 @@ namespace Service.Implementations
 
             repo.Delete(post);
             await _unitOfWork.SaveChangesAsync();
-            return new DeleteEntityResultDTO();
-
+            return new DeleteEntityResultDTO
+            {
+                Message = "Deleted successfully"
+            };
 
         }
 
 
-        public async Task<DeleteEntityResultDTO> DeleteCommentAsync(string userId, int commentId)
+        public async Task<DeleteEntityResultDTO> DeleteCommentAsync(
+            string userId, 
+            int commentId)
         {
-            var spec = new CommentByPostIdSpecification(commentId);
+            var spec = new CommentByIdSpecification(commentId);
             var repo = _unitOfWork.GetRepository<Comment, int>();
-            var comment  = await repo.GetByIdAsync(spec) ?? throw new CommentNotFoundException(commentId);
+            var comment  = await repo.GetByIdAsync(spec) 
+                ?? throw new CommentNotFoundException(commentId);
 
             if(comment.User.Id != userId)
                 if(!await IsAdminAsync(userId, comment.Post.GroupId))
@@ -427,9 +493,36 @@ namespace Service.Implementations
 
             repo.Delete(comment);
             await _unitOfWork.SaveChangesAsync();
-            return new DeleteEntityResultDTO();
+            return new DeleteEntityResultDTO
+            {
+                Message = "Deleted successfully"
+            };
 
+        }
+       
+        
+        public async Task<CreateEntityResultDTO> UpdateCommentAsync(
+            string userId,
+            int commentId, 
+            CommentDTO dto)
+        {
+            var spec = new CommentByIdSpecification(commentId);
+            var repo = _unitOfWork.GetRepository<Comment, int>();
+            var comment = await repo.GetByIdAsync(spec)
+                ?? throw new CommentNotFoundException(commentId);
 
+            comment.Content = dto.Content;
+
+            repo.Update(comment);
+            
+            await _unitOfWork.SaveChangesAsync();
+
+            return new CreateEntityResultDTO
+            {
+                IsCreated = true,
+                Status = ContentStatus.Accepted,
+                Message = "Comment updated successfully"
+            };
         }
 
 
@@ -444,6 +537,7 @@ namespace Service.Implementations
 
             return groupAdmins.Any(a => a.UserId == userId);
         }
+
 
         #endregion
 

@@ -61,7 +61,7 @@ namespace Presentation.Controller
 
 
         //[HttpGet("Feed")]
-        //public async Task<ActionResult<PagedResult<PostFeedDTO>>> GetFeed(int page = 1, int pageSize = 20)
+        //public async Task<ActionResult<PagedResult<PostDTO>>> GetFeed(int page = 1, int pageSize = 20)
         //    => Ok(await service.PostService.GetFeedAsync(UserId, page, pageSize));
     }
 }

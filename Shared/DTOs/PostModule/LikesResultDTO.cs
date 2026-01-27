@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Shared.DTOs.PostModule
 {
-    public class LikeResultDTO
+    public class LikesResultDTO
     {
         public string UserId { get; set; } = null!;
         public string Username { get; set; } = null!;

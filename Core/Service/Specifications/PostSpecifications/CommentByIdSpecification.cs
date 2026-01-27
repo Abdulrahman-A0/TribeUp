@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace Service.Specifications.PostSpecifications
 {
-    internal class CommentByPostIdSpecification : BaseSpecifications<Comment, int>
+    internal class CommentByIdSpecification : BaseSpecifications<Comment, int>
     {
-        public CommentByPostIdSpecification(int commentId)
+        public CommentByIdSpecification(int commentId)
                     : base(c => c.Id == commentId)
         {
             AddIncludes(c => c.User);

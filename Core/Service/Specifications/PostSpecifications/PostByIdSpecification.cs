@@ -10,7 +10,6 @@ namespace Service.Specifications.PostSpecifications
 {
     public class PostByIdSpecification : BaseSpecifications<Post, int>
     {
-        //public string CurrentUserId { get; }
 
         public PostByIdSpecification(int postId)
             : base(p =>
@@ -30,7 +29,6 @@ namespace Service.Specifications.PostSpecifications
             )
         {
 
-            //CurrentUserId = currentUserId;
 
             AddIncludes(p => p.User);
             AddIncludes(p => p.Group);

@@ -14,7 +14,7 @@ namespace Service.MappingProfiles
         {
             //Feed
 
-            CreateMap<Post, PostFeedDTO>()
+            CreateMap<Post, PostDTO>()
                  .ForMember(dest => dest.PostId,
                      opt => opt.MapFrom(src => src.Id))
                  .ForMember(dest => dest.UserId,
@@ -70,7 +70,7 @@ namespace Service.MappingProfiles
 
 
             // Get Likes
-            CreateMap<Like, LikeResultDTO>()
+            CreateMap<Like, LikesResultDTO>()
                 .ForMember(dest => dest.UserId,
                     opt => opt.MapFrom(src => src.UserId))
                 .ForMember(dest => dest.Username,

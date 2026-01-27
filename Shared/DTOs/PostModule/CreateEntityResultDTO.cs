@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace Shared.DTOs.PostModule
 {
-    public class CreatePostResultDTO
+    public class CreateEntityResultDTO
     {
         public bool IsCreated { get; set; }
-        public string Message { get; set; }
         public ContentStatus Status { get; set; }
+        public string Message { get; set; }
     }
 }

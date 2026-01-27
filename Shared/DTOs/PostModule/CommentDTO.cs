@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Shared.DTOs.PostModule
+namespace Shared.DTOs.Posts
 {
-    public class DeleteEntityResultDTO
+    public class CommentDTO
     {
-        public string Message { get; set; } = null!;
+        public string Content { get; set; } = null!;
     }
 }

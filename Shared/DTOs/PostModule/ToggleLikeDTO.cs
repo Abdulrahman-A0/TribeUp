@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Shared.DTOs.Posts
+namespace Shared.DTOs.PostModule
 {
-    public class CreateCommentDTO
+    public class ToggleLikeDTO
     {
-        public string Content { get; set; } = null!;
+        public string Message { get; set; } = null!;
     }
 }

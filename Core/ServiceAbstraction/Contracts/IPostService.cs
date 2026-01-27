@@ -12,15 +12,16 @@ namespace ServiceAbstraction.Contracts
 
     public interface IPostService
     {
-        Task<CreatePostResultDTO> CreatePostAsync(CreatePostDTO dto, string userId, List<IFormFile> mediaFiles);
+        Task<CreateEntityResultDTO> CreatePostAsync(string userId, CreatePostDTO dto, List<IFormFile> mediaFiles);
         Task<DeleteEntityResultDTO> DeletePostAsync(string userId, int postId);
-        Task<PostFeedDTO> GetPostByIdAsync(string userId, int postId);
-        Task<PagedResult<PostFeedDTO>> GetFeedAsync(string userId, int page, int pageSize);
-        Task<PagedResult<PostFeedDTO>> GetGroupFeedAsync(string userId, int groupId, int page, int pageSize);
-        Task<bool> ToggeleLikePostAsync(int postId, string userId);
-        Task<PagedResult<LikeResultDTO>> GetLikesByPostIdAsync(int postId, int page, int pageSize);
-        Task<int> AddCommentAsync(int postId, CreateCommentDTO dto, string userId);
+        Task<PostDTO> GetPostByIdAsync(string userId, int postId);
+        Task<PagedResult<PostDTO>> GetFeedAsync(string userId, int page, int pageSize);
+        Task<PagedResult<PostDTO>> GetGroupFeedAsync(string userId, int groupId, int page, int pageSize);
+        Task<ToggleLikeDTO> ToggeleLikePostAsync(string userId, int postId);
+        Task<PagedResult<LikesResultDTO>> GetLikesByPostIdAsync(int postId, int page, int pageSize);
+        Task<CreateEntityResultDTO> AddCommentAsync(string userId, int postId, CommentDTO dto);
         Task<DeleteEntityResultDTO> DeleteCommentAsync(string userId, int commentId);
+        Task<CreateEntityResultDTO> UpdateCommentAsync(string userId, int commentId, CommentDTO dto);
         Task<PagedResult<CommentResultDTO>> GetCommentsByPostIdAsync(int postId, int page, int pageSize);
     }
 }
