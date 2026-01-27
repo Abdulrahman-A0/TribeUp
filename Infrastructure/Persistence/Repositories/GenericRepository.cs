@@ -22,27 +22,6 @@ namespace Persistence.Repositories
             return asNoTracking ? await dbContext.Set<TEntity>().AsNoTracking().ToListAsync()
                 : await dbContext.Set<TEntity>().AsTracking().ToListAsync();
         }
-        public async Task<IEnumerable<Post>> GetAllAsync(ISpecifications<Post, int> spec)
-        {
-            var query = SpecificationEvaluator
-                .CreateQuery(dbContext.Set<Post>(), spec);
-
-            if (spec is PostFeedSpecification postSpec)
-            {
-                query = query.Where(p =>
-                    p.UserId == postSpec.CurrentUserId
-                    ||
-                    !dbContext.Set<AIModeration>().Any(m =>
-                        m.EntityType == ModeratedEntityType.Post &&
-                        m.EntityId == p.Id &&
-                        m.Status == ContentStatus.Denied
-                    )
-                );
-            }
-
-            return await query.ToListAsync();
-        }
-
         public async Task<TEntity?> GetByIdAsync(TKey Id)
         {
             return await dbContext.Set<TEntity>().FindAsync(Id);
@@ -65,6 +44,11 @@ namespace Persistence.Repositories
         {
             return await dbContext.Set<TEntity>().CountAsync(predicate);
         }
+        public IQueryable<TEntity> AsQueryable()
+        {
+            return dbContext.Set<TEntity>();
+        }
+
 
 
         #region Specifications

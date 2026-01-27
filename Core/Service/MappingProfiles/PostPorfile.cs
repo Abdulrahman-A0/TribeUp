@@ -3,7 +3,6 @@ using Domain.Entities.Media;
 using Domain.Entities.Posts;
 using Microsoft.Extensions.Configuration;
 using Service.MappingProfiles.MediaResolvers;
-using Service.MappingProfiles.UrlResolvers;
 using Shared.DTOs.PostModule;
 using Shared.DTOs.Posts;
 

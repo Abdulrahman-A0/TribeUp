@@ -16,6 +16,7 @@ namespace Domain.Contracts
         void Update(TEntity entity);
         void Delete(TEntity entity);
         Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate);
+        IQueryable<TEntity> AsQueryable();
 
 
         #region Specifications

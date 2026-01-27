@@ -5,19 +5,26 @@ namespace Service.Specifications.PostSpecifications
 {
     public class GroupPostFeedSpecification : BaseSpecifications<Post, int>
     {
-        public string CurrentUserId { get; }
-
-        public GroupPostFeedSpecification(string currentUserId, int groupId, int page, int pageSize)
+        
+        public GroupPostFeedSpecification(
+            string currentUserId, 
+            int groupId, 
+            IQueryable<AIModeration> moderations, 
+            int page, 
+            int pageSize)
             : base(p =>
                     p.GroupId == groupId
-                  &&
+                &&
                 (
-                    //p.Group.GroupMembers.Any(m => m.UserId == currentUserId) ||
-                    p.UserId == currentUserId
-                )
+                p.UserId == currentUserId ||
+                    !moderations.Any(m =>
+                        m.EntityType == ModeratedEntityType.Post &&
+                        m.EntityId == p.Id &&
+                        m.Status == ContentStatus.Denied
+                    )
+               )
             )
         {
-            CurrentUserId = currentUserId;
 
             AddIncludes(p => p.User);
             AddIncludes(p => p.Group);
@@ -26,7 +33,7 @@ namespace Service.Specifications.PostSpecifications
             AddIncludes(p => p.Comments);
             AddIncludes(p => p.MediaItems);
 
-            ApplyPagination(pageSize, page);
+            ApplyPagination(page, pageSize);
         }
     }
 }

@@ -126,14 +126,25 @@ namespace Service.Implementations
 
         public async Task<PagedResult<PostFeedDTO>> GetFeedAsync(string userId, int page, int pageSize)
         {
-            var spec = new PostFeedSpecification(userId, page, pageSize);
+            var moderation = _unitOfWork
+                .GetRepository<AIModeration, int>()
+                .AsQueryable();
+
+            var spec = new PostFeedSpecification(userId, moderation, page, pageSize);
 
             var repo = _unitOfWork.GetRepository<Post, int>();
             
             var posts = await repo.GetAllAsync(spec);
 
-            var totalCount = await repo.CountAsync(p => true);
-
+            var totalCount = await repo.CountAsync(p =>
+                    !moderation.Any(m =>
+                        m.EntityType == ModeratedEntityType.Post &&
+                        m.EntityId == p.Id &&
+                        m.Status == ContentStatus.Denied &&
+                        p.UserId != userId
+                    )
+                );
+            
             var scored = posts.Select(post =>
             {
                 var member = post.Group.GroupMembers
@@ -198,11 +209,24 @@ namespace Service.Implementations
 
         public async Task<PagedResult<PostFeedDTO>> GetGroupFeedAsync(string userId, int groupId, int page, int pageSize)
         {
-            var spec = new GroupPostFeedSpecification(userId, groupId, page, pageSize);
+            var moderation = _unitOfWork
+                .GetRepository<AIModeration, int>()
+                .AsQueryable();
 
-            var posts = await _unitOfWork
-                .GetRepository<Post, int>()
-                .GetAllAsync(spec);
+            var spec = new GroupPostFeedSpecification(userId, groupId, moderation, page, pageSize);
+
+            var repo = _unitOfWork.GetRepository<Post, int>();
+
+            var posts = await repo.GetAllAsync(spec);
+
+            var totalCount = await repo.CountAsync(p =>
+                    !moderation.Any(m =>
+                        m.EntityType == ModeratedEntityType.Post &&
+                        m.EntityId == p.Id &&
+                        m.Status == ContentStatus.Denied &&
+                        p.UserId != userId
+                    )
+                );
 
             var scored = posts.Select(post =>
             {
@@ -261,7 +285,8 @@ namespace Service.Implementations
                 }).ToList(),
                 Page = page,
                 PageSize = pageSize,
-                HasMore = ordered.Count == pageSize
+                TotalCount = totalCount,
+                HasMore = totalCount > page * pageSize
             };
 
         }
