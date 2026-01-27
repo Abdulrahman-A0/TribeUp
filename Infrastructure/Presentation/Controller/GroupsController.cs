@@ -59,9 +59,5 @@ namespace Presentation.Controller
         public async Task<ActionResult<PagedResult<GroupResultDTO>>> ExploreGroupsAsync(int page = 1, int pageSize = 20)
             => Ok(await serviceManager.GroupService.ExploreGroupsAsync(page, pageSize, UserId));
 
-
-        //[HttpGet("Feed")]
-        //public async Task<ActionResult<PagedResult<PostFeedDTO>>> GetFeed(int page = 1, int pageSize = 20)
-        //    => Ok(await service.PostService.GetFeedAsync(UserId, page, pageSize));
     }
 }
