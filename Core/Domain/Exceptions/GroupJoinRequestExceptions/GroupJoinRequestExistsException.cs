@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Domain.Exceptions.Abstraction;
 
 namespace Domain.Exceptions.GroupJoinRequestExceptions
 {
-    public class GroupJoinRequestExistsException : Exception
+    public sealed class GroupJoinRequestExistsException
+    : ConflictException
     {
-        public GroupJoinRequestExistsException(int Id) : base($"Request with Id `{Id}` was sent before")
-        {
-            
-        }
+        public GroupJoinRequestExistsException(int id)
+            : base($"Join request with Id '{id}' already exists") { }
     }
+
 }
