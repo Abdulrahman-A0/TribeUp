@@ -152,7 +152,7 @@ namespace Service.Implementations
             };
 
             await memberRepo.AddAsync(newMember);
-            await groupScoreService.IncreaseOnJoinAsync(request.GroupId, 10);
+            await groupScoreService.IncreaseOnActionAsync(request.GroupId, 10);
 
             await notificationService.CreateAsync(new CreateNotificationDTO
             {
