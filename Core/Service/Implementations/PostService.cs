@@ -6,18 +6,14 @@ using Domain.Entities.Posts;
 using Domain.Exceptions.GroupExceptions;
 using Domain.Exceptions.PostExceptions;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting;
-using Service.Specifications;
 using Service.Specifications.GroupMemberSpecs;
 using Service.Specifications.PostSpecifications;
 using ServiceAbstraction.Contracts;
+using Shared.DTOs.NotificationModule;
 using Shared.DTOs.PostModule;
 using Shared.DTOs.Posts;
 using Shared.Enums;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Text.RegularExpressions;
 
 namespace Service.Implementations
 {
@@ -27,7 +23,14 @@ namespace Service.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly IFileStorageService _fileStorage;
         private readonly IGroupScoreService _groupScoreService;
+        private readonly INotificationService _notificationService;
         private readonly IAIModerationManager _aiModerationManager;
+
+        private readonly IGenericRepository<Post, int> postRepo;
+        private readonly IGenericRepository<Like, int> likeRepo;
+        private readonly IGenericRepository<Group, int> groupRepo;
+        private readonly IGenericRepository<Comment, int> commentRepo;
+        private readonly IGenericRepository<AIModeration, int> moderationRepo;
 
 
         public PostService
@@ -36,6 +39,7 @@ namespace Service.Implementations
             IUnitOfWork unitOfWork,
             IFileStorageService fileStorage,
             IGroupScoreService groupScoreService,
+            INotificationService notificationService,
             IAIModerationManager aiModerationManager
             )
         {
@@ -43,7 +47,14 @@ namespace Service.Implementations
             _unitOfWork = unitOfWork;
             _fileStorage = fileStorage;
             _groupScoreService = groupScoreService;
+            _notificationService = notificationService;
             _aiModerationManager = aiModerationManager;
+
+            postRepo = _unitOfWork.GetRepository<Post, int>();
+            likeRepo = _unitOfWork.GetRepository<Like, int>();
+            groupRepo = _unitOfWork.GetRepository<Group, int>();
+            commentRepo = _unitOfWork.GetRepository<Comment, int>();
+            moderationRepo = _unitOfWork.GetRepository<AIModeration, int>();
         }
 
         public async Task<CreateEntityResultDTO> CreatePostAsync(
@@ -71,11 +82,9 @@ namespace Service.Implementations
                 });
             }
 
-            await _unitOfWork
-                .GetRepository<Post, int>()
-                .AddAsync(post);
+            await postRepo.AddAsync(post);
 
-            await _unitOfWork.SaveChangesAsync(); // PostId generated here
+            await _unitOfWork.SaveChangesAsync();
 
             # region AI moderation result
 
@@ -113,10 +122,7 @@ namespace Service.Implementations
             int postId)
         {
             var spec = new PostByIdSpecification(postId);
-
-            var post = await _unitOfWork
-                .GetRepository<Post, int>()
-                .GetByIdAsync(spec) 
+            var post = await postRepo.GetByIdAsync(spec) 
                 ?? throw new PostNotFoundException(postId);
 
             var mapped = _mapper.Map<PostDTO>(post);
@@ -133,17 +139,11 @@ namespace Service.Implementations
             if (page <= 0 || pageSize <= 0)
                 throw new ValidationException("Page and PageSize must be greater than zero.");
 
-            var moderation = _unitOfWork
-                .GetRepository<AIModeration, int>()
-                .AsQueryable();
-
+            var moderation = moderationRepo.AsQueryable();
             var spec = new PostFeedSpecification(userId, moderation, page, pageSize);
+            var posts = await postRepo.GetAllAsync(spec);
 
-            var repo = _unitOfWork.GetRepository<Post, int>();
-            
-            var posts = await repo.GetAllAsync(spec);
-
-            var totalCount = await repo.CountAsync(p =>
+            var totalCount = await postRepo.CountAsync(p =>
                     !moderation.Any(m =>
                         m.EntityType == ModeratedEntityType.Post &&
                         m.EntityId == p.Id &&
@@ -224,20 +224,14 @@ namespace Service.Implementations
             if (page <= 0 || pageSize <= 0)
                 throw new ValidationException("Page and PageSize must be greater than zero.");
             
-            var group = await _unitOfWork
-                .GetRepository<Domain.Entities.Groups.Group, int>()
-                .GetByIdAsync(groupId)
+            var group = await groupRepo.GetByIdAsync(groupId)
                 ?? throw new GroupNotFoundException(groupId);
 
-            var moderation = _unitOfWork
-                .GetRepository<AIModeration, int>()
-                .AsQueryable();
-
+            var moderation = moderationRepo.AsQueryable();
             var spec = new GroupPostFeedSpecification(userId, groupId, moderation, page, pageSize);
-            var repo = _unitOfWork.GetRepository<Post, int>();
-            var posts = await repo.GetAllAsync(spec);
+            var posts = await postRepo.GetAllAsync(spec);
 
-            var totalCount = await repo.CountAsync(p =>
+            var totalCount = await postRepo.CountAsync(p =>
                     !moderation.Any(m =>
                         m.EntityType == ModeratedEntityType.Post &&
                         m.EntityId == p.Id &&
@@ -314,14 +308,11 @@ namespace Service.Implementations
             string userId, 
             int postId)
         {
-            var post = await _unitOfWork
-                .GetRepository<Post, int>()
-                .GetByIdAsync(postId)
+            var post = await postRepo.GetByIdAsync(postId)
                 ?? throw new PostNotFoundException(postId);
 
-            var repo = _unitOfWork.GetRepository<Like, int>();
             var spec = new LikeByPostAndUserSpecification(userId, postId);
-            var existingLike = await repo.GetByIdAsync(spec);
+            var existingLike = await likeRepo.GetByIdAsync(spec);
 
             if (existingLike is null)
             {
@@ -331,8 +322,18 @@ namespace Service.Implementations
                     UserId = userId
                 };
 
-                await repo.AddAsync(like);
+                await likeRepo.AddAsync(like);
                 await _unitOfWork.SaveChangesAsync();
+
+                await _notificationService.CreateAsync(new CreateNotificationDTO
+                {
+                    RecipientUserId = post.UserId,
+                    ActorUserId = userId,
+                    Type = NotificationType.PostLike,
+                    Title = $"New like on your post",
+                    Message = $"liked your post: \"{GetFirstWord(post.Caption)}\"",
+                    ReferenceId = like.Id
+                });
 
                 return new ToggleLikeDTO 
                 { 
@@ -340,7 +341,7 @@ namespace Service.Implementations
                 };
             }
 
-            repo.Delete(existingLike);
+            likeRepo.Delete(existingLike);
             await _unitOfWork.SaveChangesAsync();
 
             return new ToggleLikeDTO 
@@ -358,15 +359,11 @@ namespace Service.Implementations
             if (page <= 0 || pageSize <= 0)
                 throw new ValidationException("Page and PageSize must be greater than zero.");
             
-            var post = await _unitOfWork
-                 .GetRepository<Post, int>()
-                 .GetByIdAsync(postId)
+            var post = await postRepo.GetByIdAsync(postId)
                  ?? throw new PostNotFoundException(postId);
 
             var spec = new LikesByPostIdSpecification(postId, page, pageSize);
-            var likes = await _unitOfWork
-                .GetRepository<Like, int>()
-                .GetAllAsync(spec);
+            var likes = await likeRepo.GetAllAsync(spec);
 
             var totalCount = likes.Count();
 
@@ -388,10 +385,11 @@ namespace Service.Implementations
             string userId, 
             int postId, 
             CommentDTO dto)
-        {           
-            var post = await _unitOfWork
-                .GetRepository<Post, int>()
-                .GetByIdAsync(postId)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Content))
+                throw new ValidationException("Comment must contain text");
+
+            var post = await postRepo.GetByIdAsync(postId)
                 ?? throw new PostNotFoundException(postId);
 
             var comment = new Comment
@@ -401,11 +399,19 @@ namespace Service.Implementations
                 Content = dto.Content
             };
 
-            await _unitOfWork
-                .GetRepository<Comment, int>()
-                .AddAsync(comment);
+            await commentRepo.AddAsync(comment);
             
             await _unitOfWork.SaveChangesAsync();
+
+            await _notificationService.CreateAsync(new CreateNotificationDTO
+            {
+                RecipientUserId = post.UserId,
+                ActorUserId = userId,
+                Type = NotificationType.PostComment,
+                Title = $"New comment on your post: \"{GetFirstWord(post.Caption)}\"",
+                Message = $"commented: \"{GetFirstWord(comment.Content)}\"",
+                ReferenceId = comment.Id
+            });
 
             return new CreateEntityResultDTO
             {
@@ -424,15 +430,12 @@ namespace Service.Implementations
         {
             if (page <= 0 || pageSize <= 0)
                 throw new ValidationException("Page and PageSize must be greater than zero.");
-            var post = await _unitOfWork
-                .GetRepository<Post, int>()
-                .GetByIdAsync(postId)
+            var post = await postRepo.GetByIdAsync(postId)
                 ?? throw new PostNotFoundException(postId);
 
             var spec = new CommentsByPostIdSpecification(postId, page, pageSize);
-            var repo = _unitOfWork.GetRepository<Comment, int>();
-            var comments = await repo.GetAllAsync(spec);
-            var totalCount = await repo
+            var comments = await commentRepo.GetAllAsync(spec);
+            var totalCount = await commentRepo
                 .CountAsync(c => c.PostId == postId);
 
             var mapped = _mapper.Map<List<CommentResultDTO>>(comments);
@@ -454,8 +457,7 @@ namespace Service.Implementations
             int postId)
         {
             var spec = new PostByIdSpecification(postId);
-            var repo = _unitOfWork.GetRepository<Post, int>();
-            var post  = await repo.GetByIdAsync(spec)
+            var post  = await postRepo.GetByIdAsync(spec)
                 ?? throw new PostNotFoundException(postId);
 
             if(post.User.Id != userId)
@@ -465,7 +467,7 @@ namespace Service.Implementations
                         Message = "You don't have permission to delete this post"
                     };
 
-            repo.Delete(post);
+            postRepo.Delete(post);
             await _unitOfWork.SaveChangesAsync();
             return new DeleteEntityResultDTO
             {
@@ -480,8 +482,7 @@ namespace Service.Implementations
             int commentId)
         {
             var spec = new CommentByIdSpecification(commentId);
-            var repo = _unitOfWork.GetRepository<Comment, int>();
-            var comment  = await repo.GetByIdAsync(spec) 
+            var comment  = await commentRepo.GetByIdAsync(spec) 
                 ?? throw new CommentNotFoundException(commentId);
 
             if(comment.User.Id != userId)
@@ -491,7 +492,7 @@ namespace Service.Implementations
                         Message = "You don't have permission to delete this comment"
                     };
 
-            repo.Delete(comment);
+            commentRepo.Delete(comment);
             await _unitOfWork.SaveChangesAsync();
             return new DeleteEntityResultDTO
             {
@@ -507,13 +508,12 @@ namespace Service.Implementations
             CommentDTO dto)
         {
             var spec = new CommentByIdSpecification(commentId);
-            var repo = _unitOfWork.GetRepository<Comment, int>();
-            var comment = await repo.GetByIdAsync(spec)
+            var comment = await commentRepo.GetByIdAsync(spec)
                 ?? throw new CommentNotFoundException(commentId);
 
             comment.Content = dto.Content;
 
-            repo.Update(comment);
+            commentRepo.Update(comment);
             
             await _unitOfWork.SaveChangesAsync();
 
@@ -538,6 +538,16 @@ namespace Service.Implementations
             return groupAdmins.Any(a => a.UserId == userId);
         }
 
+        private static string GetFirstWord(string? text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return "...";
+
+            return text
+                .Trim()
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .First() + "...";
+        }
 
         #endregion
 

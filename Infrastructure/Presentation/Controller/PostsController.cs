@@ -12,6 +12,7 @@ namespace Presentation.Controller
     [Authorize]
     public class PostsController(IServiceManager service) : ApiController
     {
+
         [HttpPost("CreatePost")]
         public async Task<ActionResult<CreateEntityResultDTO>> CreatePost(
             [FromForm] CreatePostDTO dto,
