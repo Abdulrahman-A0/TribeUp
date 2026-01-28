@@ -26,6 +26,7 @@ namespace Service.Implementations
         private readonly INotificationService _notificationService;
         private readonly IAIModerationManager _aiModerationManager;
 
+        private readonly IGenericRepository<Tag, int> tagRepo;
         private readonly IGenericRepository<Post, int> postRepo;
         private readonly IGenericRepository<Like, int> likeRepo;
         private readonly IGenericRepository<Group, int> groupRepo;
@@ -50,6 +51,7 @@ namespace Service.Implementations
             _notificationService = notificationService;
             _aiModerationManager = aiModerationManager;
 
+            tagRepo = _unitOfWork.GetRepository<Tag, int>();
             postRepo = _unitOfWork.GetRepository<Post, int>();
             likeRepo = _unitOfWork.GetRepository<Like, int>();
             groupRepo = _unitOfWork.GetRepository<Group, int>();
@@ -85,6 +87,28 @@ namespace Service.Implementations
             await postRepo.AddAsync(post);
 
             await _unitOfWork.SaveChangesAsync();
+
+
+            foreach (var taggedUserId in dto.TaggedUserIds.Distinct())
+            {
+                var tag = new Tag
+                {
+                    PostId = post.Id,
+                    UserId = taggedUserId
+                };
+
+                await tagRepo.AddAsync(tag);
+
+                await _notificationService.CreateAsync(new CreateNotificationDTO
+                {
+                    RecipientUserId = taggedUserId,
+                    ActorUserId = userId,
+                    Type = NotificationType.PostTag,
+                    Title = "You were tagged in a post",
+                    Message = $"tagged you in his post: \"{GetFirstWord(post.Caption)}\"",
+                    ReferenceId = tag.Id
+                });
+            }
 
             # region AI moderation result
 

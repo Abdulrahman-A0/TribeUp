@@ -12,6 +12,6 @@ namespace Shared.DTOs.Posts
         public int GroupId { get; set; }
         public string? Caption { get; set; }
         public AccessibilityType Accessibility { get; set; }
-
+        public List<string> TaggedUserIds { get; set; } = [];
     }
 }

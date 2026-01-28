@@ -5,6 +5,7 @@
         GroupJoinRequest,
         GroupJoinApproved,
         GroupJoinRejected,
+        PostTag,
         PostLike,
         PostComment,
         System

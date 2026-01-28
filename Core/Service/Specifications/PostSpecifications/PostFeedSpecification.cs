@@ -34,6 +34,7 @@ namespace Service.Specifications.PostSpecifications
             )
         {
             AddIncludes(p => p.User);
+            AddIncludes(p => p.Tags);
             AddIncludes(p => p.Group);
             AddIncludes(p => p.Group.GroupMembers);
             AddIncludes(p => p.MediaItems);
