@@ -3,26 +3,18 @@ using Domain.Contracts;
 using Domain.Entities.Groups;
 using Domain.Exceptions.GroupExceptions;
 using Domain.Exceptions.GroupMemberExceptions;
-using Domain.Exceptions.Validation;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Hosting;
 using Service.Specifications.GroupMemberSpecs;
 using Service.Specifications.GroupSpecs;
 using ServiceAbstraction.Contracts;
-using Shared.DTOs.GroupMemberModule;
 using Shared.DTOs.GroupModule;
 using Shared.DTOs.Posts;
 using Shared.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Service.Implementations
 {
-    public class GroupService(IUnitOfWork unitOfWork, IMapper mapper, IWebHostEnvironment environment) : IGroupService
+    public class GroupService(IUnitOfWork unitOfWork, IMapper mapper,
+        IWebHostEnvironment environment, IFileStorageService fileStorage) : IGroupService
     {
         public async Task<List<GroupResultDTO>> GetAllGroupsAsync()
         {
@@ -112,7 +104,7 @@ namespace Service.Implementations
             return mapper.Map<GroupResultDTO>(group);
         }
 
-        
+
 
 
         public async Task<bool> DeleteGroupAsync(int groupId, string userId)
@@ -128,7 +120,7 @@ namespace Service.Implementations
             await unitOfWork.SaveChangesAsync();
             return true;
         }
-        
+
 
 
 
@@ -141,12 +133,11 @@ namespace Service.Implementations
 
             await EnsureUserIsAdmin(groupId, userId);
 
-            ValidateImage(updateGroupPictureDTO.Picture);
+            var newRelativePath = await fileStorage
+                .SaveAsync(updateGroupPictureDTO.Picture, MediaType.GroupProfile);
 
-            var newRelativePath = await SaveGroupPictureAsync(updateGroupPictureDTO.Picture);
-
-            if(!string.IsNullOrWhiteSpace(group.GroupProfilePicture))
-                DeleteFileIfExists(group.GroupProfilePicture);
+            if (!string.IsNullOrWhiteSpace(group.GroupProfilePicture))
+                await fileStorage.DeleteAsync(group.GroupProfilePicture);
 
             group.GroupProfilePicture = newRelativePath;
 
@@ -168,10 +159,10 @@ namespace Service.Implementations
 
             await EnsureUserIsAdmin(groupId, userId);
 
-            if(string.IsNullOrWhiteSpace(group.GroupProfilePicture))
+            if (string.IsNullOrWhiteSpace(group.GroupProfilePicture))
                 return true;
 
-            DeleteFileIfExists(group.GroupProfilePicture);
+            await fileStorage.DeleteAsync(group.GroupProfilePicture);
 
             group.GroupProfilePicture = null;
 
@@ -189,7 +180,7 @@ namespace Service.Implementations
             var spec = new ExploreGroupsSpec(page, pageSize);
             var groups = await unitOfWork.GetRepository<Group, int>().GetAllAsync(spec);
 
-            const int memberBonus = 5;        
+            const int memberBonus = 5;
             const int membershipPenalty = 1000;
 
             var scored =
@@ -235,51 +226,11 @@ namespace Service.Implementations
                 ?? throw new GroupMemberNotFoundException(userId);
 
             if (member.Role != RoleType.Admin)
-                throw new UnauthorizedAccessException("Only group admins can perform this action");
+                throw new GroupAdminOnlyException();
 
             return member;
         }
 
-        private static void ValidateImage(IFormFile file)
-        {
-            var allowedTypes = new[] { "image/jpg", "image/jpeg", "image/png", "image/webp" };
-
-            if (!allowedTypes.Contains(file.ContentType))
-                throw new ValidationException(["Invalid image type"]);
-
-            if (file.Length > 2 * 1024 * 1024)
-                throw new ValidationException(["Image size must be under 2MB"]);
-        }
-
-        private async Task<string> SaveGroupPictureAsync(IFormFile file)
-        {
-            var uploadsRoot = Path.Combine(
-                environment.WebRootPath,
-                "images",
-                "ProfilePictures",
-                "Groups");
-
-            Directory.CreateDirectory(uploadsRoot);
-
-            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-            var fullPath = Path.Combine(uploadsRoot, fileName);
-
-            await using var stream = new FileStream(fullPath, FileMode.Create);
-            await file.CopyToAsync(stream);
-
-
-            return $"images/ProfilePictures/Groups/{fileName}";
-        }
-
-        private void DeleteFileIfExists(string relativePath)
-        {
-            var fullPath = Path.Combine(environment.WebRootPath, relativePath);
-
-            if (File.Exists(fullPath))
-                File.Delete(fullPath);
-        }
-
-        
     }
 }
 

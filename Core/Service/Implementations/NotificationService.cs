@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Domain.Contracts;
 using Domain.Entities.Users;
-using Microsoft.AspNetCore.SignalR;
+using Domain.Exceptions.NotificationExceptions;
 using Service.Specifications.NotificationSpecifications;
 using ServiceAbstraction.Contracts;
 using Shared.DTOs.NotificationModule;
@@ -32,10 +32,11 @@ namespace Service.Implementations
 
             var notification = await unitOfWork
                 .GetRepository<Notification, int>()
-                .GetByIdAsync(notificationId);
+                .GetByIdAsync(notificationId)
+                ?? throw new NotificationNotFoundException(notificationId);
 
-            if (notification is null || notification.UserId != userId)
-                throw new UnauthorizedAccessException();
+            if (notification.UserId != userId)
+                throw new NotificationAccessDeniedException();
 
             notification.IsRead = true;
 

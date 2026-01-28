@@ -1,14 +1,13 @@
 ﻿using AutoMapper;
 using Domain.Contracts;
 using Domain.Entities.Users;
-using Domain.Exceptions.UnAuthorized;
-using Domain.Exceptions.Validation;
+using Domain.Exceptions.AuthExceptions;
+using Domain.Exceptions.UserExceptions;
+using Domain.Exceptions.ValidationExceptions;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Service.Specifications;
 using Service.Specifications.RefreshTokenSpecifications;
 using ServiceAbstraction.Contracts;
 using Shared.Common;
@@ -27,10 +26,10 @@ namespace Service.Implementations
         public async Task<AuthResponseDTO> LoginAsync(LoginDTO loginDTO, string deviceId)
         {
             var user = await _userManager.FindByEmailAsync(loginDTO.Email);
-            if (user is null) throw new UnAuthorizedException();
+            if (user is null) throw new AuthenticationFailedException("invalid_credentials");
 
             var result = await _userManager.CheckPasswordAsync(user, loginDTO.Password);
-            if (!result) throw new UnAuthorizedException();
+            if (!result) throw new AuthenticationFailedException("invalid_credentials");
 
             foreach (var rt in user.RefreshTokens.Where(rt => rt.DeviceId == deviceId))
                 rt.IsRevoked = true;
@@ -63,14 +62,12 @@ namespace Service.Implementations
                 .GetRepository<RefreshToken, Guid>()
                 .GetByIdAsync(specification);
 
-            if (storedToken is null)
-                throw new UnAuthorizedException("Invalid refresh token");
-
-            if (storedToken.IsRevoked)
-                throw new UnAuthorizedException("Refresh token revoked");
-
-            if (storedToken.ExpiresAt < DateTime.UtcNow)
-                throw new UnAuthorizedException("Refresh token expired");
+            if (storedToken is null ||
+                storedToken.IsRevoked ||
+                storedToken.ExpiresAt < DateTime.UtcNow)
+            {
+                throw new AuthenticationFailedException("invalid_refresh_token");
+            }
 
             storedToken.IsRevoked = true;
 
@@ -98,8 +95,12 @@ namespace Service.Implementations
             var result = await _userManager.CreateAsync(user, registerDTO.Password);
             if (!result.Succeeded)
             {
-                var errors = result.Errors.Select(e => e.Description).ToList();
-                throw new ValidationException(errors);
+                var errors = result.Errors
+                    .GroupBy(e => e.Code)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.Select(e => e.Description).ToArray());
+                throw new DomainValidationException(errors);
             }
 
             var token = await CreateTokenAsync(user);
@@ -137,10 +138,14 @@ namespace Service.Implementations
         public async Task ChangePasswordAsync(string userId, ChangePasswordDTO changePasswordDTO)
         {
             if (changePasswordDTO.NewPassword != changePasswordDTO.ConfirmNewPassword)
-                throw new ValidationException(["Passwords do not match"]);
+                throw new DomainValidationException(
+                    new Dictionary<string, string[]>
+                    {
+                        ["ConfirmNewPassword"] = new[] { "Passwords do not match" }
+                    });
 
             var user = await _userManager.FindByIdAsync(userId)
-                ?? throw new UnAuthorizedException();
+                ?? throw new UserNotFoundException(userId);
 
             var result = await _userManager.ChangePasswordAsync(
                 user,
@@ -148,7 +153,14 @@ namespace Service.Implementations
                 changePasswordDTO.NewPassword);
 
             if (!result.Succeeded)
-                throw new ValidationException(result.Errors.Select(e => e.Description).ToList());
+            {
+                var errors = result.Errors
+                    .GroupBy(e => e.Code)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.Select(e => e.Description).ToArray());
+                throw new DomainValidationException(errors);
+            }
 
 
             foreach (var token in user.RefreshTokens)
@@ -176,10 +188,14 @@ namespace Service.Implementations
         public async Task ResetPasswordAsync(ResetPasswordDTO dto)
         {
             if (dto.NewPassword != dto.ConfirmPassword)
-                throw new ValidationException(["Passwords do not match"]);
+                throw new DomainValidationException(
+                    new Dictionary<string, string[]>
+                    {
+                        ["ConfirmNewPassword"] = new[] { "Passwords do not match" }
+                    });
 
             var user = await _userManager.FindByEmailAsync(dto.Email)
-                ?? throw new UnAuthorizedException();
+                ?? throw new AuthenticationFailedException("invalid_reset_request");
 
             var decodedToken = Uri.UnescapeDataString(dto.Token);
 
@@ -189,7 +205,14 @@ namespace Service.Implementations
                 dto.NewPassword);
 
             if (!result.Succeeded)
-                throw new ValidationException(result.Errors.Select(e => e.Description).ToList());
+            {
+                var errors = result.Errors
+                    .GroupBy(e => e.Code)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.Select(e => e.Description).ToArray());
+                throw new DomainValidationException(errors);
+            }
 
             foreach (var token in user.RefreshTokens)
                 token.IsRevoked = true;

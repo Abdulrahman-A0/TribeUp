@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Domain.Exceptions.Abstraction;
 
 namespace Domain.Exceptions.GroupMemberExceptions
 {
-    public class GroupMemberExistsException : Exception
+    public class GroupMemberExistsException : ConflictException
     {
-        public GroupMemberExistsException(string UserId) : base($"Member with Id `{UserId}` exists in this group")
-        {
-            
-        }
+        public GroupMemberExistsException(string userId)
+        : base($"User with id: '{userId}' already exists in this group") { }
     }
 }

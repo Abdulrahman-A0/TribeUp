@@ -12,9 +12,7 @@ namespace Presentation.Controller
 {
     [ApiController]
     [Route("api/[controller]")]
-    //[ProducesResponseType(typeof(ErrorDetails), StatusCodes.Status500InternalServerError)]
-    //[ProducesResponseType(typeof(ErrorDetails), StatusCodes.Status404NotFound)]
-    //[ProducesResponseType(typeof(ValidationErrorResponse), StatusCodes.Status400BadRequest)]
+
     public class ApiController : ControllerBase
     {
         protected string UserId =>

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,8 @@ namespace ServiceAbstraction.Contracts
 {
     public interface IFileStorageService
     {
-        Task<string> SaveAsync(IFormFile file);
-    
+        Task<string> SaveAsync(IFormFile file, MediaType type);
+        Task DeleteAsync(string relativePath);
+
     }
 }

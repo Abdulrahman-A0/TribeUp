@@ -1,16 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Domain.Exceptions.Abstraction;
+using Shared.Enums;
 
 namespace Domain.Exceptions.GroupJoinRequestExceptions
 {
-    public class InvalidGroupJoinRequestException : Exception
+    public sealed class InvalidGroupJoinRequestException
+    : ConflictException
     {
         public InvalidGroupJoinRequestException(int groupId, string accessibility)
-            : base($"Group with ID {groupId} is {accessibility}. Join requests are only allowed for private groups.")
+            : base($"Group '{groupId}' is {accessibility}. Join requests are only allowed for private groups.")
         {
         }
     }
+
 }

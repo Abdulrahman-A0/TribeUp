@@ -1,27 +1,38 @@
 ﻿using Domain.Contracts;
 using Domain.Entities.Users;
+using Microsoft.Extensions.Logging;
 using Service.Specifications.RefreshTokenSpecifications;
 using ServiceAbstraction.Contracts;
 
 namespace Service.Implementations
 {
-    public class RefreshTokenCleanupService(IUnitOfWork unitOfWork) : IRefreshTokenCleanupService
+    public class RefreshTokenCleanupService(IUnitOfWork unitOfWork,
+        ILogger<RefreshTokenCleanupService> logger) : IRefreshTokenCleanupService
     {
         public async Task CleanupExpiredTokensAsync()
         {
-            var specification = new ExpiredRefreshTokensSpec();
+            try
+            {
 
-            var repo = unitOfWork.GetRepository<RefreshToken, Guid>();
+                var specification = new ExpiredRefreshTokensSpec();
 
-            var tokens = await repo.GetAllAsync(specification);
+                var repo = unitOfWork.GetRepository<RefreshToken, Guid>();
 
-            if (!tokens.Any())
-                return;
+                var tokens = await repo.GetAllAsync(specification);
 
-            foreach (var token in tokens)
-                repo.Delete(token);
+                if (!tokens.Any())
+                    return;
 
-            await unitOfWork.SaveChangesAsync();
+                foreach (var token in tokens)
+                    repo.Delete(token);
+
+                await unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to cleanup expired refresh tokens");
+                throw;
+            }
         }
     }
 }

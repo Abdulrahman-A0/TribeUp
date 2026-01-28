@@ -8,11 +8,6 @@ using Service.Specifications.GroupMemberSpecs;
 using ServiceAbstraction.Contracts;
 using Shared.DTOs.GroupMemberModule;
 using Shared.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Service.Implementations
 {
@@ -24,7 +19,7 @@ namespace Service.Implementations
         private readonly IGroupJoinRequestService groupJoinRequestService;
         private readonly IGroupScoreService groupScoreService;
 
-        public GroupMemberService(IUnitOfWork unitOfWork,IMapper mapper,IGroupJoinRequestService groupJoinRequestService, IGroupScoreService groupScoreService)
+        public GroupMemberService(IUnitOfWork unitOfWork, IMapper mapper, IGroupJoinRequestService groupJoinRequestService, IGroupScoreService groupScoreService)
         {
             this.unitOfWork = unitOfWork;
             this.mapper = mapper;

@@ -1,22 +1,20 @@
 ﻿using AutoMapper;
 using Domain.Entities.Users;
-using Domain.Exceptions.UnAuthorized;
-using Domain.Exceptions.Validation;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
+using Domain.Exceptions.UserExceptions;
 using Microsoft.AspNetCore.Identity;
 using ServiceAbstraction.Contracts;
 using Shared.DTOs.ProfileModule;
+using Shared.Enums;
 
 namespace Service.Implementations
 {
     public class ProfileService(UserManager<ApplicationUser> userManager,
-        IMapper mapper, IWebHostEnvironment environment) : IProfileService
+        IMapper mapper, IFileStorageService fileStorage) : IProfileService
     {
         public async Task<UserProfileDTO> GetMyProfileAsync(string userId)
         {
             var user = await userManager.FindByIdAsync(userId)
-                ?? throw new UnAuthorizedException();
+                ?? throw new UserNotFoundException(userId);
 
             return mapper.Map<UserProfileDTO>(user);
         }
@@ -24,7 +22,7 @@ namespace Service.Implementations
         public async Task UpdateProfileAsync(string userId, UpdateProfileDTO updateProfileDTO)
         {
             var user = await userManager.FindByIdAsync(userId)
-                ?? throw new UnAuthorizedException();
+                ?? throw new UserNotFoundException(userId);
 
             user.FirstName = updateProfileDTO.FirstName;
             user.LastName = updateProfileDTO.LastName;
@@ -35,7 +33,7 @@ namespace Service.Implementations
         public async Task UpdateAvatarAsync(string userId, UpdateAvatarDTO updateAvatarDTO)
         {
             var user = await userManager.FindByIdAsync(userId)
-                ?? throw new UnAuthorizedException();
+                ?? throw new UserNotFoundException(userId);
 
             user.Avatar = updateAvatarDTO.Avatar;
 
@@ -45,14 +43,14 @@ namespace Service.Implementations
         public async Task UpdateProfilePictureAsync(string userId, UpdateProfilePictureDTO updateProfilePictureDTO)
         {
             var user = await userManager.FindByIdAsync(userId)
-                ?? throw new UnAuthorizedException();
+                ?? throw new UserNotFoundException(userId);
 
-            ValidateImage(updateProfilePictureDTO.Picture);
+            var newRelativePath = await fileStorage
+                .SaveAsync(updateProfilePictureDTO.Picture, MediaType.UserProfile);
 
-            var newRelativePath = await SaveProfilePictureAsync(updateProfilePictureDTO.Picture);
 
             if (!string.IsNullOrWhiteSpace(user.ProfilePicture))
-                DeleteFileIfExists(user.ProfilePicture);
+                await fileStorage.DeleteAsync(user.ProfilePicture);
 
             user.ProfilePicture = newRelativePath;
 
@@ -62,12 +60,12 @@ namespace Service.Implementations
         public async Task DeleteProfilePictureAsync(string userId)
         {
             var user = await userManager.FindByIdAsync(userId)
-                ?? throw new UnAuthorizedException();
+                ?? throw new UserNotFoundException(userId);
 
             if (string.IsNullOrWhiteSpace(user.ProfilePicture))
                 return;
 
-            DeleteFileIfExists(user.ProfilePicture);
+            await fileStorage.DeleteAsync(user.ProfilePicture);
 
             user.ProfilePicture = null;
 
@@ -77,7 +75,7 @@ namespace Service.Implementations
         public async Task UpdatePhoneNumberAsync(string userId, UpdatePhoneNumberDTO updatePhoneNumberDTO)
         {
             var user = await userManager.FindByIdAsync(userId)
-                ?? throw new UnAuthorizedException();
+                ?? throw new UserNotFoundException(userId);
 
             user.PhoneNumber = updatePhoneNumberDTO.PhoneNumber;
 
@@ -87,53 +85,13 @@ namespace Service.Implementations
         public async Task DeletePhoneNumberAsync(string userId)
         {
             var user = await userManager.FindByIdAsync(userId)
-                ?? throw new UnAuthorizedException();
+                ?? throw new UserNotFoundException(userId);
 
             user.PhoneNumber = null;
 
             await userManager.UpdateAsync(user);
         }
 
-
-
-        private static void ValidateImage(IFormFile file)
-        {
-            var allowedTypes = new[] { "image/jpg", "image/jpeg", "image/png", "image/webp" };
-
-            if (!allowedTypes.Contains(file.ContentType))
-                throw new ValidationException(["Invalid image type"]);
-
-            if (file.Length > 2 * 1024 * 1024)
-                throw new ValidationException(["Image size must be under 2MB"]);
-        }
-
-        private async Task<string> SaveProfilePictureAsync(IFormFile file)
-        {
-            var uploadsRoot = Path.Combine(
-                environment.WebRootPath,
-                "images",
-                "ProfilePictures",
-                "Users");
-
-            Directory.CreateDirectory(uploadsRoot);
-
-            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-            var fullPath = Path.Combine(uploadsRoot, fileName);
-
-            await using var stream = new FileStream(fullPath, FileMode.Create);
-            await file.CopyToAsync(stream);
-
-
-            return $"images/ProfilePictures/Users/{fileName}";
-        }
-
-        private void DeleteFileIfExists(string relativePath)
-        {
-            var fullPath = Path.Combine(environment.WebRootPath, relativePath);
-
-            if (File.Exists(fullPath))
-                File.Delete(fullPath);
-        }
 
 
     }
