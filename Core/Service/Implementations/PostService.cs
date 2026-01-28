@@ -383,14 +383,6 @@ namespace Service.Implementations
 
         }
 
-        //public async Task<int> AddCommentAsync(int postId, CreateCommentDTO dto, string userId)
-        //{
-        //    var comment = new Comment
-        //    {
-        //        PostId = postId,
-        //        UserId = userId,
-        //        Content = dto.Content
-        //    };
 
         public async Task<CreateEntityResultDTO> AddCommentAsync(
             string userId, 
