@@ -7,7 +7,7 @@ namespace Service.Implementations
 {
     public class MediaUrlService(IConfiguration configuration) : IMediaUrlService
     {
-        public string BuildUrl(string? relativePath, MediaType type)
+        public string? BuildUrl(string? relativePath, MediaType type)
         {
             var baseUrl = configuration["URLs:BaseUrl"];
 
@@ -16,7 +16,8 @@ namespace Service.Implementations
                 {
                     MediaType.UserProfile => $"{baseUrl}/images/ProfilePictures/Users/default-user.jpg",
                     MediaType.GroupProfile => $"{baseUrl}/images/ProfilePictures/Groups/default-group.jpg",
-                    _ => string.Empty
+                    MediaType.PostMedia => null,
+                    _ => null
                 };
 
             return $"{baseUrl}/{relativePath}";

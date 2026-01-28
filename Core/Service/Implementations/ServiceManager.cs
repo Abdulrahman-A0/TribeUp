@@ -7,6 +7,7 @@ namespace Service.Implementations
          Func<IGroupService> groupServiceFactory,
          Func<IGroupMemberService> groupMemberFactory,
          Func<IGroupJoinRequestService> groupJoinRequestFactory,
+         Func<IGroupChatService> groupChatFactory,
          Func<IPostService> _postFactory,
          Func<IProfileService> profileFactory,
          Func<INotificationService> notificationFactory) : IServiceManager
@@ -15,6 +16,7 @@ namespace Service.Implementations
         public IGroupService GroupService => groupServiceFactory.Invoke();
         public IGroupMemberService GroupMemberService => groupMemberFactory.Invoke();
         public IGroupJoinRequestService GroupJoinRequestService => groupJoinRequestFactory.Invoke();
+        public IGroupChatService GroupChatService => groupChatFactory.Invoke();
         public IPostService PostService => _postFactory.Invoke();
         public IProfileService ProfileService => profileFactory.Invoke();
         public INotificationService NotificationService => notificationFactory.Invoke();

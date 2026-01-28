@@ -60,7 +60,7 @@ namespace Service.Implementations
 
             foreach (var file in mediaFiles)
             {
-                var savedPath = await _fileStorage.SaveAsync(file);
+                var savedPath = await _fileStorage.SaveAsync(file, MediaType.PostMedia);
 
                 post.MediaItems.Add(new MediaItem
                 {

@@ -10,11 +10,6 @@ using ServiceAbstraction.Contracts;
 using Shared.DTOs.GroupJoinRequestModule;
 using Shared.DTOs.NotificationModule;
 using Shared.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Service.Implementations
 {
@@ -97,7 +92,7 @@ namespace Service.Implementations
             var memberSpec = new GroupMemberByGroupAndUserSpec(groupId, userId);
             var member = await memberRepo.GetByIdAsync(memberSpec);
             if (member is null || member.Role != RoleType.Admin)
-                throw new UnauthorizedAccessException("Only group admins can view pending requests.");
+                throw new GroupAdminOnlyException();
 
             var spec = new PendingGroupJoinRequestsSpec(groupId);
             var requests = await requestRepo.GetAllAsync(spec);
@@ -116,10 +111,10 @@ namespace Service.Implementations
             if (request.UserId == userId)
                 return mapper.Map<GroupJoinRequestResultDTO>(request);
 
-            var memberSpec = new GroupMemberByGroupAndUserSpec(request.GroupId,userId);
+            var memberSpec = new GroupMemberByGroupAndUserSpec(request.GroupId, userId);
             var member = await memberRepo.GetByIdAsync(memberSpec);
             if (member is null || member.Role != RoleType.Admin)
-                throw new UnauthorizedAccessException("You are not allowed to access this request");
+                throw new GroupAdminOnlyException();
 
             return mapper.Map<GroupJoinRequestResultDTO>(request);
         }
@@ -133,12 +128,12 @@ namespace Service.Implementations
                 ?? throw new GroupJoinRequestNoFoundException(requestId);
 
             if (request.Status != JoinRequestStatus.Pending)
-                throw new InvalidOperationException("Request is not pending.");
+                throw new GroupJoinRequestInvalidStateException();
 
             var adminSpec = new GroupMemberByGroupAndUserSpec(request.GroupId, userId);
             var adminMember = await memberRepo.GetByIdAsync(adminSpec);
             if (adminMember is null || adminMember.Role != RoleType.Admin)
-                throw new UnauthorizedAccessException("Only group admins can approve join requests.");
+                throw new GroupAdminOnlyException();
 
             request.Status = JoinRequestStatus.Approved;
             requestRepo.Update(request);
@@ -183,12 +178,12 @@ namespace Service.Implementations
                 ?? throw new GroupJoinRequestNoFoundException(requestId);
 
             if (request.Status != JoinRequestStatus.Pending)
-                throw new InvalidOperationException("Request is not pending.");
+                throw new GroupJoinRequestInvalidStateException();
 
             var adminSpec = new GroupMemberByGroupAndUserSpec(request.GroupId, userId);
             var adminMember = await memberRepo.GetByIdAsync(adminSpec);
             if (adminMember is null || adminMember.Role != RoleType.Admin)
-                throw new UnauthorizedAccessException("Only group admins can reject join requests.");
+                throw new GroupAdminOnlyException();
 
             request.Status = JoinRequestStatus.Rejected;
             requestRepo.Update(request);

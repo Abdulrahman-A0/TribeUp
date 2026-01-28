@@ -1,4 +1,5 @@
-﻿using Service;
+﻿using Presentation.SignalR;
+using Service;
 using Service.Implementations;
 using ServiceAbstraction.Contracts;
 using Shared.Common;
@@ -28,6 +29,9 @@ namespace TribeUp.Extensions
             services.AddScoped<IGroupMemberService, GroupMemberService>();
             services.AddScoped<IGroupJoinRequestService, GroupJoinRequestService>();
             services.AddScoped<IGroupScoreService, GroupScoreService>();
+            services.AddScoped<IGroupChatService, GroupChatService>();
+            services.AddScoped<IGroupChatPermissionService, GroupChatPermissionService>();
+
 
             services.AddScoped<IPostService, PostService>();
             services.AddScoped<IPostUrlService, PostUrlService>();
@@ -51,6 +55,12 @@ namespace TribeUp.Extensions
 
             services.AddScoped<Func<IGroupScoreService>>(provider =>
             () => provider.GetRequiredService<IGroupScoreService>());
+            
+            services.AddScoped<Func<IGroupChatService>>(provider =>
+            () => provider.GetRequiredService<IGroupChatService>());
+
+            services.AddScoped<Func<IGroupChatPermissionService>>(provider =>
+            () => provider.GetRequiredService<IGroupChatPermissionService>());
 
 
             services.AddScoped<Func<IPostService>>(provider =>

@@ -16,7 +16,8 @@ namespace Service.Implementations
         {
             var groupRepo = unitOfWork.GetRepository<Group, int>();
 
-            var group = await groupRepo.GetByIdAsync(groupId);
+            var group = await groupRepo.GetByIdAsync(groupId)
+                ?? throw new GroupNotFoundException(groupId);
 
             group.GroupScore ??= new GroupScore
             {
@@ -34,7 +35,8 @@ namespace Service.Implementations
         {
             var groupRepo = unitOfWork.GetRepository<Group, int>();
 
-            var group = await groupRepo.GetByIdAsync(groupId);
+            var group = await groupRepo.GetByIdAsync(groupId)
+                ?? throw new GroupNotFoundException(groupId);
 
             group.GroupScore ??= new GroupScore
             {

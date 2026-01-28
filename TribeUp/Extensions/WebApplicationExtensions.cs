@@ -22,6 +22,7 @@ namespace TribeUp.Extensions
         public static WebApplication MapHubs(this WebApplication app)
         {
             app.MapHub<NotificationHub>("/hubs/notifications");
+            app.MapHub<GroupChatHub>("/hubs/group-chat");
             return app;
         }
     }

@@ -4,6 +4,6 @@ namespace ServiceAbstraction.Contracts
 {
     public interface IMediaUrlService
     {
-        string BuildUrl(string? relativePath, MediaType type);
+        string? BuildUrl(string? relativePath, MediaType type);
     }
 }
