@@ -15,8 +15,8 @@ namespace Domain.Entities.Groups
     public class Group : BaseEntity<int>
     {
         public string GroupName { get; set; }
-        public string Description { get; set; }
-        public string GroupProfilePicture { get; set; }
+        public string? Description { get; set; }
+        public string? GroupProfilePicture { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public AccessibilityType Accessibility { get; set; }
 
@@ -30,7 +30,7 @@ namespace Domain.Entities.Groups
         public virtual ICollection<Poll> Polls { get; set; } = new List<Poll>();
         public virtual ICollection<Badge> Badges { get; set; } = new List<Badge>();
         public virtual ICollection<MemoryReel> MemoryReels { get; set; } = new List<MemoryReel>();
-        public virtual GroupScore GroupScore { get; set; } 
+        public virtual GroupScore GroupScore { get; set; }
         public virtual ICollection<ActivityLog> ActivityLogs { get; set; } = new List<ActivityLog>();
         public virtual ICollection<Story> Stories { get; set; } = new List<Story>();
         public virtual ICollection<GroupJoinRequest> GroupJoinRequests { get; set; } = new List<GroupJoinRequest>();

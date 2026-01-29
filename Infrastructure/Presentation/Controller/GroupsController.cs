@@ -30,7 +30,8 @@ namespace Presentation.Controller
 
 
         [HttpPost("CreateGroup")]
-        public async Task<ActionResult<GroupResultDTO>> CreateGroupAsync([FromBody] CreateGroupDTO createGroupDTO)
+
+        public async Task<ActionResult<GroupResultDTO>> CreateGroupAsync( CreateGroupDTO createGroupDTO)
             => Ok(await serviceManager.GroupService.CreateGroupAsync(createGroupDTO, UserId));
 
 
