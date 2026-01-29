@@ -12,6 +12,7 @@ namespace Domain.Entities.Groups
 {
     public class GroupMember : BaseEntity<int>
     {
+        public bool IsCreator { get; set; }
         public RoleType Role { get; set; } = RoleType.Member;
         public DateTime JoinedAt { get; set; } = DateTime.Now;
 
