@@ -39,21 +39,19 @@ namespace Service.Implementations
             var group = await groupRepo.GetByIdAsync(groupId)
                 ?? throw new GroupNotFoundException(groupId);
 
-            if (group.Accessibility != AccessibilityType.Private)
-                throw new InvalidGroupJoinRequestException(groupId, group.Accessibility.ToString());
 
             var memberSpec = new GroupMemberByGroupAndUserSpec(groupId, userId);
             var existingMember = await memberRepo.GetByIdAsync(memberSpec);
             if (existingMember != null)
-                throw new GroupMemberExistsException(userId);
+                throw new GroupJoinRequestNotAllowedException("You are already a member of this group.");
 
 
             var requestSpec = new GroupJoinRequestByGroupAndUserSpec(groupId, userId);
             var existingRequest = await requestRepo.GetByIdAsync(requestSpec);
-            if (existingRequest != null && existingRequest.Status != JoinRequestStatus.Rejected)
-                throw new GroupJoinRequestExistsException(existingRequest.Id);
+            if (existingRequest != null && existingRequest.Status == JoinRequestStatus.Pending)
+                throw new GroupJoinRequestNotAllowedException("You already have a pending join request.");
 
-            var newRequest = new GroupJoinRequest
+            var request = new GroupJoinRequest
             {
                 GroupId = groupId,
                 UserId = userId,
@@ -61,12 +59,10 @@ namespace Service.Implementations
                 CreatedAt = DateTime.UtcNow
             };
 
-            await requestRepo.AddAsync(newRequest);
+            await requestRepo.AddAsync(request);
             await unitOfWork.SaveChangesAsync();
 
-            var adminsSpec = new GroupAdminsSpec(groupId);
-            var admins = await memberRepo.GetAllAsync(adminsSpec);
-
+            var admins = await memberRepo.GetAllAsync(new GroupAdminsSpec(groupId));
             foreach (var admin in admins)
             {
                 await notificationService.CreateAsync(new CreateNotificationDTO
@@ -75,15 +71,17 @@ namespace Service.Implementations
                     ActorUserId = userId,
                     Type = NotificationType.GroupJoinRequest,
                     Title = "New Join Request",
-                    Message = "A user requested to join your group",
-                    ReferenceId = newRequest.Id
+                    Message = "A user requested to join your group.",
+                    ReferenceId = request.Id
                 });
             }
 
-            var detailsSpec = new GroupJoinRequestWithDetailsSpec(newRequest.Id);
-            var result = await requestRepo.GetByIdAsync(detailsSpec);
-            return mapper.Map<GroupJoinRequestResultDTO>(result);
+            var details = await requestRepo.GetByIdAsync(
+                new GroupJoinRequestWithDetailsSpec(request.Id));
+
+            return mapper.Map<GroupJoinRequestResultDTO>(details);
         }
+
 
 
 
@@ -165,12 +163,6 @@ namespace Service.Implementations
 
 
 
-
-
-
-
-
-
         public async Task<bool> RejectJoinRequestAsync(int requestId, string userId)
         {
             var spec = new GroupJoinRequestWithDetailsSpec(requestId);
@@ -219,6 +211,23 @@ namespace Service.Implementations
             var request = await requestRepo.GetByIdAsync(spec);
 
             return request == null ? null : mapper.Map<GroupJoinRequestResultDTO>(request);
+        }
+
+
+
+        public async Task<bool> CancelMyJoinRequestAsync(int requestId, string userId)
+        {
+            var request = await requestRepo.GetByIdAsync(requestId)
+                ?? throw new GroupJoinRequestNoFoundException(requestId);
+
+            if (request.UserId != userId)
+                throw new GroupJoinRequestOwnershipException();
+
+            if (request.Status != JoinRequestStatus.Pending)
+                throw new GroupJoinRequestInvalidStateException();
+
+            requestRepo.Delete(request);
+            return await unitOfWork.SaveChangesAsync() > 0;
         }
     }
 }
