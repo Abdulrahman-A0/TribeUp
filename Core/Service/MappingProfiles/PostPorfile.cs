@@ -38,6 +38,8 @@ namespace Service.MappingProfiles
                  .ForMember(dest => dest.IsLikedByCurrentUser,
                      opt => opt.Ignore())
                  .ForMember(dest => dest.FeedScore,
+                     opt => opt.Ignore())
+                 .ForMember(dest => dest.IsDenied,
                      opt => opt.Ignore());
 
             // Create Post

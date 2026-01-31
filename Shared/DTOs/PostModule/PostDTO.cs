@@ -31,6 +31,6 @@ namespace Shared.DTOs.Posts
         public IReadOnlyCollection<MediaItemFeedDTO> Media { get; set; }
                  = new List<MediaItemFeedDTO>();
 
-
+        public bool IsDenied { get; set; }
     }
 }

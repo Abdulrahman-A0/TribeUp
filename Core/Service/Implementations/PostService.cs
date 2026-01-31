@@ -8,6 +8,7 @@ using Domain.Exceptions.GroupExceptions;
 using Domain.Exceptions.PostExceptions;
 using Domain.Exceptions.UserExceptions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Service.Specifications.GroupMemberSpecs;
 using Service.Specifications.PostSpecifications;
 using ServiceAbstraction.Contracts;
@@ -257,6 +258,17 @@ namespace Service.Implementations
             var spec = new PostFeedSpecification(userId, moderation, page, pageSize);
             var posts = await postRepo.GetAllAsync(spec);
 
+            var postIds = posts.Select(p => p.Id).ToList();
+
+            var deniedPostIds = await moderationRepo.AsQueryable()
+                .Where(m =>
+                    m.EntityType == ModeratedEntityType.Post && 
+                    m.Status == ContentStatus.Denied &&
+                    postIds.Contains(m.EntityId)
+                )
+                .Select(m => m.EntityId)
+                .ToListAsync();
+
             var totalCount = await postRepo.CountAsync(p =>
                     !moderation.Any(m =>
                         m.EntityType == ModeratedEntityType.Post &&
@@ -319,6 +331,9 @@ namespace Service.Implementations
                     var dto = _mapper.Map<PostDTO>(x.Post);
                     dto.IsLikedByCurrentUser = x.IsLikedByUser;
                     dto.FeedScore = x.FeedScore;
+                    dto.IsDenied =
+                    deniedPostIds.Contains(x.Post.Id) &&
+                        x.Post.UserId == userId;
                     return dto;
                 }).ToList(),
                 Page = page,
@@ -344,6 +359,16 @@ namespace Service.Implementations
             var moderation = moderationRepo.AsQueryable();
             var spec = new GroupPostFeedSpecification(userId, groupId, moderation, page, pageSize);
             var posts = await postRepo.GetAllAsync(spec);
+            
+            var postIds = posts.Select(p => p.Id).ToList();
+            var deniedPostIds = await moderationRepo.AsQueryable()
+                .Where(m =>
+                    m.EntityType == ModeratedEntityType.Post &&
+                    m.Status == ContentStatus.Denied &&
+                    postIds.Contains(m.EntityId)
+                )
+                .Select(m => m.EntityId)
+                .ToListAsync();
 
             var totalCount = await postRepo.CountAsync(p =>
                     !moderation.Any(m =>
@@ -407,6 +432,9 @@ namespace Service.Implementations
                     var dto = _mapper.Map<PostDTO>(x.Post);
                     dto.IsLikedByCurrentUser = x.IsLikedByUser;
                     dto.FeedScore = x.FeedScore;
+                    dto.IsDenied =
+                    deniedPostIds.Contains(x.Post.Id) &&
+                        x.Post.UserId == userId;
                     return dto;
                 }).ToList(),
                 Page = page,
