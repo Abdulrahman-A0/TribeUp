@@ -75,7 +75,7 @@ namespace Presentation.Controller
 
         [HttpGet("{postId:int}/Comments")]
         public async Task<ActionResult<PagedResult<CommentResultDTO>>> GetComments(int postId, int page = 1, int pageSize = 20)
-            => Ok(await service.PostService.GetCommentsByPostIdAsync(postId, page, pageSize));
+            => Ok(await service.PostService.GetCommentsByPostIdAsync(UserId, postId, page, pageSize));
 
     }
 }

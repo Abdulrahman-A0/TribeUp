@@ -514,6 +514,9 @@ namespace Service.Implementations
                 UserId = userId,
                 Content = dto.Content
             };
+            await commentRepo.AddAsync(comment);
+            
+            await _unitOfWork.SaveChangesAsync();
 
             # region AI moderation result
 
@@ -533,10 +536,6 @@ namespace Service.Implementations
             }
 
             #endregion
-
-            await commentRepo.AddAsync(comment);
-            
-            await _unitOfWork.SaveChangesAsync();
 
             await _notificationService.CreateAsync(new CreateNotificationDTO
             {
@@ -611,6 +610,7 @@ namespace Service.Implementations
 
 
         public async Task<PagedResult<CommentResultDTO>> GetCommentsByPostIdAsync(
+            string userId,
             int postId, 
             int page, 
             int pageSize)
@@ -620,9 +620,12 @@ namespace Service.Implementations
             
             var post = await postRepo.GetByIdAsync(postId)
                 ?? throw new PostNotFoundException(postId);
+            
+            var moderation = moderationRepo.AsQueryable();
 
-            var spec = new CommentsByPostIdSpecification(postId, page, pageSize);
+            var spec = new CommentsByPostIdSpecification(userId, moderation, postId, page, pageSize);
             var comments = await commentRepo.GetAllAsync(spec);
+           
             var totalCount = await commentRepo
                 .CountAsync(c => c.PostId == postId);
 
