@@ -38,6 +38,11 @@ namespace Presentation.Controller
             => Ok(await service.PostService.GetPostByIdAsync(UserId, postId));
 
 
+        [HttpGet("PersonalFeed")]
+        public async Task<ActionResult<PagedResult<PostDTO>>> GetPersonalFeed(int page = 1, int pageSize = 20)
+            => Ok(await service.PostService.GetPersonalFeedAsync(UserId, page, pageSize));
+        
+        
         [HttpGet("Feed")]
         public async Task<ActionResult<PagedResult<PostDTO>>> GetFeed(int page = 1, int pageSize = 20)
             => Ok(await service.PostService.GetFeedAsync(UserId, page, pageSize));

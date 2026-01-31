@@ -249,6 +249,62 @@ namespace Service.Implementations
         }
 
 
+        public async Task<PagedResult<PostDTO>> GetPersonalFeedAsync(
+           string userId,
+           int page,
+           int pageSize)
+        {
+            if (page <= 0 || pageSize <= 0)
+                throw new PageIndexAndPageSizeException(page, pageSize);
+
+            var moderation = moderationRepo.AsQueryable();
+            var spec = new PersonalPostFeedSpecification(userId, moderation, page, pageSize);
+            var posts = await postRepo.GetAllAsync(spec);
+
+            var postIds = posts.Select(p => p.Id).ToList();
+
+            var deniedPostIds = await moderationRepo.AsQueryable()
+                .Where(m =>
+                    m.EntityType == ModeratedEntityType.Post &&
+                    m.Status == ContentStatus.Denied &&
+                    postIds.Contains(m.EntityId)
+                )
+                .Select(m => m.EntityId)
+                .ToListAsync();
+
+            var totalCount = await postRepo.CountAsync(p =>
+                    !moderation.Any(m =>
+                        m.EntityType == ModeratedEntityType.Post &&
+                        m.EntityId == p.Id &&
+                        m.Status == ContentStatus.Denied &&
+                        p.UserId != userId
+                    )
+                );
+
+            var ordered = posts
+                .OrderByDescending(p => p.CreatedAt)
+                .ToList();
+
+            return new PagedResult<PostDTO>
+            {
+                Items = ordered.Select(x =>
+                {
+                    var dto = _mapper.Map<PostDTO>(x);
+                    dto.IsLikedByCurrentUser = x.Likes.Any(l => l.UserId == userId);
+                    dto.IsDenied =
+                    deniedPostIds.Contains(x.Id) &&
+                        x.UserId == userId;
+                    return dto;
+                }).ToList(),
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = totalCount,
+                HasMore = totalCount > page * pageSize
+            };
+        }
+
+
+
         public async Task<PagedResult<PostDTO>> GetFeedAsync(
             string userId,
             int page, 
