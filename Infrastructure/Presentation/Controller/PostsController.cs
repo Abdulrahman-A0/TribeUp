@@ -17,7 +17,7 @@ namespace Presentation.Controller
         public async Task<ActionResult<CreateEntityResultDTO>> CreatePost(
             [FromForm] CreatePostDTO dto,
             [FromForm] List<IFormFile> mediaFiles)
-            => Ok(await service.PostService.CreatePostAsync(UserId, dto, mediaFiles));
+            => Ok(await service.PostService.CreatePostAsync(UserId, UserName, dto, mediaFiles));
 
 
         [HttpPut("{postId:int}/UpdatePost")]
@@ -25,7 +25,7 @@ namespace Presentation.Controller
             int postId,
             [FromForm] CreatePostDTO dto,
             [FromForm] List<IFormFile> mediaFiles)
-            => Ok(await service.PostService.UpdatePostAsync(UserId, postId, dto, mediaFiles));
+            => Ok(await service.PostService.UpdatePostAsync(UserId, UserName, postId, dto, mediaFiles));
 
 
         [HttpDelete("{postId:int}/DeletePost")]
@@ -50,7 +50,7 @@ namespace Presentation.Controller
 
         [HttpPost("{postId:int}/ToggleLike")]
         public async Task<ActionResult<ToggleLikeDTO>> ToggleLikePost(int postId)
-            => Ok(await service.PostService.ToggeleLikePostAsync(UserId, postId));
+            => Ok(await service.PostService.ToggeleLikePostAsync(UserId, UserName, postId));
 
 
         [HttpGet("{postId:int}/Likes")]
@@ -60,12 +60,12 @@ namespace Presentation.Controller
 
         [HttpPost("{postId:int}/AddComment")]
         public async Task<ActionResult<CreateEntityResultDTO>> Comment(int postId, CommentDTO dto)
-            => Ok(await service.PostService.AddCommentAsync(UserId, postId, dto));
+            => Ok(await service.PostService.AddCommentAsync(UserId, UserName, postId, dto));
 
 
         [HttpPut("{commentId:int}/UpdateComment")]
         public async Task<ActionResult<CreateEntityResultDTO>> UpdateComment(int commentId, CommentDTO dto)
-            => Ok(await service.PostService.UpdateCommentAsync(UserId, commentId , dto));
+            => Ok(await service.PostService.UpdateCommentAsync(UserId, UserName, commentId , dto));
 
 
         [HttpDelete("{commentId:int}/DeleteComment")]

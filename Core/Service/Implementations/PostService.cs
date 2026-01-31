@@ -6,6 +6,7 @@ using Domain.Entities.Posts;
 using Domain.Exceptions;
 using Domain.Exceptions.GroupExceptions;
 using Domain.Exceptions.PostExceptions;
+using Domain.Exceptions.UserExceptions;
 using Microsoft.AspNetCore.Http;
 using Service.Specifications.GroupMemberSpecs;
 using Service.Specifications.PostSpecifications;
@@ -61,7 +62,8 @@ namespace Service.Implementations
         }
 
         public async Task<CreateEntityResultDTO> CreatePostAsync(
-            string userId,
+            string userId, 
+            string username,
             CreatePostDTO dto,
             List<IFormFile> mediaFiles)
         {
@@ -89,28 +91,6 @@ namespace Service.Implementations
 
             await _unitOfWork.SaveChangesAsync();
 
-
-            foreach (var taggedUserId in dto.TaggedUserIds.Distinct())
-            {
-                var tag = new Tag
-                {
-                    PostId = post.Id,
-                    UserId = taggedUserId
-                };
-
-                await tagRepo.AddAsync(tag);
-
-                await _notificationService.CreateAsync(new CreateNotificationDTO
-                {
-                    RecipientUserId = taggedUserId,
-                    ActorUserId = userId,
-                    Type = NotificationType.PostTag,
-                    Title = "You were tagged in a post",
-                    Message = $"tagged you in his post: \"{GetFirstWord(post.Caption)}\"",
-                    ReferenceId = post.Id
-                });
-            }
-
             # region AI moderation result
 
             var moderationResult = await _aiModerationManager.ModerateAsync(
@@ -130,6 +110,28 @@ namespace Service.Implementations
 
             #endregion
 
+
+            foreach (var taggedUserId in dto.TaggedUserIds.Distinct())
+            {
+                var tag = new Tag
+                {
+                    PostId = post.Id,
+                    UserId = taggedUserId
+                };
+                await tagRepo.AddAsync(tag);
+
+                await _notificationService.CreateAsync(new CreateNotificationDTO
+                {
+                    RecipientUserId = taggedUserId,
+                    ActorUserId = userId,
+                    Type = NotificationType.PostTag,
+                    Title = "You were tagged in a post",
+                    Message = $"{username} tagged you in his post: \"{GetFirstWord(post.Caption)}\"",
+                    ReferenceId = post.Id
+                });
+            }
+
+
             //await _groupScoreService.IncreaseOnActionAsync(dto.GroupId, 5);
 
             return new CreateEntityResultDTO
@@ -144,6 +146,7 @@ namespace Service.Implementations
 
         public async Task<CreateEntityResultDTO> UpdatePostAsync(
            string userId,
+           string username,
            int postId,
            CreatePostDTO dto,
            List<IFormFile> mediaFiles)
@@ -416,7 +419,8 @@ namespace Service.Implementations
 
 
         public async Task<ToggleLikeDTO> ToggeleLikePostAsync(
-            string userId, 
+            string userId,
+            string username,
             int postId)
         {
             var post = await postRepo.GetByIdAsync(postId)
@@ -442,7 +446,7 @@ namespace Service.Implementations
                     ActorUserId = userId,
                     Type = NotificationType.PostLike,
                     Title = $"New like on your post",
-                    Message = $"liked your post: \"{GetFirstWord(post.Caption)}\"",
+                    Message = $"{username} liked your post: \"{GetFirstWord(post.Caption)}\"",
                     ReferenceId = post.Id
                 });
 
@@ -494,6 +498,7 @@ namespace Service.Implementations
 
         public async Task<CreateEntityResultDTO> AddCommentAsync(
             string userId, 
+            string username,
             int postId, 
             CommentDTO dto)
         {
@@ -539,7 +544,7 @@ namespace Service.Implementations
                 ActorUserId = userId,
                 Type = NotificationType.PostComment,
                 Title = $"New comment on your post: \"{GetFirstWord(post.Caption)}\"",
-                Message = $"commented: \"{GetFirstWord(comment.Content)}\"",
+                Message = $"{username} commented: \"{GetFirstWord(comment.Content)}\"",
                 ReferenceId = post.Id
             });
 
@@ -550,6 +555,58 @@ namespace Service.Implementations
                 Message = "Comment created successfully"
             };
 
+        }
+
+        public async Task<CreateEntityResultDTO> UpdateCommentAsync(
+            string userId,
+            string username,
+            int commentId, 
+            CommentDTO dto)
+        {
+            var spec = new CommentByIdSpecification(commentId);
+            var comment = await commentRepo.GetByIdAsync(spec)
+                ?? throw new CommentNotFoundException(commentId);
+
+            if(userId != comment.UserId)
+                return new CreateEntityResultDTO
+                {
+                    IsCreated = false,
+                    Status = ContentStatus.Denied,
+                    Message = "You can't edit this comment"
+                };
+
+            comment.Content = dto.Content;
+
+            # region AI moderation result
+
+            var moderationResult = await _aiModerationManager.ModerateAsync(
+                comment.Content ?? string.Empty,
+                ModeratedEntityType.Comment,
+                comment.Id);
+
+            if (!moderationResult.IsAccepted)
+            {
+                return new CreateEntityResultDTO
+                {
+                    IsCreated = false,
+                    Status = ContentStatus.Denied,
+                    Message = "Comment violates community guidelines."
+                };
+            }
+
+            #endregion
+
+
+            commentRepo.Update(comment);
+            
+            await _unitOfWork.SaveChangesAsync();
+
+            return new CreateEntityResultDTO
+            {
+                IsCreated = true,
+                Status = ContentStatus.Accepted,
+                Message = "Comment updated successfully"
+            };
         }
 
 
@@ -633,57 +690,6 @@ namespace Service.Implementations
         }
        
         
-        public async Task<CreateEntityResultDTO> UpdateCommentAsync(
-            string userId,
-            int commentId, 
-            CommentDTO dto)
-        {
-            var spec = new CommentByIdSpecification(commentId);
-            var comment = await commentRepo.GetByIdAsync(spec)
-                ?? throw new CommentNotFoundException(commentId);
-
-            if(userId != comment.UserId)
-                return new CreateEntityResultDTO
-                {
-                    IsCreated = false,
-                    Status = ContentStatus.Denied,
-                    Message = "You can't edit this comment"
-                };
-
-            comment.Content = dto.Content;
-
-            # region AI moderation result
-
-            var moderationResult = await _aiModerationManager.ModerateAsync(
-                comment.Content ?? string.Empty,
-                ModeratedEntityType.Comment,
-                comment.Id);
-
-            if (!moderationResult.IsAccepted)
-            {
-                return new CreateEntityResultDTO
-                {
-                    IsCreated = false,
-                    Status = ContentStatus.Denied,
-                    Message = "Comment violates community guidelines."
-                };
-            }
-
-            #endregion
-
-
-            commentRepo.Update(comment);
-            
-            await _unitOfWork.SaveChangesAsync();
-
-            return new CreateEntityResultDTO
-            {
-                IsCreated = true,
-                Status = ContentStatus.Accepted,
-                Message = "Comment updated successfully"
-            };
-        }
-
 
 
 
