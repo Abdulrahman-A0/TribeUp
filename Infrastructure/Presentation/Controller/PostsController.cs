@@ -20,6 +20,14 @@ namespace Presentation.Controller
             => Ok(await service.PostService.CreatePostAsync(UserId, dto, mediaFiles));
 
 
+        [HttpPut("{postId:int}/UpdatePost")]
+        public async Task<ActionResult<CreateEntityResultDTO>> UpdatePost(
+            int postId,
+            [FromForm] CreatePostDTO dto,
+            [FromForm] List<IFormFile> mediaFiles)
+            => Ok(await service.PostService.UpdatePostAsync(UserId, postId, dto, mediaFiles));
+
+
         [HttpDelete("{postId:int}/DeletePost")]
         public async Task<ActionResult<DeleteEntityResultDTO>> DeletePost(int postId)
             => Ok(await service.PostService.DeletePostAsync(UserId, postId));
@@ -55,14 +63,14 @@ namespace Presentation.Controller
             => Ok(await service.PostService.AddCommentAsync(UserId, postId, dto));
 
 
-        [HttpDelete("{commentId:int}/DeleteComment")]
-        public async Task<ActionResult<DeleteEntityResultDTO>> DeleteComment(int commentId)
-           => Ok(await service.PostService.DeleteCommentAsync(UserId, commentId));
-
-
         [HttpPut("{commentId:int}/UpdateComment")]
         public async Task<ActionResult<CreateEntityResultDTO>> UpdateComment(int commentId, CommentDTO dto)
             => Ok(await service.PostService.UpdateCommentAsync(UserId, commentId , dto));
+
+
+        [HttpDelete("{commentId:int}/DeleteComment")]
+        public async Task<ActionResult<DeleteEntityResultDTO>> DeleteComment(int commentId)
+           => Ok(await service.PostService.DeleteCommentAsync(UserId, commentId));
 
 
         [HttpGet("{postId:int}/Comments")]

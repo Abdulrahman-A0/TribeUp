@@ -3,6 +3,7 @@ using Domain.Contracts;
 using Domain.Entities.Groups;
 using Domain.Entities.Media;
 using Domain.Entities.Posts;
+using Domain.Exceptions;
 using Domain.Exceptions.GroupExceptions;
 using Domain.Exceptions.PostExceptions;
 using Microsoft.AspNetCore.Http;
@@ -106,7 +107,93 @@ namespace Service.Implementations
                     Type = NotificationType.PostTag,
                     Title = "You were tagged in a post",
                     Message = $"tagged you in his post: \"{GetFirstWord(post.Caption)}\"",
-                    ReferenceId = tag.Id
+                    ReferenceId = post.Id
+                });
+            }
+
+            # region AI moderation result
+
+            var moderationResult = await _aiModerationManager.ModerateAsync(
+                post.Caption ?? string.Empty,
+                ModeratedEntityType.Post,
+                post.Id);
+
+            if (!moderationResult.IsAccepted)
+            {
+                return new CreateEntityResultDTO
+                {
+                    IsCreated = false,
+                    Status = ContentStatus.Denied,
+                    Message = "Post violates community guidelines."
+                };
+            }
+
+            #endregion
+
+            //await _groupScoreService.IncreaseOnActionAsync(dto.GroupId, 5);
+
+            return new CreateEntityResultDTO
+            {
+                IsCreated = true,
+                Status = ContentStatus.Accepted,
+                Message = "Post created successfully."
+            };
+
+        }
+
+
+        public async Task<CreateEntityResultDTO> UpdatePostAsync(
+           string userId,
+           int postId,
+           CreatePostDTO dto,
+           List<IFormFile> mediaFiles)
+        {
+            var spec = new PostByIdSpecification(postId);
+            var post = await postRepo.GetByIdAsync(spec)
+                ?? throw new PostNotFoundException(postId);
+
+            if (string.IsNullOrWhiteSpace(post.Caption) && !mediaFiles.Any())
+                throw new ValidationException("Post must contain text or media.");
+
+            foreach (var file in mediaFiles)
+            {
+                var savedPath = await _fileStorage.SaveAsync(file, MediaType.PostMedia);
+
+                //if (post.MediaItems.ElementAt(true))
+
+                post.MediaItems.Add(new MediaItem
+                {
+                    MediaURL = savedPath,
+                    UploadedAt = DateTime.UtcNow,
+                    Type = file.ContentType.StartsWith("video") ? "Video" : "Image",
+                    Order = post.MediaItems.Count
+                });
+            }
+            
+
+            //await postRepo.AddAsync(post);
+
+            //await _unitOfWork.SaveChangesAsync();
+
+
+            foreach (var taggedUserId in dto.TaggedUserIds.Distinct())
+            {
+                var tag = new Tag
+                {
+                    PostId = post.Id,
+                    UserId = taggedUserId
+                };
+
+                await tagRepo.AddAsync(tag);
+
+                await _notificationService.CreateAsync(new CreateNotificationDTO
+                {
+                    RecipientUserId = taggedUserId,
+                    ActorUserId = userId,
+                    Type = NotificationType.PostTag,
+                    Title = "You were tagged in a post",
+                    Message = $"tagged you in his post: \"{GetFirstWord(post.Caption)}\"",
+                    ReferenceId = post.Id
                 });
             }
 
@@ -161,7 +248,7 @@ namespace Service.Implementations
             int pageSize)
         {
             if (page <= 0 || pageSize <= 0)
-                throw new ValidationException("Page and PageSize must be greater than zero.");
+                throw new PageIndexAndPageSizeException(page, pageSize);
 
             var moderation = moderationRepo.AsQueryable();
             var spec = new PostFeedSpecification(userId, moderation, page, pageSize);
@@ -246,8 +333,8 @@ namespace Service.Implementations
             int pageSize)
         {
             if (page <= 0 || pageSize <= 0)
-                throw new ValidationException("Page and PageSize must be greater than zero.");
-            
+                throw new PageIndexAndPageSizeException(page, pageSize);
+
             var group = await groupRepo.GetByIdAsync(groupId)
                 ?? throw new GroupNotFoundException(groupId);
 
@@ -356,7 +443,7 @@ namespace Service.Implementations
                     Type = NotificationType.PostLike,
                     Title = $"New like on your post",
                     Message = $"liked your post: \"{GetFirstWord(post.Caption)}\"",
-                    ReferenceId = like.Id
+                    ReferenceId = post.Id
                 });
 
                 return new ToggleLikeDTO 
@@ -381,8 +468,8 @@ namespace Service.Implementations
             int pageSize)
         {
             if (page <= 0 || pageSize <= 0)
-                throw new ValidationException("Page and PageSize must be greater than zero.");
-            
+                throw new PageIndexAndPageSizeException(page, pageSize);
+
             var post = await postRepo.GetByIdAsync(postId)
                  ?? throw new PostNotFoundException(postId);
 
@@ -423,6 +510,25 @@ namespace Service.Implementations
                 Content = dto.Content
             };
 
+            # region AI moderation result
+
+            var moderationResult = await _aiModerationManager.ModerateAsync(
+                comment.Content ?? string.Empty,
+                ModeratedEntityType.Comment,
+                comment.Id);
+
+            if (!moderationResult.IsAccepted)
+            {
+                return new CreateEntityResultDTO
+                {
+                    IsCreated = false,
+                    Status = ContentStatus.Denied,
+                    Message = "Comment violates community guidelines."
+                };
+            }
+
+            #endregion
+
             await commentRepo.AddAsync(comment);
             
             await _unitOfWork.SaveChangesAsync();
@@ -434,7 +540,7 @@ namespace Service.Implementations
                 Type = NotificationType.PostComment,
                 Title = $"New comment on your post: \"{GetFirstWord(post.Caption)}\"",
                 Message = $"commented: \"{GetFirstWord(comment.Content)}\"",
-                ReferenceId = comment.Id
+                ReferenceId = post.Id
             });
 
             return new CreateEntityResultDTO
@@ -453,7 +559,8 @@ namespace Service.Implementations
             int pageSize)
         {
             if (page <= 0 || pageSize <= 0)
-                throw new ValidationException("Page and PageSize must be greater than zero.");
+                throw new PageIndexAndPageSizeException(page, pageSize);
+            
             var post = await postRepo.GetByIdAsync(postId)
                 ?? throw new PostNotFoundException(postId);
 
@@ -535,7 +642,35 @@ namespace Service.Implementations
             var comment = await commentRepo.GetByIdAsync(spec)
                 ?? throw new CommentNotFoundException(commentId);
 
+            if(userId != comment.UserId)
+                return new CreateEntityResultDTO
+                {
+                    IsCreated = false,
+                    Status = ContentStatus.Denied,
+                    Message = "You can't edit this comment"
+                };
+
             comment.Content = dto.Content;
+
+            # region AI moderation result
+
+            var moderationResult = await _aiModerationManager.ModerateAsync(
+                comment.Content ?? string.Empty,
+                ModeratedEntityType.Comment,
+                comment.Id);
+
+            if (!moderationResult.IsAccepted)
+            {
+                return new CreateEntityResultDTO
+                {
+                    IsCreated = false,
+                    Status = ContentStatus.Denied,
+                    Message = "Comment violates community guidelines."
+                };
+            }
+
+            #endregion
+
 
             commentRepo.Update(comment);
             

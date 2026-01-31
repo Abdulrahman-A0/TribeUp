@@ -13,6 +13,7 @@ namespace ServiceAbstraction.Contracts
     public interface IPostService
     {
         Task<CreateEntityResultDTO> CreatePostAsync(string userId, CreatePostDTO dto, List<IFormFile> mediaFiles);
+        Task<CreateEntityResultDTO> UpdatePostAsync(string userId,int postId, CreatePostDTO dto, List<IFormFile> mediaFiles);
         Task<DeleteEntityResultDTO> DeletePostAsync(string userId, int postId);
         Task<PostDTO> GetPostByIdAsync(string userId, int postId);
         Task<PagedResult<PostDTO>> GetFeedAsync(string userId, int page, int pageSize);
