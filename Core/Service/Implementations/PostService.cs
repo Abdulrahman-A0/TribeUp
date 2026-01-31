@@ -152,7 +152,8 @@ namespace Service.Implementations
            CreatePostDTO dto,
            List<IFormFile> mediaFiles)
         {
-            var spec = new PostByIdSpecification(postId);
+            var moderation = moderationRepo.AsQueryable();
+            var spec = new PostByIdSpecification(userId, moderation, postId);
             var post = await postRepo.GetByIdAsync(spec)
                 ?? throw new PostNotFoundException(postId);
 
@@ -236,7 +237,9 @@ namespace Service.Implementations
             string userId, 
             int postId)
         {
-            var spec = new PostByIdSpecification(postId);
+            var moderation = moderationRepo.AsQueryable();
+
+            var spec = new PostByIdSpecification(userId, moderation, postId);
             var post = await postRepo.GetByIdAsync(spec) 
                 ?? throw new PostNotFoundException(postId);
 
@@ -675,7 +678,8 @@ namespace Service.Implementations
             string userId, 
             int postId)
         {
-            var spec = new PostByIdSpecification(postId);
+            var moderation = moderationRepo.AsQueryable();
+            var spec = new PostByIdSpecification(userId, moderation, postId);
             var post  = await postRepo.GetByIdAsync(spec)
                 ?? throw new PostNotFoundException(postId);
 

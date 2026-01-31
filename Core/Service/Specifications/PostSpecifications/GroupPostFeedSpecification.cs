@@ -15,6 +15,19 @@ namespace Service.Specifications.PostSpecifications
             : base(p =>
                     p.GroupId == groupId
                 &&
+
+            (
+                    p.Group.Accessibility == AccessibilityType.Public ||
+                    p.Group.GroupMembers.Any(m => m.UserId == currentUserId) ||
+                    p.UserId == currentUserId
+                )
+                &&
+                (
+                    p.Accessibility == AccessibilityType.Public ||
+                    p.Group.GroupMembers.Any(m => m.UserId == currentUserId) ||
+                    p.UserId == currentUserId
+                )
+                && 
                 (
                 p.UserId == currentUserId ||
                     !moderations.Any(m =>
