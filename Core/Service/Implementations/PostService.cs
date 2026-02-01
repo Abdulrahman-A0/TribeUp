@@ -778,6 +778,49 @@ namespace Service.Implementations
 
         }
        
+
+        public async Task<PagedResult<PostDTO>> GetDeniedPostsByGroupIdAsync(
+            string userId,
+            int groupId, 
+            int page, 
+            int pageSize)
+        {
+            if (page <= 0 || pageSize <= 0)
+                throw new PageIndexAndPageSizeException(page, pageSize);
+
+            if (!await IsAdminAsync(userId, groupId))
+                throw new ForbiddenActionException();
+
+            var moderation = moderationRepo.AsQueryable();
+            var spec = new GroupDeniedPostsSpecification(groupId, moderation, page, pageSize);
+            var posts = await postRepo.GetAllAsync(spec)
+                ?? throw new GroupNotFoundException(groupId);
+            var totalCount = await postRepo.CountAsync(p =>
+                    p.GroupId == groupId &&
+                    moderation.Any(m =>
+                        m.EntityType == ModeratedEntityType.Post &&
+                        m.EntityId == p.Id &&
+                        m.Status == ContentStatus.Denied
+                    )
+            );
+
+            var ordered = posts.OrderByDescending(p => p.CreatedAt).ToList();
+
+            return new PagedResult<PostDTO>
+            {
+                Items = ordered.Select(x =>
+                {
+                    var dto = _mapper.Map<PostDTO>(x);
+                    dto.IsDenied = true;
+                    return dto;
+                }).ToList(),
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = totalCount,
+                HasMore = totalCount > page * pageSize
+            };
+        }
+
         
 
 

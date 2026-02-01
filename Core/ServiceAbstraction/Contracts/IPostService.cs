@@ -25,5 +25,6 @@ namespace ServiceAbstraction.Contracts
         Task<DeleteEntityResultDTO> DeleteCommentAsync(string userId, int commentId);
         Task<CreateEntityResultDTO> UpdateCommentAsync(string userId, string username, int commentId, CommentDTO dto);
         Task<PagedResult<CommentResultDTO>> GetCommentsByPostIdAsync(string userId, int postId, int page, int pageSize);
+        Task<PagedResult<PostDTO>> GetDeniedPostsByGroupIdAsync(string userId, int groupId, int page, int pageSize);
     }
 }

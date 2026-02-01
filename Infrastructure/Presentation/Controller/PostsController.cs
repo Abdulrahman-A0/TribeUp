@@ -41,8 +41,8 @@ namespace Presentation.Controller
         [HttpGet("PersonalFeed")]
         public async Task<ActionResult<PagedResult<PostDTO>>> GetPersonalFeed(int page = 1, int pageSize = 20)
             => Ok(await service.PostService.GetPersonalFeedAsync(UserId, page, pageSize));
-        
-        
+
+
         [HttpGet("Feed")]
         public async Task<ActionResult<PagedResult<PostDTO>>> GetFeed(int page = 1, int pageSize = 20)
             => Ok(await service.PostService.GetFeedAsync(UserId, page, pageSize));
@@ -70,7 +70,7 @@ namespace Presentation.Controller
 
         [HttpPut("{commentId:int}/UpdateComment")]
         public async Task<ActionResult<CreateEntityResultDTO>> UpdateComment(int commentId, CommentDTO dto)
-            => Ok(await service.PostService.UpdateCommentAsync(UserId, UserName, commentId , dto));
+            => Ok(await service.PostService.UpdateCommentAsync(UserId, UserName, commentId, dto));
 
 
         [HttpDelete("{commentId:int}/DeleteComment")]
@@ -82,5 +82,9 @@ namespace Presentation.Controller
         public async Task<ActionResult<PagedResult<CommentResultDTO>>> GetComments(int postId, int page = 1, int pageSize = 20)
             => Ok(await service.PostService.GetCommentsByPostIdAsync(UserId, postId, page, pageSize));
 
+
+        [HttpGet("{groupId:int}/DeniedPostsByGroupId")]
+        public async Task<ActionResult<PagedResult<PostDTO>>> GetDeniedPostsByGroupId(int groupId, int page = 1, int pageSize = 20)
+            => Ok(await service.PostService.GetDeniedPostsByGroupIdAsync(UserId, groupId, page, pageSize));
     }
 }
