@@ -65,6 +65,12 @@ namespace TribeUp.Middlewares
                     problem.Type = ErrorTypes.Conflict;
                     problem.Title = conflict.Message;
                     break;
+               
+                case ForbiddenException forbbiden:
+                    problem.Status = StatusCodes.Status403Forbidden;
+                    problem.Type = ErrorTypes.Forbidden;
+                    problem.Title = forbbiden.Message;
+                    break;
 
                 default:
                     _logger.LogError($"Something went wrong ==> : {ex.Message}");

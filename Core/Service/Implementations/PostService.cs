@@ -4,6 +4,7 @@ using Domain.Entities.Groups;
 using Domain.Entities.Media;
 using Domain.Entities.Posts;
 using Domain.Exceptions;
+using Domain.Exceptions.ForbiddenExceptions;
 using Domain.Exceptions.GroupExceptions;
 using Domain.Exceptions.PostExceptions;
 using Domain.Exceptions.UserExceptions;
@@ -228,6 +229,28 @@ namespace Service.Implementations
                 IsCreated = true,
                 Status = ContentStatus.Accepted,
                 Message = "Post created successfully."
+            };
+
+        }
+
+        public async Task<DeleteEntityResultDTO> DeletePostAsync(
+            string userId, 
+            int postId)
+        {
+            var moderation = moderationRepo.AsQueryable();
+            var spec = new PostByIdSpecification(userId, moderation, postId);
+            var post  = await postRepo.GetByIdAsync(spec)
+                ?? throw new PostNotFoundException(postId);
+
+            if (post.User.Id != userId)
+                if (!await IsAdminAsync(userId, post.GroupId))
+                    throw new ForbiddenActionException();
+
+            postRepo.Delete(post);
+            await _unitOfWork.SaveChangesAsync();
+            return new DeleteEntityResultDTO
+            {
+                Message = "Deleted successfully"
             };
 
         }
@@ -653,13 +676,8 @@ namespace Service.Implementations
             var comment = await commentRepo.GetByIdAsync(spec)
                 ?? throw new CommentNotFoundException(commentId);
 
-            if(userId != comment.UserId)
-                return new CreateEntityResultDTO
-                {
-                    IsCreated = false,
-                    Status = ContentStatus.Denied,
-                    Message = "You can't edit this comment"
-                };
+            if (userId != comment.UserId)
+                throw new ForbiddenActionException();
 
             comment.Content = dto.Content;
 
@@ -730,32 +748,6 @@ namespace Service.Implementations
         }
 
 
-        public async Task<DeleteEntityResultDTO> DeletePostAsync(
-            string userId, 
-            int postId)
-        {
-            var moderation = moderationRepo.AsQueryable();
-            var spec = new PostByIdSpecification(userId, moderation, postId);
-            var post  = await postRepo.GetByIdAsync(spec)
-                ?? throw new PostNotFoundException(postId);
-
-            if(post.User.Id != userId)
-                if(!await IsAdminAsync(userId,post.GroupId))
-                    return new DeleteEntityResultDTO
-                    {
-                        Message = "You don't have permission to delete this post"
-                    };
-
-            postRepo.Delete(post);
-            await _unitOfWork.SaveChangesAsync();
-            return new DeleteEntityResultDTO
-            {
-                Message = "Deleted successfully"
-            };
-
-        }
-
-
         public async Task<DeleteEntityResultDTO> DeleteCommentAsync(
             string userId, 
             int commentId)
@@ -766,10 +758,8 @@ namespace Service.Implementations
 
             if(comment.User.Id != userId)
                 if(!await IsAdminAsync(userId, comment.Post.GroupId))
-                    return new DeleteEntityResultDTO
-                    {
-                        Message = "You don't have permission to delete this comment"
-                    };
+                    throw new ForbiddenActionException();
+
 
             commentRepo.Delete(comment);
             await _unitOfWork.SaveChangesAsync();
