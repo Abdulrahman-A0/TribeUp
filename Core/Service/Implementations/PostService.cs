@@ -296,6 +296,7 @@ namespace Service.Implementations
                 .ToListAsync();
 
             var totalCount = await postRepo.CountAsync(p =>
+                    p.UserId == userId &&
                     !moderation.Any(m =>
                         m.EntityType == ModeratedEntityType.Post &&
                         m.EntityId == p.Id &&
@@ -325,7 +326,6 @@ namespace Service.Implementations
                 HasMore = totalCount > page * pageSize
             };
         }
-
 
 
         public async Task<PagedResult<PostDTO>> GetFeedAsync(
@@ -453,6 +453,7 @@ namespace Service.Implementations
                 .ToListAsync();
 
             var totalCount = await postRepo.CountAsync(p =>
+                    p.GroupId == groupId &&
                     !moderation.Any(m =>
                         m.EntityType == ModeratedEntityType.Post &&
                         m.EntityId == p.Id &&
@@ -731,8 +732,15 @@ namespace Service.Implementations
             var spec = new CommentsByPostIdSpecification(userId, moderation, postId, page, pageSize);
             var comments = await commentRepo.GetAllAsync(spec);
            
-            var totalCount = await commentRepo
-                .CountAsync(c => c.PostId == postId);
+            var totalCount = await commentRepo.CountAsync(c => 
+                    c.PostId == postId &&
+                    !moderation.Any(m =>
+                        m.EntityType == ModeratedEntityType.Comment &&
+                        m.EntityId == c.Id &&
+                        m.Status == ContentStatus.Denied &&
+                        c.UserId != userId
+                    )
+                );
 
             var mapped = _mapper.Map<List<CommentResultDTO>>(comments);
 
