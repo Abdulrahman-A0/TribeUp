@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 
 namespace ServiceAbstraction.Contracts
 {
-    public interface IGroupChatPermissionService
+    public interface IGroupAuthorizationService
     {
         Task<GroupMemberResultDTO> EnsureUserCanChatAsync(int groupId, string userId);
+        Task<GroupMemberResultDTO> EnsureUserIsAdminAsync(int groupId, string userId);
     }
 }
