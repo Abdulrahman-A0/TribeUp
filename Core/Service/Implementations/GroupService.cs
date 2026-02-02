@@ -14,7 +14,7 @@ using Shared.Enums;
 namespace Service.Implementations
 {
     public class GroupService(IUnitOfWork unitOfWork, IMapper mapper,
-        IWebHostEnvironment environment, IFileStorageService fileStorage) : IGroupService
+        IWebHostEnvironment environment, IFileStorageService fileStorage, IGroupAuthorizationService groupAuthorizationService) : IGroupService
     {
         public async Task<List<GroupResultDTO>> GetAllGroupsAsync()
         {
@@ -101,7 +101,7 @@ namespace Service.Implementations
             var group = await repo.GetByIdAsync(groupId)
                 ?? throw new GroupNotFoundException(groupId);
 
-            await EnsureUserIsAdmin(groupId, userId);
+            await groupAuthorizationService.EnsureUserIsAdminAsync(groupId, userId);
 
             // AutoMapper will only update non-null fields
             mapper.Map(updateGroupDTO, group);
@@ -122,7 +122,7 @@ namespace Service.Implementations
             var group = await repo.GetByIdAsync(groupId)
                 ?? throw new GroupNotFoundException(groupId);
 
-            await EnsureUserIsAdmin(groupId, userId);
+            await groupAuthorizationService.EnsureUserIsAdminAsync(groupId, userId);
 
             repo.Delete(group);
             await unitOfWork.SaveChangesAsync();
@@ -139,7 +139,7 @@ namespace Service.Implementations
             var group = await groupRepo.GetByIdAsync(groupId)
                 ?? throw new GroupNotFoundException(groupId);
 
-            await EnsureUserIsAdmin(groupId, userId);
+            await groupAuthorizationService.EnsureUserIsAdminAsync(groupId, userId);
 
             var newRelativePath = await fileStorage
                 .SaveAsync(updateGroupPictureDTO.Picture, MediaType.GroupProfile);
@@ -165,7 +165,7 @@ namespace Service.Implementations
             var group = await groupRepo.GetByIdAsync(groupId)
                 ?? throw new GroupNotFoundException(groupId);
 
-            await EnsureUserIsAdmin(groupId, userId);
+            await groupAuthorizationService.EnsureUserIsAdminAsync(groupId, userId);
 
             if (string.IsNullOrWhiteSpace(group.GroupProfilePicture))
                 return true;
@@ -225,19 +225,7 @@ namespace Service.Implementations
 
 
 
-        private async Task<GroupMember> EnsureUserIsAdmin(int groupId, string userId)
-        {
-            var memberRepo = unitOfWork.GetRepository<GroupMember, int>();
-
-            var spec = new GroupMemberByGroupAndUserSpec(groupId, userId);
-            var member = await memberRepo.GetByIdAsync(spec)
-                ?? throw new GroupMemberNotFoundException(userId);
-
-            if (member.Role != RoleType.Admin)
-                throw new GroupAdminOnlyException();
-
-            return member;
-        }
+        
 
     }
 }

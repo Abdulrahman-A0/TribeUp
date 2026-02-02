@@ -129,23 +129,31 @@ namespace Service.Implementations
                 throw new GroupJoinRequestInvalidStateException();
 
             var adminSpec = new GroupMemberByGroupAndUserSpec(request.GroupId, userId);
-            var adminMember = await memberRepo.GetByIdAsync(adminSpec);
-            if (adminMember is null || adminMember.Role != RoleType.Admin)
+            var admin = await memberRepo.GetByIdAsync(adminSpec);
+            if (admin is null || admin.Role != RoleType.Admin)
                 throw new GroupAdminOnlyException();
 
             request.Status = JoinRequestStatus.Approved;
             requestRepo.Update(request);
 
-            var newMember = new GroupMember
-            {
-                GroupId = request.GroupId,
-                UserId = request.UserId,
-                Role = RoleType.Member,
-                JoinedAt = DateTime.UtcNow
-            };
+            var memberSpec = new GroupMemberByGroupAndUserSpec(request.GroupId, request.UserId);
+            var existingMember = await memberRepo.GetByIdAsync(memberSpec);
 
-            await memberRepo.AddAsync(newMember);
-            await groupScoreService.IncreaseOnActionAsync(request.GroupId, 10);
+            if (existingMember != null)
+            {
+                existingMember.Role = RoleType.Member;
+                memberRepo.Update(existingMember);
+            }
+            else
+            {
+                await memberRepo.AddAsync(new GroupMember
+                {
+                    GroupId = request.GroupId,
+                    UserId = request.UserId,
+                    Role = RoleType.Member,
+                    JoinedAt = DateTime.UtcNow
+                });
+            }
 
             await notificationService.CreateAsync(new CreateNotificationDTO
             {
@@ -153,9 +161,11 @@ namespace Service.Implementations
                 ActorUserId = userId,
                 Type = NotificationType.GroupJoinApproved,
                 Title = "Join Request Approved",
-                Message = "Your request to join the group was approved.",
+                Message = "You are now a group member.",
                 ReferenceId = request.GroupId
             });
+
+            await groupScoreService.IncreaseOnActionAsync(request.GroupId, 10);
 
             return await unitOfWork.SaveChangesAsync() > 0;
         }

@@ -9,9 +9,8 @@ namespace Shared.DTOs.GroupMemberModule
 {
     public record JoinGroupResponseDTO
     {
-        public bool IsImmediate { get; init; }
         public string Message { get; init; }
-        public GroupMemberResultDTO? MemberResult { get; init; }
-        public GroupJoinRequestResultDTO? RequestResult { get; init; }
+        public GroupJoinRequestResultDTO Request { get; init; }
+        public GroupMemberResultDTO? Follower { get; init; }
     }
 }
