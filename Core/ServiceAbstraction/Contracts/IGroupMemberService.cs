@@ -9,7 +9,14 @@ namespace ServiceAbstraction.Contracts
 {
     public interface IGroupMemberService
     {
-        Task<JoinGroupResponseDTO> JoinOrRequestGroupAsync(int groupId, string userId);
+        public Task<List<GroupMemberResultDTO>> GetGroupMembersAsync(int groupId, string userId);
+        
+        Task<JoinGroupResponseDTO> JoinGroupAsync(int groupId, string userId);
         Task<bool> LeaveGroupAsync(int groupId, string userId);
+
+        public Task<bool> PromoteToAdminAsync(int groupId, string actorUserId, int groupMemberId);
+        public Task<bool> DemoteAdminAsync(int groupId, string actorUserId, int groupMemberId);
+        public Task<bool> KickMemberAsync(int groupId, string actorUserId, int groupMemberId);
+
     }
 }
