@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Shared.DTOs.PostModule;
 using Shared.DTOs.Posts;
+using Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,5 +27,6 @@ namespace ServiceAbstraction.Contracts
         Task<CreateEntityResultDTO> UpdateCommentAsync(string userId, string username, int commentId, CommentDTO dto);
         Task<PagedResult<CommentResultDTO>> GetCommentsByPostIdAsync(string userId, int postId, int page, int pageSize);
         Task<PagedResult<PostDTO>> GetDeniedPostsByGroupIdAsync(string userId, int groupId, int page, int pageSize);
+        Task<CreateEntityResultDTO> ChangeModerationStatusAsync(string userId, int groupId, ModerationDTO dto);
     }
 }
