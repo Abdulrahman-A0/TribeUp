@@ -16,8 +16,4 @@
     <ProjectReference Include="..\ServiceAbstraction\ServiceAbstraction.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Specifications\Moderation\" />
-  </ItemGroup>
-
 </Project>

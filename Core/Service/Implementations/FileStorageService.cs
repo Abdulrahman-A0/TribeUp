@@ -85,13 +85,13 @@ namespace Service.Implementations
             if (!allowed.Contains(file.ContentType))
                 errors["File"] = new[] { "Unsupported image format" };
 
-            if (file.Length > 2 * 1024 * 1024)
+            if (file.Length > 5 * 1024 * 1024)
                 errors["File"] = new[] { "Image must be under 2MB" };
         }
 
         private static void ValidatePostImage(IFormFile file, Dictionary<string, string[]> errors)
         {
-            if (file.Length > 5 * 1024 * 1024)
+            if (file.Length > 20 * 1024 * 1024)
                 errors["File"] = new[] { "Post image must be under 5MB" };
         }
 

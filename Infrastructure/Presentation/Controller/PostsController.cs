@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using ServiceAbstraction.Contracts;
 using Shared.DTOs.PostModule;
 using Shared.DTOs.Posts;
+using Shared.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace Presentation.Controller
@@ -86,5 +87,10 @@ namespace Presentation.Controller
         [HttpGet("{groupId:int}/DeniedPostsByGroupId")]
         public async Task<ActionResult<PagedResult<PostDTO>>> GetDeniedPostsByGroupId(int groupId, int page = 1, int pageSize = 20)
             => Ok(await service.PostService.GetDeniedPostsByGroupIdAsync(UserId, groupId, page, pageSize));
+
+
+        [HttpPut("ChangeEntityContentStatus")]
+        public async Task<ActionResult<CreateEntityResultDTO>> ChangeEntityContentStatus(int groupId, ModerationDTO dto)
+            => Ok(await service.PostService.ChangeModerationStatusAsync(UserId, groupId, dto));
     }
 }

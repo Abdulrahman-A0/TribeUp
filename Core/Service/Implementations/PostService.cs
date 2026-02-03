@@ -6,11 +6,13 @@ using Domain.Entities.Posts;
 using Domain.Exceptions;
 using Domain.Exceptions.ForbiddenExceptions;
 using Domain.Exceptions.GroupExceptions;
+using Domain.Exceptions.ModerationExceptions;
 using Domain.Exceptions.PostExceptions;
 using Domain.Exceptions.UserExceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Service.Specifications.GroupMemberSpecs;
+using Service.Specifications.ModerationSpecifications;
 using Service.Specifications.PostSpecifications;
 using ServiceAbstraction.Contracts;
 using Shared.DTOs.NotificationModule;
@@ -821,7 +823,44 @@ namespace Service.Implementations
             };
         }
 
-        
+        public async Task<CreateEntityResultDTO> ChangeModerationStatusAsync(
+            string userId, 
+            int groupId,
+            ModerationDTO dto)
+        {
+            if (!await IsAdminAsync(userId, groupId))
+                throw new ForbiddenActionException();
+
+            var group = await groupRepo.GetByIdAsync(groupId)
+               ?? throw new GroupNotFoundException(groupId);
+
+            var spec = new ChangeEntityStatusSpecification(dto.EntityType, dto.EntityId);
+            var entity = await moderationRepo.GetByIdAsync(spec)
+                ?? throw new EntityNotFoundException(dto.EntityType, dto.EntityId);
+
+            entity.Status = dto.ContentStatus;
+            entity.ReviewedAt = DateTime.UtcNow;
+
+            moderationRepo.Update(entity);
+            await _unitOfWork.SaveChangesAsync();
+
+            if(dto.ContentStatus == ContentStatus.Accepted)
+                return new CreateEntityResultDTO
+                {
+                    IsCreated = true,
+                    Status = dto.ContentStatus,
+                    Message = "Accepted by Admins."
+                };
+
+            return new CreateEntityResultDTO
+            {
+                IsCreated = false,
+                Status = dto.ContentStatus,
+                Message = "Denied by Admins."
+            };
+
+        }
+
 
 
 
@@ -845,6 +884,7 @@ namespace Service.Implementations
                 .Split(' ', StringSplitOptions.RemoveEmptyEntries)
                 .First() + "...";
         }
+
 
         #endregion
 
