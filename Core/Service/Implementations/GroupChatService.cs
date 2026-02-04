@@ -45,7 +45,7 @@ namespace Service.Implementations
             group.LastMessage = message;
             group.LastMessageSentAt = message.SentAt;
 
-            await unitOfWork.SaveChangesAsync(); // ✅ مرة واحدة
+            await unitOfWork.SaveChangesAsync();
 
             var spec = new GroupChatMessageWithGroupSpec(message.Id);
             var savedMessage = await messageRepo.GetByIdAsync(spec);

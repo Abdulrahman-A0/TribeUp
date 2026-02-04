@@ -15,7 +15,7 @@ namespace Domain.Entities.Groups
 {
     public class Group : BaseEntity<int>
     {
-        public string GroupName { get; set; }
+        public string GroupName { get; set; } = string.Empty;
         public string? Description { get; set; }
         public string? GroupProfilePicture { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -23,7 +23,6 @@ namespace Domain.Entities.Groups
 
         public DateTime? LastMessageSentAt { get; set; }
 
-        [ForeignKey(nameof(LastMessageId))]
         public GroupChatMessage? LastMessage { get; set; }
         public long? LastMessageId { get; set; }
 

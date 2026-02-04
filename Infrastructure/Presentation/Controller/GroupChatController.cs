@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ServiceAbstraction.Contracts;
 using Shared.DTOs.GroupMessageModule;
 using Shared.DTOs.GroupMessages;
@@ -11,6 +12,7 @@ using System.Threading.Tasks;
 
 namespace Presentation.Controller
 {
+    [Authorize]
     public class GroupChatController(IServiceManager serviceManager) : ApiController
     {
         [HttpGet("GetMessages")]
