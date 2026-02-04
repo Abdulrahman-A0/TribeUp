@@ -2,9 +2,12 @@
 using AutoMapper.Execution;
 using Domain.Contracts;
 using Domain.Entities.Groups;
+using Domain.Exceptions.GroupExceptions;
 using Service.Specifications.GroupChatMessageSpecs;
 using Service.Specifications.GroupMemberSpecs;
+using Service.Specifications.GroupSpecs;
 using ServiceAbstraction.Contracts;
+using Shared.DTOs.GroupMessageModule;
 using Shared.DTOs.GroupMessages;
 using Shared.DTOs.Posts;
 using Shared.Enums;
@@ -17,11 +20,17 @@ using System.Threading.Tasks;
 
 namespace Service.Implementations
 {
-    public class GroupChatService(IUnitOfWork unitOfWork, IMapper mapper, IGroupChatPermissionService groupChatPermissionService, IGroupChatNotifier groupChatNotifier) : IGroupChatService
+    public class GroupChatService(IUnitOfWork unitOfWork, IMapper mapper, IGroupAuthorizationService groupAuthorizationService, IGroupChatNotifier groupChatNotifier) : IGroupChatService
     {
         public async Task<GroupMessageResponseDTO> SendMessageAsync(int groupId, SendGroupMessageDTO sendGroupMessageDTO, string userId)
         {
-            await groupChatPermissionService.EnsureUserCanChatAsync(groupId, userId);
+            await groupAuthorizationService.EnsureUserCanChatAsync(groupId, userId);
+
+            var messageRepo = unitOfWork.GetRepository<GroupChatMessage, long>();
+            var groupRepo = unitOfWork.GetRepository<Group, int>();
+
+            var group = await groupRepo.GetByIdAsync(groupId)
+                ?? throw new GroupNotFoundException(groupId);
 
             var message = new GroupChatMessage
             {
@@ -31,12 +40,15 @@ namespace Service.Implementations
                 SentAt = DateTime.UtcNow
             };
 
-            var repo = unitOfWork.GetRepository<GroupChatMessage, long>();
-            await repo.AddAsync(message);
-            await unitOfWork.SaveChangesAsync();
+            await messageRepo.AddAsync(message);
 
-            var spec = new GroupChatMessageWithUserSpec(message.Id);
-            var savedMessage = await repo.GetByIdAsync(spec);
+            group.LastMessage = message;
+            group.LastMessageSentAt = message.SentAt;
+
+            await unitOfWork.SaveChangesAsync(); // ✅ مرة واحدة
+
+            var spec = new GroupChatMessageWithGroupSpec(message.Id);
+            var savedMessage = await messageRepo.GetByIdAsync(spec);
 
             var response = mapper.Map<GroupMessageResponseDTO>(savedMessage);
 
@@ -50,7 +62,7 @@ namespace Service.Implementations
 
         public async Task<PagedResult<GroupMessageResponseDTO>> GetMessagesAsync(int groupId, int page, int pageSize, string userId)
         {
-            await groupChatPermissionService.EnsureUserCanChatAsync(groupId, userId);
+            await groupAuthorizationService.EnsureUserCanChatAsync(groupId, userId);
 
             var repo = unitOfWork.GetRepository<GroupChatMessage, long>();
             var spec = new GroupChatMessagesSpec(groupId, page, pageSize);
@@ -72,6 +84,17 @@ namespace Service.Implementations
 
 
 
-        
+        public async Task<List<GroupChatInboxDTO>> GetChatInboxAsync(string userId)
+        {
+            var repo = unitOfWork.GetRepository<Group, int>();
+            var spec = new ChatInboxProjectionSpec(userId);
+
+            var groups = await repo.GetAllAsync(spec);
+
+            return mapper.Map<List<GroupChatInboxDTO>>(groups);
+        }
+
+
+
     }
 }

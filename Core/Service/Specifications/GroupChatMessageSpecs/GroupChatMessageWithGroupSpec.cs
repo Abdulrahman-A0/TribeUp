@@ -7,16 +7,13 @@ using System.Threading.Tasks;
 
 namespace Service.Specifications.GroupChatMessageSpecs
 {
-    public class GroupChatMessagesSpec : BaseSpecifications<GroupChatMessage, long>
+    public class GroupChatMessageWithGroupSpec : BaseSpecifications<GroupChatMessage, long>
     {
-        public GroupChatMessagesSpec(int groupId, int page, int pageSize)
-            : base(m => m.GroupId == groupId && !m.IsDeleted)
+        public GroupChatMessageWithGroupSpec(long messageId)
+            : base(m => m.Id == messageId && !m.IsDeleted)
         {
             AddIncludes(m => m.User);
             AddIncludes(m => m.Group);
-
-            AddOrderByDescending(m => m.SentAt);
-            ApplyPagination(page, pageSize);
         }
     }
 }
