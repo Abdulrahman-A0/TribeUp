@@ -193,8 +193,9 @@ namespace Service.Implementations
                     {
                         ["ConfirmNewPassword"] = new[] { "Passwords do not match" }
                     });
+            var decodedEmail = Uri.UnescapeDataString(dto.Email);
 
-            var user = await _userManager.FindByEmailAsync(dto.Email)
+            var user = await _userManager.FindByEmailAsync(decodedEmail)
                 ?? throw new AuthenticationFailedException("invalid_reset_request");
 
             var decodedToken = Uri.UnescapeDataString(dto.Token);
