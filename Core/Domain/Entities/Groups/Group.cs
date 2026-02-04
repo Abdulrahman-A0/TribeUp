@@ -2,12 +2,13 @@
 using Domain.Entities.Media;
 using Domain.Entities.Posts;
 using Domain.Entities.Stories;
+using Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
-using Shared.Enums;
 using System.Threading.Tasks;
 
 namespace Domain.Entities.Groups
@@ -17,8 +18,14 @@ namespace Domain.Entities.Groups
         public string GroupName { get; set; }
         public string? Description { get; set; }
         public string? GroupProfilePicture { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public AccessibilityType Accessibility { get; set; }
+
+        public DateTime? LastMessageSentAt { get; set; }
+
+        [ForeignKey(nameof(LastMessageId))]
+        public GroupChatMessage? LastMessage { get; set; }
+        public long? LastMessageId { get; set; }
 
 
 

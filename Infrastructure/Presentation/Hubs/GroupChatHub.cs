@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace Presentation.Hubs
 {
     [Authorize]
-    public class GroupChatHub(IGroupChatPermissionService groupChatPermissionService) : Hub
+    public class GroupChatHub(IGroupAuthorizationService groupAuthorizationService) : Hub
     {
         public async Task JoinGroupChat(int groupId)
         {
@@ -19,7 +19,7 @@ namespace Presentation.Hubs
             if (string.IsNullOrEmpty(userId))
                 throw new HubException("Unauthorized");
 
-            await groupChatPermissionService.EnsureUserCanChatAsync(groupId, userId);
+            await groupAuthorizationService.EnsureUserCanChatAsync(groupId, userId);
 
             await Groups.AddToGroupAsync(
                 Context.ConnectionId,

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ServiceAbstraction.Contracts;
+using Shared.DTOs.GroupMessageModule;
 using Shared.DTOs.GroupMessages;
 using Shared.DTOs.Posts;
 using System;
@@ -20,6 +21,10 @@ namespace Presentation.Controller
         [HttpPost("SendMessage/{groupId}")]
         public async Task<ActionResult<GroupMessageResponseDTO>> SendMessageAsync(int groupId, [FromBody] SendGroupMessageDTO sendGroupMessageDTO)
             => Ok(await serviceManager.GroupChatService.SendMessageAsync(groupId, sendGroupMessageDTO, UserId));
+
+        [HttpGet("ChatInbox")]
+        public async Task<ActionResult<List<GroupChatInboxDTO>>> GetChatInboxAsync()
+            => Ok(await serviceManager.GroupChatService.GetChatInboxAsync(UserId));
 
     }
 }
