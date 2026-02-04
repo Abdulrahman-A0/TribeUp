@@ -178,7 +178,7 @@ namespace Service.Implementations
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
 
             var resetLink =
-                $"{configuration["URLs:FrontUrl"]}/reset-password" +
+                $"{configuration["URLs:FrontUrl"]}/auth/reset-password" +
                 $"?email={Uri.EscapeDataString(user.Email!)}" +
                 $"&token={Uri.EscapeDataString(token)}";
 
