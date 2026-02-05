@@ -5,6 +5,8 @@
         GroupJoinRequest,
         GroupJoinApproved,
         GroupJoinRejected,
+        GroupMemberRoleChanged,
+        GroupMemberRemoved,
         PostTag,
         PostLike,
         PostComment,

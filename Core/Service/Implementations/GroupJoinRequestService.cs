@@ -39,21 +39,19 @@ namespace Service.Implementations
             var group = await groupRepo.GetByIdAsync(groupId)
                 ?? throw new GroupNotFoundException(groupId);
 
-            if (group.Accessibility != AccessibilityType.Private)
-                throw new InvalidGroupJoinRequestException(groupId, group.Accessibility.ToString());
 
             var memberSpec = new GroupMemberByGroupAndUserSpec(groupId, userId);
             var existingMember = await memberRepo.GetByIdAsync(memberSpec);
             if (existingMember != null)
-                throw new GroupMemberExistsException(userId);
+                throw new GroupJoinRequestNotAllowedException("You are already a member of this group.");
 
 
             var requestSpec = new GroupJoinRequestByGroupAndUserSpec(groupId, userId);
             var existingRequest = await requestRepo.GetByIdAsync(requestSpec);
-            if (existingRequest != null && existingRequest.Status != JoinRequestStatus.Rejected)
-                throw new GroupJoinRequestExistsException(existingRequest.Id);
+            if (existingRequest != null && existingRequest.Status == JoinRequestStatus.Pending)
+                throw new GroupJoinRequestNotAllowedException("You already have a pending join request.");
 
-            var newRequest = new GroupJoinRequest
+            var request = new GroupJoinRequest
             {
                 GroupId = groupId,
                 UserId = userId,
@@ -61,12 +59,10 @@ namespace Service.Implementations
                 CreatedAt = DateTime.UtcNow
             };
 
-            await requestRepo.AddAsync(newRequest);
+            await requestRepo.AddAsync(request);
             await unitOfWork.SaveChangesAsync();
 
-            var adminsSpec = new GroupAdminsSpec(groupId);
-            var admins = await memberRepo.GetAllAsync(adminsSpec);
-
+            var admins = await memberRepo.GetAllAsync(new GroupAdminsSpec(groupId));
             foreach (var admin in admins)
             {
                 await notificationService.CreateAsync(new CreateNotificationDTO
@@ -75,15 +71,17 @@ namespace Service.Implementations
                     ActorUserId = userId,
                     Type = NotificationType.GroupJoinRequest,
                     Title = "New Join Request",
-                    Message = "A user requested to join your group",
-                    ReferenceId = newRequest.Id
+                    Message = "A user requested to join your group.",
+                    ReferenceId = request.Id
                 });
             }
 
-            var detailsSpec = new GroupJoinRequestWithDetailsSpec(newRequest.Id);
-            var result = await requestRepo.GetByIdAsync(detailsSpec);
-            return mapper.Map<GroupJoinRequestResultDTO>(result);
+            var details = await requestRepo.GetByIdAsync(
+                new GroupJoinRequestWithDetailsSpec(request.Id));
+
+            return mapper.Map<GroupJoinRequestResultDTO>(details);
         }
+
 
 
 
@@ -131,23 +129,31 @@ namespace Service.Implementations
                 throw new GroupJoinRequestInvalidStateException();
 
             var adminSpec = new GroupMemberByGroupAndUserSpec(request.GroupId, userId);
-            var adminMember = await memberRepo.GetByIdAsync(adminSpec);
-            if (adminMember is null || adminMember.Role != RoleType.Admin)
+            var admin = await memberRepo.GetByIdAsync(adminSpec);
+            if (admin is null || admin.Role != RoleType.Admin)
                 throw new GroupAdminOnlyException();
 
             request.Status = JoinRequestStatus.Approved;
             requestRepo.Update(request);
 
-            var newMember = new GroupMember
-            {
-                GroupId = request.GroupId,
-                UserId = request.UserId,
-                Role = RoleType.Member,
-                JoinedAt = DateTime.UtcNow
-            };
+            var memberSpec = new GroupMemberByGroupAndUserSpec(request.GroupId, request.UserId);
+            var existingMember = await memberRepo.GetByIdAsync(memberSpec);
 
-            await memberRepo.AddAsync(newMember);
-            await groupScoreService.IncreaseOnActionAsync(request.GroupId, 10);
+            if (existingMember != null)
+            {
+                existingMember.Role = RoleType.Member;
+                memberRepo.Update(existingMember);
+            }
+            else
+            {
+                await memberRepo.AddAsync(new GroupMember
+                {
+                    GroupId = request.GroupId,
+                    UserId = request.UserId,
+                    Role = RoleType.Member,
+                    JoinedAt = DateTime.UtcNow
+                });
+            }
 
             await notificationService.CreateAsync(new CreateNotificationDTO
             {
@@ -155,18 +161,14 @@ namespace Service.Implementations
                 ActorUserId = userId,
                 Type = NotificationType.GroupJoinApproved,
                 Title = "Join Request Approved",
-                Message = "Your request to join the group was approved.",
+                Message = "You are now a group member.",
                 ReferenceId = request.GroupId
             });
 
+            await groupScoreService.IncreaseOnActionAsync(request.GroupId, 10);
+
             return await unitOfWork.SaveChangesAsync() > 0;
         }
-
-
-
-
-
-
 
 
 
@@ -219,6 +221,23 @@ namespace Service.Implementations
             var request = await requestRepo.GetByIdAsync(spec);
 
             return request == null ? null : mapper.Map<GroupJoinRequestResultDTO>(request);
+        }
+
+
+
+        public async Task<bool> CancelMyJoinRequestAsync(int requestId, string userId)
+        {
+            var request = await requestRepo.GetByIdAsync(requestId)
+                ?? throw new GroupJoinRequestNoFoundException(requestId);
+
+            if (request.UserId != userId)
+                throw new GroupJoinRequestOwnershipException();
+
+            if (request.Status != JoinRequestStatus.Pending)
+                throw new GroupJoinRequestInvalidStateException();
+
+            requestRepo.Delete(request);
+            return await unitOfWork.SaveChangesAsync() > 0;
         }
     }
 }

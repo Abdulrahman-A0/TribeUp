@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Persistence.Data.Contexts;
 
@@ -11,9 +12,11 @@ using Persistence.Data.Contexts;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260129131356_MakeGroupProfilePictureAndDescriptionNullable")]
+    partial class MakeGroupProfilePictureAndDescriptionNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -209,31 +212,18 @@ namespace Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("GroupName")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("GroupProfilePicture")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<long?>("LastMessageId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("LastMessageSentAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LastMessageId");
-
-                    b.HasIndex("LastMessageSentAt");
-
-                    b.ToTable("Groups", (string)null);
+                    b.ToTable("Groups");
                 });
 
             modelBuilder.Entity("Domain.Entities.Groups.GroupChatMessage", b =>
@@ -246,16 +236,13 @@ namespace Persistence.Migrations
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("GroupId")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("bit");
 
                     b.Property<DateTime>("SentAt")
                         .HasColumnType("datetime2");
@@ -266,11 +253,11 @@ namespace Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("GroupId");
+
                     b.HasIndex("UserId");
 
-                    b.HasIndex("GroupId", "SentAt");
-
-                    b.ToTable("GroupChatMessages", (string)null);
+                    b.ToTable("GroupChatMessages");
                 });
 
             modelBuilder.Entity("Domain.Entities.Groups.GroupJoinRequest", b =>
@@ -313,9 +300,6 @@ namespace Persistence.Migrations
 
                     b.Property<int>("GroupId")
                         .HasColumnType("int");
-
-                    b.Property<bool>("IsCreator")
-                        .HasColumnType("bit");
 
                     b.Property<DateTime>("JoinedAt")
                         .HasColumnType("datetime2");
@@ -1067,16 +1051,6 @@ namespace Persistence.Migrations
                     b.Navigation("Group");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Groups.Group", b =>
-                {
-                    b.HasOne("Domain.Entities.Groups.GroupChatMessage", "LastMessage")
-                        .WithMany()
-                        .HasForeignKey("LastMessageId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("LastMessage");
-                });
-
             modelBuilder.Entity("Domain.Entities.Groups.GroupChatMessage", b =>
                 {
                     b.HasOne("Domain.Entities.Groups.Group", "Group")
@@ -1088,7 +1062,7 @@ namespace Persistence.Migrations
                     b.HasOne("Domain.Entities.Users.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Group");

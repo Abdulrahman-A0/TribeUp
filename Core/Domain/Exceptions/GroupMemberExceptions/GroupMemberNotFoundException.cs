@@ -4,8 +4,8 @@ namespace Domain.Exceptions.GroupMemberExceptions
 {
     public class GroupMemberNotFoundException : NotFoundException
     {
-        public GroupMemberNotFoundException(string UserId)
-            : base($"User with Id `{UserId}` was not found in the group")
+        public GroupMemberNotFoundException(int groupMemberId)
+        : base($"Group member with id `{groupMemberId}` was not found.")
         {
         }
     }

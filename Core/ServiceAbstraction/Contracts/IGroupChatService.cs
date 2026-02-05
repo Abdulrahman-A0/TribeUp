@@ -1,4 +1,5 @@
-﻿using Shared.DTOs.GroupMessages;
+﻿using Shared.DTOs.GroupMessageModule;
+using Shared.DTOs.GroupMessages;
 using Shared.DTOs.Posts;
 using System;
 using System.Collections.Generic;
@@ -13,5 +14,7 @@ namespace ServiceAbstraction.Contracts
         Task<GroupMessageResponseDTO> SendMessageAsync(int groupId, SendGroupMessageDTO sendGroupMessageDTO, string userId);
 
         Task<PagedResult<GroupMessageResponseDTO>> GetMessagesAsync(int groupId, int page, int pageSize, string userId);
+
+        Task<List<GroupChatInboxDTO>> GetChatInboxAsync(string userId);
     }
 }

@@ -178,7 +178,7 @@ namespace Service.Implementations
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
 
             var resetLink =
-                $"{configuration["URLs:FrontUrl"]}/reset-password" +
+                $"{configuration["URLs:FrontUrl"]}/auth/reset-password" +
                 $"?email={Uri.EscapeDataString(user.Email!)}" +
                 $"&token={Uri.EscapeDataString(token)}";
 
@@ -193,8 +193,9 @@ namespace Service.Implementations
                     {
                         ["ConfirmNewPassword"] = new[] { "Passwords do not match" }
                     });
+            var decodedEmail = Uri.UnescapeDataString(dto.Email);
 
-            var user = await _userManager.FindByEmailAsync(dto.Email)
+            var user = await _userManager.FindByEmailAsync(decodedEmail)
                 ?? throw new AuthenticationFailedException("invalid_reset_request");
 
             var decodedToken = Uri.UnescapeDataString(dto.Token);

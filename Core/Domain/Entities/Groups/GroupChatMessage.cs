@@ -15,13 +15,11 @@ namespace Domain.Entities.Groups
         public DateTime SentAt { get; set; } = DateTime.UtcNow;
         public bool IsDeleted { get; set; } = false;
 
-        [ForeignKey(nameof(GroupId))]
-        public virtual Group Group { get; set; }
+        public virtual Group Group { get; set; } = null!;
         public int GroupId { get; set; }
 
 
-        [ForeignKey(nameof(UserId))]
-        public virtual ApplicationUser User { get; set; }
-        public string UserId { get; set; }
+        public virtual ApplicationUser User { get; set; } = null!;
+        public string UserId { get; set; } = string.Empty;
     }
 }

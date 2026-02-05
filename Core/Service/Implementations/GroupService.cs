@@ -14,7 +14,7 @@ using Shared.Enums;
 namespace Service.Implementations
 {
     public class GroupService(IUnitOfWork unitOfWork, IMapper mapper,
-        IWebHostEnvironment environment, IFileStorageService fileStorage) : IGroupService
+        IWebHostEnvironment environment, IFileStorageService fileStorage, IGroupAuthorizationService groupAuthorizationService) : IGroupService
     {
         public async Task<List<GroupResultDTO>> GetAllGroupsAsync()
         {
@@ -66,19 +66,25 @@ namespace Service.Implementations
                 LastUpdated = DateTime.UtcNow
             };
 
-            group.GroupMembers = new List<GroupMember>();
+            if (createGroupDTO.GroupProfilePicture is not null)
+            {
+                var picturePath = await fileStorage
+                    .SaveAsync(createGroupDTO.GroupProfilePicture, MediaType.GroupProfile);
 
-            var adminMember = new GroupMember
+                group.GroupProfilePicture = picturePath;
+            }
+
+            var creatorMember = new GroupMember
             {
                 UserId = userId,
                 Role = RoleType.Admin,
+                IsCreator = true,
                 JoinedAt = DateTime.UtcNow
             };
 
-            group.GroupMembers.Add(adminMember);
+            group.GroupMembers = new List<GroupMember> { creatorMember };
 
             await groupRepo.AddAsync(group);
-
             await unitOfWork.SaveChangesAsync();
 
             return mapper.Map<GroupResultDTO>(group);
@@ -87,18 +93,20 @@ namespace Service.Implementations
 
 
 
+
         public async Task<GroupResultDTO> UpdateGroupAsync(int groupId, UpdateGroupDTO updateGroupDTO, string userId)
         {
-
             var repo = unitOfWork.GetRepository<Group, int>();
+
             var group = await repo.GetByIdAsync(groupId)
                 ?? throw new GroupNotFoundException(groupId);
 
-            await EnsureUserIsAdmin(groupId, userId);
+            await groupAuthorizationService.EnsureUserIsAdminAsync(groupId, userId);
 
+            // AutoMapper will only update non-null fields
             mapper.Map(updateGroupDTO, group);
 
-            repo.Update(group);
+            // No repo.Update(group) needed if EF is tracking
             await unitOfWork.SaveChangesAsync();
 
             return mapper.Map<GroupResultDTO>(group);
@@ -114,7 +122,7 @@ namespace Service.Implementations
             var group = await repo.GetByIdAsync(groupId)
                 ?? throw new GroupNotFoundException(groupId);
 
-            await EnsureUserIsAdmin(groupId, userId);
+            await groupAuthorizationService.EnsureUserIsAdminAsync(groupId, userId);
 
             repo.Delete(group);
             await unitOfWork.SaveChangesAsync();
@@ -131,7 +139,7 @@ namespace Service.Implementations
             var group = await groupRepo.GetByIdAsync(groupId)
                 ?? throw new GroupNotFoundException(groupId);
 
-            await EnsureUserIsAdmin(groupId, userId);
+            await groupAuthorizationService.EnsureUserIsAdminAsync(groupId, userId);
 
             var newRelativePath = await fileStorage
                 .SaveAsync(updateGroupPictureDTO.Picture, MediaType.GroupProfile);
@@ -157,7 +165,7 @@ namespace Service.Implementations
             var group = await groupRepo.GetByIdAsync(groupId)
                 ?? throw new GroupNotFoundException(groupId);
 
-            await EnsureUserIsAdmin(groupId, userId);
+            await groupAuthorizationService.EnsureUserIsAdminAsync(groupId, userId);
 
             if (string.IsNullOrWhiteSpace(group.GroupProfilePicture))
                 return true;
@@ -217,19 +225,7 @@ namespace Service.Implementations
 
 
 
-        private async Task<GroupMember> EnsureUserIsAdmin(int groupId, string userId)
-        {
-            var memberRepo = unitOfWork.GetRepository<GroupMember, int>();
-
-            var spec = new GroupMemberByGroupAndUserSpec(groupId, userId);
-            var member = await memberRepo.GetByIdAsync(spec)
-                ?? throw new GroupMemberNotFoundException(userId);
-
-            if (member.Role != RoleType.Admin)
-                throw new GroupAdminOnlyException();
-
-            return member;
-        }
+        
 
     }
 }

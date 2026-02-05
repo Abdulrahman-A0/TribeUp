@@ -15,7 +15,6 @@ namespace Shared.DTOs.GroupModule
 
         [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters")]
         public string? Description { get; init; } 
-        public string? GroupProfilePicture { get; init; }
         public AccessibilityType? Accessibility { get; init; }
     }
 }

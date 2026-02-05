@@ -31,8 +31,6 @@ namespace Presentation.Controller
             => Ok(await serviceManager.GroupJoinRequestService.RejectJoinRequestAsync(requestId, UserId));
 
 
-
-
         [HttpGet("User/Requests")]
         public async Task<ActionResult<List<GroupJoinRequestResultDTO>>> GetUserRequestsAsync()
             => Ok(await serviceManager.GroupJoinRequestService.GetUserRequestsAsync(UserId));
@@ -40,5 +38,10 @@ namespace Presentation.Controller
         [HttpGet("User/Group/{groupId:int}")]
         public async Task<ActionResult<GroupJoinRequestResultDTO>> GetMyRequestForGroup(int groupId)
             => Ok(await serviceManager.GroupJoinRequestService.GetUserRequestForGroupAsync(groupId, UserId));
+
+        [HttpDelete("Cancel/MyRequest/{requestId:int}")]
+        public async Task<ActionResult<bool>> CancelMyJoinRequestAsync(int requestId)
+            => Ok(await serviceManager.GroupJoinRequestService.CancelMyJoinRequestAsync(requestId, UserId));
+
     }
 }

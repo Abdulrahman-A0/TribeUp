@@ -2,6 +2,7 @@
 using Domain.Entities.Groups;
 using Service.MappingProfiles.MediaResolvers;
 using Shared.DTOs.GroupMemberModule;
+using Shared.DTOs.GroupMessageModule;
 using Shared.DTOs.GroupModule;
 using System;
 using System.Collections.Generic;
@@ -54,6 +55,17 @@ namespace Service.MappingProfiles
 
                 .ForAllMembers(opt => opt.Condition(
                     (src, dest, srcMember) => srcMember != null));
+
+
+
+            CreateMap<Group, GroupChatInboxDTO>()
+                .ForMember(dest => dest.GroupId, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.GroupName, opt => opt.MapFrom(src => src.GroupName))
+                .ForMember(dest => dest.GroupProfilePicture,opt => opt.MapFrom(src => src.GroupProfilePicture))
+                .ForMember(dest => dest.LastMessageContent, opt => opt.MapFrom(src => src.LastMessage.Content))
+                .ForMember(dest => dest.LastMessageSenderName, opt => opt.MapFrom(src => src.LastMessage.User.UserName))
+                .ForMember(dest => dest.LastMessageSentAt,  opt => opt.MapFrom(src => src.LastMessage.SentAt));
+
         }
     }
 }
