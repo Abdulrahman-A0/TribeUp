@@ -9,6 +9,7 @@ using Domain.Exceptions.GroupExceptions;
 using Domain.Exceptions.ModerationExceptions;
 using Domain.Exceptions.PostExceptions;
 using Domain.Exceptions.UserExceptions;
+using Domain.Exceptions.ValidationExceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Service.Specifications.GroupMemberSpecs;
@@ -76,8 +77,15 @@ namespace Service.Implementations
             post.CreatedAt = DateTime.UtcNow;
             post.UserId = userId;
 
+            var group = await groupRepo.GetByIdAsync(dto.GroupId)
+               ?? throw new GroupNotFoundException(dto.GroupId);
+
             if (string.IsNullOrWhiteSpace(post.Caption) && !mediaFiles.Any())
-                throw new ValidationException("Post must contain text or media.");
+                throw new PostAndCommentContentValidationException(
+                    new Dictionary<string, string[]>
+                    {
+                        ["PostContent"] = new[] { "Post must contain text or media." }
+                    });
 
             foreach (var file in mediaFiles)
             {
@@ -93,7 +101,6 @@ namespace Service.Implementations
             }
 
             await postRepo.AddAsync(post);
-
             await _unitOfWork.SaveChangesAsync();
 
             # region AI moderation result
@@ -136,8 +143,8 @@ namespace Service.Implementations
                 });
             }
 
-
-            //await _groupScoreService.IncreaseOnActionAsync(dto.GroupId, 5);
+            await _groupScoreService.IncreaseOnActionAsync(dto.GroupId, 5);
+            await _unitOfWork.SaveChangesAsync();
 
             return new CreateEntityResultDTO
             {
@@ -281,7 +288,7 @@ namespace Service.Implementations
            int pageSize)
         {
             if (page <= 0 || pageSize <= 0)
-                throw new PageIndexAndPageSizeException(page, pageSize);
+                throw new PageIndexAndPageSizeValidationException(page, pageSize);
 
             var moderation = moderationRepo.AsQueryable();
             var spec = new PersonalPostFeedSpecification(userId, moderation, page, pageSize);
@@ -337,7 +344,7 @@ namespace Service.Implementations
             int pageSize)
         {
             if (page <= 0 || pageSize <= 0)
-                throw new PageIndexAndPageSizeException(page, pageSize);
+                throw new PageIndexAndPageSizeValidationException(page, pageSize);
 
             var moderation = moderationRepo.AsQueryable();
             var spec = new PostFeedSpecification(userId, moderation, page, pageSize);
@@ -436,7 +443,7 @@ namespace Service.Implementations
             int pageSize)
         {
             if (page <= 0 || pageSize <= 0)
-                throw new PageIndexAndPageSizeException(page, pageSize);
+                throw new PageIndexAndPageSizeValidationException(page, pageSize);
 
             var group = await groupRepo.GetByIdAsync(groupId)
                 ?? throw new GroupNotFoundException(groupId);
@@ -586,7 +593,7 @@ namespace Service.Implementations
             int pageSize)
         {
             if (page <= 0 || pageSize <= 0)
-                throw new PageIndexAndPageSizeException(page, pageSize);
+                throw new PageIndexAndPageSizeValidationException(page, pageSize);
 
             var post = await postRepo.GetByIdAsync(postId)
                  ?? throw new PostNotFoundException(postId);
@@ -617,7 +624,11 @@ namespace Service.Implementations
             CommentDTO dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Content))
-                throw new ValidationException("Comment must contain text");
+                throw new PostAndCommentContentValidationException(
+                    new Dictionary<string, string[]>
+                    {
+                        ["CommentContent"] = new[] { "Comment must contain text." }
+                    });
 
             var post = await postRepo.GetByIdAsync(postId)
                 ?? throw new PostNotFoundException(postId);
@@ -725,7 +736,7 @@ namespace Service.Implementations
             int pageSize)
         {
             if (page <= 0 || pageSize <= 0)
-                throw new PageIndexAndPageSizeException(page, pageSize);
+                throw new PageIndexAndPageSizeValidationException(page, pageSize);
             
             var post = await postRepo.GetByIdAsync(postId)
                 ?? throw new PostNotFoundException(postId);
@@ -789,7 +800,7 @@ namespace Service.Implementations
             int pageSize)
         {
             if (page <= 0 || pageSize <= 0)
-                throw new PageIndexAndPageSizeException(page, pageSize);
+                throw new PageIndexAndPageSizeValidationException(page, pageSize);
 
             if (!await IsAdminAsync(userId, groupId))
                 throw new ForbiddenActionException();

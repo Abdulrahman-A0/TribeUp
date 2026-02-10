@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace Domain.Exceptions
 {
-    public sealed class PageIndexAndPageSizeException : ValidationException
+    public sealed class PageIndexAndPageSizeValidationException : ValidationException
     {
-        public PageIndexAndPageSizeException(int page, int pageSize)
+        public PageIndexAndPageSizeValidationException(int page, int pageSize)
             : base(BuildErrors(page, pageSize))
         {
         }
