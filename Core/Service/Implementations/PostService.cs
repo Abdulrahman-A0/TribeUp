@@ -72,6 +72,7 @@ namespace Service.Implementations
             List<IFormFile> mediaFiles)
         {
             var post = _mapper.Map<Post>(dto);
+            post.Caption = post.Caption?.Trim();
             post.CreatedAt = DateTime.UtcNow;
             post.UserId = userId;
 
@@ -625,7 +626,7 @@ namespace Service.Implementations
             {
                 PostId = postId,
                 UserId = userId,
-                Content = dto.Content
+                Content = dto.Content.Trim()
             };
             await commentRepo.AddAsync(comment);
             
