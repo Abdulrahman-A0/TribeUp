@@ -12,6 +12,7 @@ using Domain.Exceptions.UserExceptions;
 using Domain.Exceptions.ValidationExceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Service.Specifications.GroupMemberSpecs;
 using Service.Specifications.ModerationSpecifications;
 using Service.Specifications.PostSpecifications;
@@ -40,6 +41,8 @@ namespace Service.Implementations
         private readonly IGenericRepository<Comment, int> commentRepo;
         private readonly IGenericRepository<AIModeration, int> moderationRepo;
 
+        private readonly int PostPoints = 5;
+        private readonly int CommentPoints = 1;
 
         public PostService
             (
@@ -143,7 +146,7 @@ namespace Service.Implementations
                 });
             }
 
-            await _groupScoreService.IncreaseOnActionAsync(dto.GroupId, 5);
+            await _groupScoreService.IncreaseOnActionAsync(dto.GroupId, PostPoints);
             await _unitOfWork.SaveChangesAsync();
 
             return new CreateEntityResultDTO
@@ -255,7 +258,8 @@ namespace Service.Implementations
             if (post.User.Id != userId)
                 if (!await IsAdminAsync(userId, post.GroupId))
                     throw new ForbiddenActionException();
-
+            
+            await _groupScoreService.DecreaseOnActionAsync(post.GroupId, PostPoints);
             postRepo.Delete(post);
             await _unitOfWork.SaveChangesAsync();
             return new DeleteEntityResultDTO
@@ -672,6 +676,9 @@ namespace Service.Implementations
                 ReferenceId = post.Id
             });
 
+            await _groupScoreService.IncreaseOnActionAsync(post.GroupId, CommentPoints);
+            await _unitOfWork.SaveChangesAsync();
+
             return new CreateEntityResultDTO
             {
                 IsCreated = true,
@@ -774,15 +781,19 @@ namespace Service.Implementations
             string userId, 
             int commentId)
         {
+
             var spec = new CommentByIdSpecification(commentId);
             var comment  = await commentRepo.GetByIdAsync(spec) 
                 ?? throw new CommentNotFoundException(commentId);
+
+            var post = await postRepo.GetByIdAsync(comment.PostId)
+                ?? throw new PostNotFoundException(comment.PostId);
 
             if(comment.User.Id != userId)
                 if(!await IsAdminAsync(userId, comment.Post.GroupId))
                     throw new ForbiddenActionException();
 
-
+            await _groupScoreService.DecreaseOnActionAsync(post.GroupId, CommentPoints);
             commentRepo.Delete(comment);
             await _unitOfWork.SaveChangesAsync();
             return new DeleteEntityResultDTO
@@ -835,6 +846,7 @@ namespace Service.Implementations
             };
         }
 
+
         public async Task<CreateEntityResultDTO> ChangeModerationStatusAsync(
             string userId, 
             int groupId,
@@ -856,13 +868,32 @@ namespace Service.Implementations
             moderationRepo.Update(entity);
             await _unitOfWork.SaveChangesAsync();
 
-            if(dto.ContentStatus == ContentStatus.Accepted)
+            int points = 0;
+            switch (dto.EntityType)
+            {
+                case ModeratedEntityType.Post:
+                    points = 5;
+                    break;
+                case ModeratedEntityType.Comment:
+                    points = 1;
+                    break;
+            }
+
+            if (dto.ContentStatus == ContentStatus.Accepted)
+            {
+                await _groupScoreService.IncreaseOnActionAsync(groupId, points);
+                await _unitOfWork.SaveChangesAsync();
+
                 return new CreateEntityResultDTO
                 {
                     IsCreated = true,
                     Status = dto.ContentStatus,
                     Message = "Accepted by Admins."
                 };
+            }
+
+            await _groupScoreService.DecreaseOnActionAsync(groupId, points);
+            await _unitOfWork.SaveChangesAsync();
 
             return new CreateEntityResultDTO
             {

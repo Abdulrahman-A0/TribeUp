@@ -1,6 +1,7 @@
 ﻿using Domain.Contracts;
 using Domain.Entities.Groups;
 using Domain.Exceptions.GroupExceptions;
+using Service.Specifications.GroupSpecs;
 using ServiceAbstraction.Contracts;
 using System;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ namespace Service.Implementations
         {
             var groupRepo = unitOfWork.GetRepository<Group, int>();
 
-            var group = await groupRepo.GetByIdAsync(groupId)
+            var group = await groupRepo.GetByIdAsync(new GroupScoreSpec(groupId))
                 ?? throw new GroupNotFoundException(groupId);
 
             group.GroupScore ??= new GroupScore
@@ -35,7 +36,7 @@ namespace Service.Implementations
         {
             var groupRepo = unitOfWork.GetRepository<Group, int>();
 
-            var group = await groupRepo.GetByIdAsync(groupId)
+            var group = await groupRepo.GetByIdAsync(new GroupScoreSpec(groupId))
                 ?? throw new GroupNotFoundException(groupId);
 
             group.GroupScore ??= new GroupScore
