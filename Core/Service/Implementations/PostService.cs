@@ -299,26 +299,8 @@ namespace Service.Implementations
             var posts = await postRepo.GetAllAsync(spec);
 
             var postIds = posts.Select(p => p.Id).ToList();
-
-            var deniedPostIds = await moderationRepo.AsQueryable()
-                .Where(m =>
-                    m.EntityType == ModeratedEntityType.Post &&
-                    m.Status == ContentStatus.Denied &&
-                    postIds.Contains(m.EntityId)
-                )
-                .Select(m => m.EntityId)
-                .ToListAsync();
-
-            var totalCount = await postRepo.CountAsync(p =>
-                    p.UserId == userId &&
-                    !moderation.Any(m =>
-                        m.EntityType == ModeratedEntityType.Post &&
-                        m.EntityId == p.Id &&
-                        m.Status == ContentStatus.Denied &&
-                        p.UserId != userId
-                    )
-                );
-
+            var deniedPostIds = await GetDeniedPostIdsAsync(postIds);
+            var totalCount = await GetVisiblePostsCountAsync(userId);
             var ordered = posts
                 .OrderByDescending(p => p.CreatedAt)
                 .ToList();
@@ -355,66 +337,19 @@ namespace Service.Implementations
             var posts = await postRepo.GetAllAsync(spec);
 
             var postIds = posts.Select(p => p.Id).ToList();
-
-            var deniedPostIds = await moderationRepo.AsQueryable()
-                .Where(m =>
-                    m.EntityType == ModeratedEntityType.Post && 
-                    m.Status == ContentStatus.Denied &&
-                    postIds.Contains(m.EntityId)
-                )
-                .Select(m => m.EntityId)
-                .ToListAsync();
-
-            var totalCount = await postRepo.CountAsync(p =>
-                    !moderation.Any(m =>
-                        m.EntityType == ModeratedEntityType.Post &&
-                        m.EntityId == p.Id &&
-                        m.Status == ContentStatus.Denied &&
-                        p.UserId != userId
-                    )
-                );
-            
+            var deniedPostIds = await GetDeniedPostIdsAsync(postIds);
+            var totalCount = await GetVisiblePostsCountAsync(userId);
             var scored = posts.Select(post =>
             {
-                var member = post.Group.GroupMembers
-                    .FirstOrDefault(m => m.UserId == userId);
-
-                int groupPriority = member?.Role switch
-                {
-                    RoleType.Admin => 60,
-                    RoleType.Member => 40,
-                    RoleType.Follower => 20,
-                    _ => 5
-                };
-
-                int engagementScore =
-                    (post.Likes.Count * 2) +
-                    (post.Comments.Count * 3);
-
-                double ageHours =
-                    (DateTime.UtcNow - post.CreatedAt).TotalHours;
-
-                double timePenalty = ageHours * 0.2;
-
-                bool likedByUser =
-                    post.Likes.Any(l => l.UserId == userId);
-
-                int likedPenalty = likedByUser ? 15 : 0;
-
-                double feedScore =
-                    groupPriority +
-                    engagementScore -
-                    timePenalty -
-                    likedPenalty;
+                var (feedScore, isLiked) = CalculateFeedScore(post, userId);
 
                 return new
                 {
                     Post = post,
                     FeedScore = feedScore,
-                    IsLikedByUser = likedByUser
+                    IsLikedByUser = isLiked
                 };
             });
-
             var ordered = scored
                 .OrderByDescending(x => x.FeedScore)
                 .ThenByDescending(x => x.Post.CreatedAt)
@@ -457,66 +392,18 @@ namespace Service.Implementations
             var posts = await postRepo.GetAllAsync(spec);
             
             var postIds = posts.Select(p => p.Id).ToList();
-            var deniedPostIds = await moderationRepo.AsQueryable()
-                .Where(m =>
-                    m.EntityType == ModeratedEntityType.Post &&
-                    m.Status == ContentStatus.Denied &&
-                    postIds.Contains(m.EntityId)
-                )
-                .Select(m => m.EntityId)
-                .ToListAsync();
-
-            var totalCount = await postRepo.CountAsync(p =>
-                    p.GroupId == groupId &&
-                    !moderation.Any(m =>
-                        m.EntityType == ModeratedEntityType.Post &&
-                        m.EntityId == p.Id &&
-                        m.Status == ContentStatus.Denied &&
-                        p.UserId != userId
-                    )
-                );
-
+            var deniedPostIds = await GetDeniedPostIdsAsync(postIds);
+            var totalCount = await GetVisiblePostsCountAsync(userId, groupId);
             var scored = posts.Select(post =>
             {
-                var member = post.Group.GroupMembers
-                    .FirstOrDefault(m => m.UserId == userId);
-
-                int groupPriority = member?.Role switch
-                {
-                    RoleType.Admin => 60,
-                    RoleType.Member => 40,
-                    RoleType.Follower => 20,
-                    _ => 5
-                };
-
-                int engagementScore =
-                    (post.Likes.Count * 2) +
-                    (post.Comments.Count * 3);
-
-                double ageHours =
-                    (DateTime.UtcNow - post.CreatedAt).TotalHours;
-
-                double timePenalty = ageHours * 0.2;
-
-                bool likedByUser =
-                    post.Likes.Any(l => l.UserId == userId);
-
-                int likedPenalty = likedByUser ? 15 : 0;
-
-                double feedScore =
-                    groupPriority +
-                    engagementScore -
-                    timePenalty -
-                    likedPenalty;
-
+                var (feedScore, isLiked) = CalculateFeedScore(post, userId);
                 return new
                 {
                     Post = post,
                     FeedScore = feedScore,
-                    IsLikedByUser = likedByUser
+                    IsLikedByUser = isLiked
                 };
             });
-
             var ordered = scored
                 .OrderByDescending(x => x.FeedScore)
                 .ThenByDescending(x => x.Post.CreatedAt)
@@ -929,6 +816,68 @@ namespace Service.Implementations
                 .First() + "...";
         }
 
+        private (double FeedScore, bool IsLikedByUser) CalculateFeedScore(Post post, string userId)
+        {
+            var member = post.Group.GroupMembers
+                .FirstOrDefault(m => m.UserId == userId);
+
+            int groupPriority = member?.Role switch
+            {
+                RoleType.Admin => 60,
+                RoleType.Member => 40,
+                RoleType.Follower => 20,
+                _ => 5
+            };
+
+            int engagementScore =
+                (post.Likes.Count * 2) +
+                (post.Comments.Count * 3);
+
+            double ageHours =
+                (DateTime.UtcNow - post.CreatedAt).TotalHours;
+
+            double timePenalty = ageHours * 0.2;
+
+            bool likedByUser =
+                post.Likes.Any(l => l.UserId == userId);
+
+            int likedPenalty = likedByUser ? 15 : 0;
+
+            double feedScore =
+                groupPriority +
+                engagementScore -
+                timePenalty -
+                likedPenalty;
+
+            return (feedScore, likedByUser);
+        }
+
+        private async Task<List<int>> GetDeniedPostIdsAsync(List<int> postIds)
+        {
+            return await moderationRepo.AsQueryable()
+                .Where(m =>
+                    m.EntityType == ModeratedEntityType.Post &&
+                    m.Status == ContentStatus.Denied &&
+                    postIds.Contains(m.EntityId)
+                )
+                .Select(m => m.EntityId)
+                .ToListAsync();
+        }
+
+        private async Task<int> GetVisiblePostsCountAsync(string userId, int? groupId = null)
+        {
+            var moderation = moderationRepo.AsQueryable();
+
+            return await postRepo.CountAsync(p =>
+                (groupId == null || p.GroupId == groupId) &&
+                !moderation.Any(m =>
+                    m.EntityType == ModeratedEntityType.Post &&
+                    m.EntityId == p.Id &&
+                    m.Status == ContentStatus.Denied &&
+                    p.UserId != userId
+                )
+            );
+        }
 
         #endregion
 
