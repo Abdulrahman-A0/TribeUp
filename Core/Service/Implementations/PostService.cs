@@ -158,7 +158,7 @@ namespace Service.Implementations
 
         }
 
-
+        // not working yet
         public async Task<CreateEntityResultDTO> UpdatePostAsync(
            string userId,
            string username,
@@ -694,6 +694,9 @@ namespace Service.Implementations
             int commentId, 
             CommentDTO dto)
         {
+            var moderatedSpec = new ChangeEntityStatusSpecification(ModeratedEntityType.Comment, commentId);
+            var moderatedComment = await moderationRepo.GetByIdAsync(moderatedSpec);
+            
             var spec = new CommentByIdSpecification(commentId);
             var comment = await commentRepo.GetByIdAsync(spec)
                 ?? throw new CommentNotFoundException(commentId);
@@ -722,9 +725,7 @@ namespace Service.Implementations
 
             #endregion
 
-
-            commentRepo.Update(comment);
-            
+            commentRepo.Update(comment);            
             await _unitOfWork.SaveChangesAsync();
 
             return new CreateEntityResultDTO
