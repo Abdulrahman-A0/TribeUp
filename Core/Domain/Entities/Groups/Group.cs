@@ -29,6 +29,7 @@ namespace Domain.Entities.Groups
 
 
         #region Navigation properties
+        public virtual ICollection<GroupInvitation> Invitations { get; set; } = new List<GroupInvitation>();
         public virtual ICollection<GroupMembers> GroupMembers { get; set; } = new List<GroupMembers>();
         public virtual ICollection<GroupFollowers> GroupFollowers { get; set; } = new List<GroupFollowers>();
         public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
