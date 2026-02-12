@@ -14,7 +14,8 @@ namespace Persistence.Data.Contexts
         #region DbSets
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<Group> Groups { get; set; }
-        public DbSet<GroupMember> GroupMembers { get; set; }
+        public DbSet<GroupMembers> GroupMembers { get; set; }
+        public DbSet<GroupFollowers> GroupFollowers { get; set; }
         public DbSet<GroupScore> GroupScores { get; set; }
         public DbSet<ActivityLog> ActivityLogs { get; set; }
         public DbSet<Badge> Badges { get; set; }

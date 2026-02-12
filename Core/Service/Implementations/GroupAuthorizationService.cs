@@ -26,7 +26,7 @@ namespace Service.Implementations
         // member.IsBanned
         public async Task<GroupMemberResultDTO> EnsureUserCanChatAsync(int groupId, string userId)
         {
-            var memberRepo = unitOfWork.GetRepository<GroupMember, int>();
+            var memberRepo = unitOfWork.GetRepository<GroupMembers, int>();
 
             var spec = new GroupMemberByGroupAndUserSpec(groupId, userId);
             var member = await memberRepo.GetByIdAsync(spec)
@@ -41,7 +41,7 @@ namespace Service.Implementations
 
         public async Task<GroupMemberResultDTO> EnsureUserIsAdminAsync(int groupId, string userId)
         {
-            var memberRepo = unitOfWork.GetRepository<GroupMember, int>();
+            var memberRepo = unitOfWork.GetRepository<GroupMembers, int>();
 
             var spec = new GroupMemberByGroupAndUserSpec(groupId, userId);
             var member = await memberRepo.GetByIdAsync(spec)

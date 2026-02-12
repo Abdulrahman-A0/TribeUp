@@ -14,7 +14,7 @@ namespace Service.MappingProfiles
         public GroupMemberProfile()
         {
 
-            CreateMap<GroupMember, GroupMemberResultDTO>()
+            CreateMap<GroupMembers, GroupMemberResultDTO>()
                 .ForMember(dest => dest.UserName,
                     opt => opt.MapFrom(src =>
                     src.User != null ? src.User.UserName : string.Empty))

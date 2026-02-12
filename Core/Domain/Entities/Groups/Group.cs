@@ -29,7 +29,8 @@ namespace Domain.Entities.Groups
 
 
         #region Navigation properties
-        public virtual ICollection<GroupMember> GroupMembers { get; set; } = new List<GroupMember>();
+        public virtual ICollection<GroupMembers> GroupMembers { get; set; } = new List<GroupMembers>();
+        public virtual ICollection<GroupFollowers> GroupFollowers { get; set; } = new List<GroupFollowers>();
         public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
         public virtual ICollection<Album> Albums { get; set; } = new List<Album>();
         public virtual ICollection<Event> Events { get; set; } = new List<Event>();
@@ -39,7 +40,6 @@ namespace Domain.Entities.Groups
         public virtual GroupScore GroupScore { get; set; }
         public virtual ICollection<ActivityLog> ActivityLogs { get; set; } = new List<ActivityLog>();
         public virtual ICollection<Story> Stories { get; set; } = new List<Story>();
-        public virtual ICollection<GroupJoinRequest> GroupJoinRequests { get; set; } = new List<GroupJoinRequest>();
 
         #endregion
     }

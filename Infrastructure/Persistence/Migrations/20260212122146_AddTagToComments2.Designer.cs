@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Persistence.Data.Contexts;
 
@@ -11,9 +12,11 @@ using Persistence.Data.Contexts;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260212122146_AddTagToComments2")]
+    partial class AddTagToComments2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -273,7 +276,7 @@ namespace Persistence.Migrations
                     b.ToTable("GroupChatMessages", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Entities.Groups.GroupFollowers", b =>
+            modelBuilder.Entity("Domain.Entities.Groups.GroupJoinRequest", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -281,10 +284,13 @@ namespace Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("FollowedAt")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("GroupId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
                         .HasColumnType("int");
 
                     b.Property<string>("UserId")
@@ -297,10 +303,10 @@ namespace Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("GroupFollowers");
+                    b.ToTable("GroupJoinRequest");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Groups.GroupMembers", b =>
+            modelBuilder.Entity("Domain.Entities.Groups.GroupMember", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -310,6 +316,9 @@ namespace Persistence.Migrations
 
                     b.Property<int>("GroupId")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsCreator")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime>("JoinedAt")
                         .HasColumnType("datetime2");
@@ -1106,16 +1115,16 @@ namespace Persistence.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Groups.GroupFollowers", b =>
+            modelBuilder.Entity("Domain.Entities.Groups.GroupJoinRequest", b =>
                 {
                     b.HasOne("Domain.Entities.Groups.Group", "Group")
-                        .WithMany("GroupFollowers")
+                        .WithMany("GroupJoinRequests")
                         .HasForeignKey("GroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Domain.Entities.Users.ApplicationUser", "User")
-                        .WithMany("GroupFollowers")
+                        .WithMany("GroupJoinRequests")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1125,7 +1134,7 @@ namespace Persistence.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Groups.GroupMembers", b =>
+            modelBuilder.Entity("Domain.Entities.Groups.GroupMember", b =>
                 {
                     b.HasOne("Domain.Entities.Groups.Group", "Group")
                         .WithMany("GroupMembers")
@@ -1422,7 +1431,7 @@ namespace Persistence.Migrations
 
                     b.Navigation("Events");
 
-                    b.Navigation("GroupFollowers");
+                    b.Navigation("GroupJoinRequests");
 
                     b.Navigation("GroupMembers");
 
@@ -1470,7 +1479,7 @@ namespace Persistence.Migrations
                 {
                     b.Navigation("Comments");
 
-                    b.Navigation("GroupFollowers");
+                    b.Navigation("GroupJoinRequests");
 
                     b.Navigation("GroupMembers");
 

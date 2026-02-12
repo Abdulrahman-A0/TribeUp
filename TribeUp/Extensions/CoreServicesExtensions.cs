@@ -25,15 +25,15 @@ namespace TribeUp.Extensions
             services.AddScoped<IEmailService, SmtpEmailService>();
             services.AddScoped<IMediaUrlService, MediaUrlService>();
 
-            services.AddScoped<IGroupService, GroupService>();
-            services.AddScoped<IGroupMemberService, GroupMemberService>();
-            services.AddScoped<IGroupJoinRequestService, GroupJoinRequestService>();
+            //services.AddScoped<IGroupService, GroupService>();
+            //services.AddScoped<IGroupMemberService, GroupMemberService>();
+            //services.AddScoped<IGroupJoinRequestService, GroupJoinRequestService>();
             services.AddScoped<IGroupScoreService, GroupScoreService>();
             services.AddScoped<IGroupChatService, GroupChatService>();
             services.AddScoped<IGroupAuthorizationService, GroupAuthorizationService>();
 
 
-            services.AddScoped<IPostService, PostService>();
+            //services.AddScoped<IPostService, PostService>();
             services.AddScoped<IPostUrlService, PostUrlService>();
             services.AddScoped<IAIModerationManager, AIModerationManager>();
             services.AddScoped<IFileStorageService, FileStorageService>();

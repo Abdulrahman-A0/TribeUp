@@ -25,8 +25,13 @@ namespace Domain.Entities.Posts
         /// //////////
 
         [ForeignKey("UserId")]
-        public virtual ApplicationUser User { get; set; }
+        public virtual ApplicationUser User { get; set; } = null!;
         [Required]
-        public string UserId { get; set; }
+        public string UserId { get; set; } = null!;
+    
+        public virtual ICollection<Like> Likes { get; set; } = new List<Like>();
+        public ICollection<Tag> Tags { get; set; } = new List<Tag>();
+
+
     }
 }

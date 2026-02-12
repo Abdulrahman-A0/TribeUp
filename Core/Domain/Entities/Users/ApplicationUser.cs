@@ -19,7 +19,8 @@ namespace Domain.Entities.Users
 
         #region Relations
         public ICollection<Post> Posts { get; set; } = new List<Post>();
-        public ICollection<GroupMember> GroupMembers { get; set; }
+        public ICollection<GroupMembers> GroupMembers { get; set; }
+        public ICollection<GroupFollowers> GroupFollowers { get; set; }
         public ICollection<Comment> Comments { get; set; }
         public ICollection<Like> Likes { get; set; }
         public ICollection<Tag> Tags { get; set; }
@@ -27,7 +28,6 @@ namespace Domain.Entities.Users
         public ICollection<PollVote> PollVotes { get; set; }
         public ICollection<Recommendation> Recommendations { get; set; }
         public ICollection<StoryView> StoryViews { get; set; }
-        public ICollection<GroupJoinRequest> GroupJoinRequests { get; set; }
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
         #endregion
     }

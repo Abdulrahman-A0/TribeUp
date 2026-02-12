@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Service.Specifications.GroupMemberSpecs
 {
-    public class ActiveGroupMembersSpec : BaseSpecifications<GroupMember, int>
+    public class ActiveGroupMembersSpec : BaseSpecifications<GroupMembers, int>
     {
         public ActiveGroupMembersSpec(int groupId)
             : base(m =>

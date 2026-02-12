@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Persistence.Data.Contexts;
 
@@ -11,9 +12,11 @@ using Persistence.Data.Contexts;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260212130211_SeparateFollowersFromMembers")]
+    partial class SeparateFollowersFromMembers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -271,33 +274,6 @@ namespace Persistence.Migrations
                     b.HasIndex("GroupId", "SentAt");
 
                     b.ToTable("GroupChatMessages", (string)null);
-                });
-
-            modelBuilder.Entity("Domain.Entities.Groups.GroupFollowers", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("FollowedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("GroupId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GroupId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("GroupFollowers");
                 });
 
             modelBuilder.Entity("Domain.Entities.Groups.GroupMembers", b =>
@@ -1106,25 +1082,6 @@ namespace Persistence.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Groups.GroupFollowers", b =>
-                {
-                    b.HasOne("Domain.Entities.Groups.Group", "Group")
-                        .WithMany("GroupFollowers")
-                        .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Domain.Entities.Users.ApplicationUser", "User")
-                        .WithMany("GroupFollowers")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Group");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Domain.Entities.Groups.GroupMembers", b =>
                 {
                     b.HasOne("Domain.Entities.Groups.Group", "Group")
@@ -1422,8 +1379,6 @@ namespace Persistence.Migrations
 
                     b.Navigation("Events");
 
-                    b.Navigation("GroupFollowers");
-
                     b.Navigation("GroupMembers");
 
                     b.Navigation("GroupScore")
@@ -1469,8 +1424,6 @@ namespace Persistence.Migrations
             modelBuilder.Entity("Domain.Entities.Users.ApplicationUser", b =>
                 {
                     b.Navigation("Comments");
-
-                    b.Navigation("GroupFollowers");
 
                     b.Navigation("GroupMembers");
 
