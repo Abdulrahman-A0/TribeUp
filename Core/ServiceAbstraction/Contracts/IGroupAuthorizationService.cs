@@ -11,5 +11,7 @@ namespace ServiceAbstraction.Contracts
     {
         Task<GroupMemberResultDTO> EnsureUserCanChatAsync(int groupId, string userId);
         Task<GroupMemberResultDTO> EnsureUserIsAdminAsync(int groupId, string userId);
+        Task<GroupMemberResultDTO> EnsureUserIsOwnerAsync(int groupId, string userId);
+        Task<GroupMemberResultDTO> EnsureUserIsOwnerOrAdminAsync(int groupId, string userId);
     }
 }

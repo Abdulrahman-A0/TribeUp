@@ -1,232 +1,226 @@
-﻿//using AutoMapper;
-//using Domain.Contracts;
-//using Domain.Entities.Groups;
-//using Domain.Exceptions.GroupExceptions;
-//using Domain.Exceptions.GroupMemberExceptions;
-//using Microsoft.AspNetCore.Hosting;
-//using Service.Specifications.GroupMemberSpecs;
-//using Service.Specifications.GroupSpecs;
-//using ServiceAbstraction.Contracts;
-//using Shared.DTOs.GroupModule;
-//using Shared.DTOs.Posts;
-//using Shared.Enums;
+﻿using AutoMapper;
+using Domain.Contracts;
+using Domain.Entities.Groups;
+using Domain.Exceptions.GroupExceptions;
+using Domain.Exceptions.GroupMemberExceptions;
+using Microsoft.AspNetCore.Hosting;
+using Service.Specifications.GroupMemberSpecs;
+using Service.Specifications.GroupSpecs;
+using ServiceAbstraction.Contracts;
+using Shared.DTOs.GroupModule;
+using Shared.DTOs.Posts;
+using Shared.Enums;
 
-//namespace Service.Implementations
-//{
-//    public class GroupService(IUnitOfWork unitOfWork, IMapper mapper,
-//        IWebHostEnvironment environment, IFileStorageService fileStorage, IGroupAuthorizationService groupAuthorizationService) : IGroupService
-//    {
-//        public async Task<List<GroupResultDTO>> GetAllGroupsAsync()
-//        {
-//            var repo = unitOfWork.GetRepository<Group, int>();
-//            var spec = new GroupsWithMembersSpec();
+namespace Service.Implementations
+{
+    public class GroupService(IUnitOfWork unitOfWork, IMapper mapper,
+        IWebHostEnvironment environment, IFileStorageService fileStorage, IGroupAuthorizationService groupAuthorizationService) : IGroupService
+    {
+        public async Task<List<GroupResultDTO>> GetAllGroupsAsync()
+        {
+            var repo = unitOfWork.GetRepository<Group, int>();
+            var spec = new GroupsWithMembersSpec();
 
-//            var groups = await repo.GetAllAsync(spec);
+            var groups = await repo.GetAllAsync(spec);
 
-//            return mapper.Map<List<GroupResultDTO>>(groups);
-//        }
+            return mapper.Map<List<GroupResultDTO>>(groups);
+        }
 
 
 
 
-//        public async Task<List<GroupResultDTO>> GetMyGroupsAsync(string userId)
-//        {
-//            var groupRepo = unitOfWork.GetRepository<Group, int>();
-//            var spec = new GroupsByUserSpec(userId);
-//            var groups = await groupRepo.GetAllAsync(spec);
-//            return mapper.Map<List<GroupResultDTO>>(groups);
-//        }
+        public async Task<List<GroupResultDTO>> GetMyGroupsAsync(string userId)
+        {
+            var groupRepo = unitOfWork.GetRepository<Group, int>();
+            var spec = new GroupsByUserSpec(userId);
+            var groups = await groupRepo.GetAllAsync(spec);
+            return mapper.Map<List<GroupResultDTO>>(groups);
+        }
 
 
 
 
-//        public async Task<GroupDetailsResultDTO> GetGroupByIdAsync(int groupId)
-//        {
-//            var repo = unitOfWork.GetRepository<Group, int>();
-//            var spec = new GroupWithMembersSpec(groupId);
+        public async Task<GroupDetailsResultDTO> GetGroupByIdAsync(int groupId)
+        {
+            var repo = unitOfWork.GetRepository<Group, int>();
+            var spec = new GroupWithMembersSpec(groupId);
 
-//            var group = await repo.GetByIdAsync(spec)
-//                ?? throw new GroupNotFoundException(groupId);
-//            return mapper.Map<GroupDetailsResultDTO>(group);
-//        }
+            var group = await repo.GetByIdAsync(spec)
+                ?? throw new GroupNotFoundException(groupId);
+            return mapper.Map<GroupDetailsResultDTO>(group);
+        }
 
 
 
 
-//        public async Task<GroupResultDTO> CreateGroupAsync(CreateGroupDTO createGroupDTO, string userId)
-//        {
-//            var groupRepo = unitOfWork.GetRepository<Group, int>();
-//            var memberRepo = unitOfWork.GetRepository<GroupMembers, int>();
+        public async Task<GroupResultDTO> CreateGroupAsync(CreateGroupDTO createGroupDTO, string userId)
+        {
+            var groupRepo = unitOfWork.GetRepository<Group, int>();
+            var memberRepo = unitOfWork.GetRepository<GroupMembers, int>();
 
-//            var group = mapper.Map<Group>(createGroupDTO);
+            var group = mapper.Map<Group>(createGroupDTO);
 
-//            group.GroupScore = new GroupScore
-//            {
-//                TotalPoints = 0,
-//                LastUpdated = DateTime.UtcNow
-//            };
+            group.GroupScore = new GroupScore
+            {
+                TotalPoints = 0,
+                LastUpdated = DateTime.UtcNow
+            };
 
-//            if (createGroupDTO.GroupProfilePicture is not null)
-//            {
-//                var picturePath = await fileStorage
-//                    .SaveAsync(createGroupDTO.GroupProfilePicture, MediaType.GroupProfile);
+            if (createGroupDTO.GroupProfilePicture is not null)
+            {
+                var picturePath = await fileStorage
+                    .SaveAsync(createGroupDTO.GroupProfilePicture, MediaType.GroupProfile);
 
-//                group.GroupProfilePicture = picturePath;
-//            }
+                group.GroupProfilePicture = picturePath;
+            }
 
-//            var creatorMember = new GroupMembers
-//            {
-//                UserId = userId,
-//                Role = RoleType.Admin,
-//                IsCreator = true,
-//                JoinedAt = DateTime.UtcNow
-//            };
+            var creatorMember = new GroupMembers
+            {
+                UserId = userId,
+                Role = RoleType.Owner,
+                JoinedAt = DateTime.UtcNow
+            };
 
-//            group.GroupMembers = new List<GroupMembers> { creatorMember };
+            group.GroupMembers = new List<GroupMembers> { creatorMember };
 
-//            await groupRepo.AddAsync(group);
-//            await unitOfWork.SaveChangesAsync();
+            await groupRepo.AddAsync(group);
+            await unitOfWork.SaveChangesAsync();
 
-//            return mapper.Map<GroupResultDTO>(group);
-//        }
+            return mapper.Map<GroupResultDTO>(group);
+        }
 
 
 
 
 
-//        public async Task<GroupResultDTO> UpdateGroupAsync(int groupId, UpdateGroupDTO updateGroupDTO, string userId)
-//        {
-//            var repo = unitOfWork.GetRepository<Group, int>();
+        public async Task<GroupResultDTO> UpdateGroupAsync(int groupId, UpdateGroupDTO updateGroupDTO, string userId)
+        {
+            var repo = unitOfWork.GetRepository<Group, int>();
 
-//            var group = await repo.GetByIdAsync(groupId)
-//                ?? throw new GroupNotFoundException(groupId);
+            var group = await repo.GetByIdAsync(groupId)
+                ?? throw new GroupNotFoundException(groupId);
 
-//            await groupAuthorizationService.EnsureUserIsAdminAsync(groupId, userId);
+            await groupAuthorizationService.EnsureUserIsOwnerOrAdminAsync(groupId, userId);
 
-//            // AutoMapper will only update non-null fields
-//            mapper.Map(updateGroupDTO, group);
+            // AutoMapper will only update non-null fields
+            mapper.Map(updateGroupDTO, group);
 
-//            // No repo.Update(group) needed if EF is tracking
-//            await unitOfWork.SaveChangesAsync();
+            // No repo.Update(group) needed if EF is tracking
+            await unitOfWork.SaveChangesAsync();
 
-//            return mapper.Map<GroupResultDTO>(group);
-//        }
+            return mapper.Map<GroupResultDTO>(group);
+        }
 
 
 
 
-//        public async Task<bool> DeleteGroupAsync(int groupId, string userId)
-//        {
+        public async Task<bool> DeleteGroupAsync(int groupId, string userId)
+        {
 
-//            var repo = unitOfWork.GetRepository<Group, int>();
-//            var group = await repo.GetByIdAsync(groupId)
-//                ?? throw new GroupNotFoundException(groupId);
+            var repo = unitOfWork.GetRepository<Group, int>();
+            var group = await repo.GetByIdAsync(groupId)
+                ?? throw new GroupNotFoundException(groupId);
 
-//            await groupAuthorizationService.EnsureUserIsAdminAsync(groupId, userId);
+            await groupAuthorizationService.EnsureUserIsOwnerAsync(groupId, userId);
 
-//            repo.Delete(group);
-//            await unitOfWork.SaveChangesAsync();
-//            return true;
-//        }
+            repo.Delete(group);
+            await unitOfWork.SaveChangesAsync();
+            return true;
+        }
 
 
 
 
-//        public async Task<GroupResultDTO> UpdateGroupPictureAsync(int groupId, UpdateGroupPictureDTO updateGroupPictureDTO, string userId)
-//        {
-//            var groupRepo = unitOfWork.GetRepository<Group, int>();
+        public async Task<GroupResultDTO> UpdateGroupPictureAsync(int groupId, UpdateGroupPictureDTO updateGroupPictureDTO, string userId)
+        {
+            var groupRepo = unitOfWork.GetRepository<Group, int>();
 
-//            var group = await groupRepo.GetByIdAsync(groupId)
-//                ?? throw new GroupNotFoundException(groupId);
+            var group = await groupRepo.GetByIdAsync(groupId)
+                ?? throw new GroupNotFoundException(groupId);
 
-//            await groupAuthorizationService.EnsureUserIsAdminAsync(groupId, userId);
+            await groupAuthorizationService.EnsureUserIsOwnerOrAdminAsync(groupId, userId);
 
-//            var newRelativePath = await fileStorage
-//                .SaveAsync(updateGroupPictureDTO.Picture, MediaType.GroupProfile);
+            var newRelativePath = await fileStorage
+                .SaveAsync(updateGroupPictureDTO.Picture, MediaType.GroupProfile);
 
-//            if (!string.IsNullOrWhiteSpace(group.GroupProfilePicture))
-//                await fileStorage.DeleteAsync(group.GroupProfilePicture);
+            if (!string.IsNullOrWhiteSpace(group.GroupProfilePicture))
+                await fileStorage.DeleteAsync(group.GroupProfilePicture);
 
-//            group.GroupProfilePicture = newRelativePath;
+            group.GroupProfilePicture = newRelativePath;
 
-//            groupRepo.Update(group);
-//            await unitOfWork.SaveChangesAsync();
+            groupRepo.Update(group);
+            await unitOfWork.SaveChangesAsync();
 
-//            return mapper.Map<GroupResultDTO>(group);
-//        }
+            return mapper.Map<GroupResultDTO>(group);
+        }
 
 
 
 
-//        public async Task<bool> DeleteGroupPictureAsync(int groupId, string userId)
-//        {
-//            var groupRepo = unitOfWork.GetRepository<Group, int>();
+        public async Task<bool> DeleteGroupPictureAsync(int groupId, string userId)
+        {
+            var groupRepo = unitOfWork.GetRepository<Group, int>();
 
-//            var group = await groupRepo.GetByIdAsync(groupId)
-//                ?? throw new GroupNotFoundException(groupId);
+            var group = await groupRepo.GetByIdAsync(groupId)
+                ?? throw new GroupNotFoundException(groupId);
 
-//            await groupAuthorizationService.EnsureUserIsAdminAsync(groupId, userId);
+            await groupAuthorizationService.EnsureUserIsOwnerOrAdminAsync(groupId, userId);
 
-//            if (string.IsNullOrWhiteSpace(group.GroupProfilePicture))
-//                return true;
+            if (string.IsNullOrWhiteSpace(group.GroupProfilePicture))
+                return true;
 
-//            await fileStorage.DeleteAsync(group.GroupProfilePicture);
+            await fileStorage.DeleteAsync(group.GroupProfilePicture);
 
-//            group.GroupProfilePicture = null;
+            group.GroupProfilePicture = null;
 
-//            groupRepo.Update(group);
-//            await unitOfWork.SaveChangesAsync();
+            groupRepo.Update(group);
+            await unitOfWork.SaveChangesAsync();
 
-//            return true;
-//        }
+            return true;
+        }
 
 
 
 
-//        public async Task<PagedResult<GroupResultDTO>> ExploreGroupsAsync(int page, int pageSize, string userId)
-//        {
-//            var spec = new ExploreGroupsSpec(page, pageSize);
-//            var groups = await unitOfWork.GetRepository<Group, int>().GetAllAsync(spec);
+        public async Task<PagedResult<GroupResultDTO>> ExploreGroupsAsync(int page, int pageSize, string userId)
+        {
+            var spec = new ExploreGroupsSpec(page, pageSize);
+            var groups = await unitOfWork.GetRepository<Group, int>().GetAllAsync(spec);
 
-//            const int memberBonus = 5;
-//            const int membershipPenalty = 1000;
+            const int memberBonus = 5;
+            const int membershipPenalty = 1000;
 
-//            var scored =
-//                groups.Select(group =>
-//                {
-//                    int baseScore = group.GroupScore?.TotalPoints ?? 0;
-//                    int popularityScore = group.GroupMembers.Count * memberBonus;
-//                    bool isMember = group.GroupMembers.Any(m => m.UserId == userId);
+            var scored =
+                groups.Select(group =>
+                {
+                    int baseScore = group.GroupScore?.TotalPoints ?? 0;
+                    int popularityScore = group.GroupMembers.Count * memberBonus;
+                    bool isMember = group.GroupMembers.Any(m => m.UserId == userId);
 
 
-//                    int exploreScore = baseScore + popularityScore - (isMember ? membershipPenalty : 0);
+                    int exploreScore = baseScore + popularityScore - (isMember ? membershipPenalty : 0);
 
-//                    return new
-//                    {
-//                        Group = group,
-//                        ExploreScore = exploreScore
-//                    };
-//                });
+                    return new
+                    {
+                        Group = group,
+                        ExploreScore = exploreScore
+                    };
+                });
 
-//            var ordered = scored
-//               .OrderByDescending(x => x.ExploreScore).ToList();
+            var ordered = scored
+               .OrderByDescending(x => x.ExploreScore).ToList();
 
-//            return new PagedResult<GroupResultDTO>
-//            {
-//                Items = ordered
-//                .Select(x => mapper.Map<GroupResultDTO>(x.Group))
-//                .ToList(),
-//                Page = page,
-//                PageSize = pageSize,
-//                HasMore = ordered.Count == pageSize
-//            };
-//        }
+            return new PagedResult<GroupResultDTO>
+            {
+                Items = ordered
+                .Select(x => mapper.Map<GroupResultDTO>(x.Group))
+                .ToList(),
+                Page = page,
+                PageSize = pageSize,
+                HasMore = ordered.Count == pageSize
+            };
+        }
 
-
-
-
-        
-
-//    }
-//}
+    }
+}
 

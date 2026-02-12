@@ -32,9 +32,6 @@ namespace Service.Implementations
             var member = await memberRepo.GetByIdAsync(spec)
                 ?? throw new UnauthorizedAccessException("You are not a member of this group.");
 
-            if (member.Role is not RoleType.Member and not RoleType.Admin)
-                throw new UnauthorizedAccessException("You are not allowed to chat in this group.");
-
             return mapper.Map<GroupMemberResultDTO>(member);
         }
 
@@ -48,6 +45,36 @@ namespace Service.Implementations
                 ?? throw new UserNotMemberOfGroupException();
 
             if (member.Role != RoleType.Admin)
+                throw new GroupAdminOnlyException();
+
+            return mapper.Map<GroupMemberResultDTO>(member);
+        }
+
+
+        public async Task<GroupMemberResultDTO> EnsureUserIsOwnerAsync(int groupId, string userId)
+        {
+            var memberRepo = unitOfWork.GetRepository<GroupMembers, int>();
+
+            var spec = new GroupMemberByGroupAndUserSpec(groupId, userId);
+            var member = await memberRepo.GetByIdAsync(spec)
+                ?? throw new UserNotMemberOfGroupException();
+
+            if (member.Role != RoleType.Owner)
+                throw new GroupAdminOnlyException();
+
+            return mapper.Map<GroupMemberResultDTO>(member);
+        }
+        
+        
+        public async Task<GroupMemberResultDTO> EnsureUserIsOwnerOrAdminAsync(int groupId, string userId)
+        {
+            var memberRepo = unitOfWork.GetRepository<GroupMembers, int>();
+
+            var spec = new GroupMemberByGroupAndUserSpec(groupId, userId);
+            var member = await memberRepo.GetByIdAsync(spec)
+                ?? throw new UserNotMemberOfGroupException();
+
+            if (member.Role != RoleType.Owner && member.Role != RoleType.Admin)
                 throw new GroupAdminOnlyException();
 
             return mapper.Map<GroupMemberResultDTO>(member);
