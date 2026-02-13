@@ -1,30 +1,28 @@
 ﻿using AutoMapper;
-using AutoMapper.Execution;
 using Domain.Contracts;
 using Domain.Entities.Groups;
 using Domain.Exceptions.GroupExceptions;
 using Service.Specifications.GroupChatMessageSpecs;
-using Service.Specifications.GroupMemberSpecs;
 using Service.Specifications.GroupSpecs;
 using ServiceAbstraction.Contracts;
 using Shared.DTOs.GroupMessageModule;
 using Shared.DTOs.GroupMessages;
 using Shared.DTOs.Posts;
-using Shared.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
+using Domain.Exceptions.ForbiddenExceptions;
 
 namespace Service.Implementations
 {
-    public class GroupChatService(IUnitOfWork unitOfWork, IMapper mapper, IGroupAuthorizationService groupAuthorizationService, IGroupChatNotifier groupChatNotifier) : IGroupChatService
+    public class GroupChatService(
+        IMapper mapper, 
+        IUnitOfWork unitOfWork,
+        IGroupChatNotifier groupChatNotifier,
+        IUserGroupRelationService _relationService
+        ) : IGroupChatService
     {
         public async Task<GroupMessageResponseDTO> SendMessageAsync(int groupId, SendGroupMessageDTO sendGroupMessageDTO, string userId)
         {
-            await groupAuthorizationService.EnsureUserCanChatAsync(groupId, userId);
+            if (!_relationService.IsMember(groupId))
+                throw new ForbiddenActionException();
 
             var messageRepo = unitOfWork.GetRepository<GroupChatMessage, long>();
             var groupRepo = unitOfWork.GetRepository<Group, int>();
@@ -62,7 +60,8 @@ namespace Service.Implementations
 
         public async Task<PagedResult<GroupMessageResponseDTO>> GetMessagesAsync(int groupId, int page, int pageSize, string userId)
         {
-            await groupAuthorizationService.EnsureUserCanChatAsync(groupId, userId);
+            if (!_relationService.IsMember(groupId))
+                throw new ForbiddenActionException();
 
             var repo = unitOfWork.GetRepository<GroupChatMessage, long>();
             var spec = new GroupChatMessagesSpec(groupId, page, pageSize);

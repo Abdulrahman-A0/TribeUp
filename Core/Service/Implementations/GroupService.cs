@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Domain.Contracts;
 using Domain.Entities.Groups;
+using Domain.Exceptions.ForbiddenExceptions;
 using Domain.Exceptions.GroupExceptions;
 using Domain.Exceptions.GroupMemberExceptions;
 using Microsoft.AspNetCore.Hosting;
@@ -13,8 +14,12 @@ using Shared.Enums;
 
 namespace Service.Implementations
 {
-    public class GroupService(IUnitOfWork unitOfWork, IMapper mapper,
-        IWebHostEnvironment environment, IFileStorageService fileStorage, IGroupAuthorizationService groupAuthorizationService) : IGroupService
+    public class GroupService(
+        IUnitOfWork unitOfWork, 
+        IMapper mapper,
+        IWebHostEnvironment environment, 
+        IFileStorageService fileStorage, 
+        IUserGroupRelationService _relationService) : IGroupService
     {
         public async Task<List<GroupResultDTO>> GetAllGroupsAsync()
         {
@@ -100,7 +105,8 @@ namespace Service.Implementations
             var group = await repo.GetByIdAsync(groupId)
                 ?? throw new GroupNotFoundException(groupId);
 
-            await groupAuthorizationService.EnsureUserIsOwnerOrAdminAsync(groupId, userId);
+            if (!_relationService.IsOwner(groupId) || ! _relationService.IsAdmin(groupId))
+                throw new ForbiddenActionException();
 
             // AutoMapper will only update non-null fields
             mapper.Map(updateGroupDTO, group);
@@ -121,7 +127,8 @@ namespace Service.Implementations
             var group = await repo.GetByIdAsync(groupId)
                 ?? throw new GroupNotFoundException(groupId);
 
-            await groupAuthorizationService.EnsureUserIsOwnerAsync(groupId, userId);
+            if (!_relationService.IsOwner(groupId))
+                throw new ForbiddenActionException();
 
             repo.Delete(group);
             await unitOfWork.SaveChangesAsync();
@@ -138,7 +145,8 @@ namespace Service.Implementations
             var group = await groupRepo.GetByIdAsync(groupId)
                 ?? throw new GroupNotFoundException(groupId);
 
-            await groupAuthorizationService.EnsureUserIsOwnerOrAdminAsync(groupId, userId);
+            if (!_relationService.IsOwner(groupId) || !_relationService.IsAdmin(groupId))
+                throw new ForbiddenActionException();
 
             var newRelativePath = await fileStorage
                 .SaveAsync(updateGroupPictureDTO.Picture, MediaType.GroupProfile);
@@ -164,7 +172,8 @@ namespace Service.Implementations
             var group = await groupRepo.GetByIdAsync(groupId)
                 ?? throw new GroupNotFoundException(groupId);
 
-            await groupAuthorizationService.EnsureUserIsOwnerOrAdminAsync(groupId, userId);
+            if (!_relationService.IsOwner(groupId) || !_relationService.IsAdmin(groupId))
+                throw new ForbiddenActionException();
 
             if (string.IsNullOrWhiteSpace(group.GroupProfilePicture))
                 return true;
