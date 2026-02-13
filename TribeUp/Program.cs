@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Data.Contexts;
 using TribeUp.Extensions;
+using TribeUp.Middlewares;
 
 namespace TribeUp
 {
@@ -41,7 +42,8 @@ namespace TribeUp
             app.UseStaticFiles();
             app.UseCors("FrontPolicy");
             app.UseRouting();
-            app.UseAuthentication();
+            app.UseAuthentication(); 
+            app.UseMiddleware<UserRelationMiddleware>();
             app.UseAuthorization();
             app.MapControllers();
             app.MapHubs();

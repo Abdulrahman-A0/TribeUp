@@ -33,12 +33,13 @@ namespace TribeUp.Extensions
             services.AddScoped<IGroupAuthorizationService, GroupAuthorizationService>();
 
 
-            //services.AddScoped<IPostService, PostService>();
+            services.AddScoped<IPostService, PostService>();
             services.AddScoped<IPostUrlService, PostUrlService>();
             services.AddScoped<IAIModerationManager, AIModerationManager>();
             services.AddScoped<IFileStorageService, FileStorageService>();
             services.AddScoped<INotificationService, NotificationService>();
 
+            services.AddScoped<IUserGroupRelationService, UserGroupRelationService>();
 
 
             services.AddScoped<Func<IAuthenticationService>>(provider =>
