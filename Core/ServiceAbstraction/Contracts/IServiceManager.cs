@@ -7,10 +7,11 @@ namespace ServiceAbstraction.Contracts
         IAuthenticationService AuthenticationService { get; }
         IGroupService GroupService { get; }
         IGroupMemberService GroupMemberService { get; }
-        IGroupJoinRequestService GroupJoinRequestService { get; }
         IGroupChatService GroupChatService { get; }
         IPostService PostService { get; }
         IProfileService ProfileService { get; }
         INotificationService NotificationService { get; }
+        IGroupInvitationService GroupInvitationService { get; }
+
     }
 }

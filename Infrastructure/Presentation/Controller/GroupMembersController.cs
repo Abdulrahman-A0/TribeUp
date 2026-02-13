@@ -19,11 +19,6 @@ namespace Presentation.Controller
             => Ok(await serviceManager.GroupMemberService.GetGroupMembersAsync(groupId, UserId));
 
 
-        [HttpPost("JoinGroup/{groupId:int}")]
-        public async Task<ActionResult<JoinGroupResponseDTO>> JoinGroupAsync(int groupId)
-            => Ok(await serviceManager.GroupMemberService.JoinGroupAsync(groupId, UserId));
-
-
         [HttpPost("LeaveGroup/{groupId:int}")]
         public async Task<ActionResult<bool>> LeaveGroupAsync(int groupId)
             => Ok(await serviceManager.GroupMemberService.LeaveGroupAsync(groupId, UserId));

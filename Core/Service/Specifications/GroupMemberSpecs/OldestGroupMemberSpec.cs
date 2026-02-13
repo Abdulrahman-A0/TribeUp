@@ -13,7 +13,7 @@ namespace Service.Specifications.GroupMemberSpecs
         public OldestGroupMemberSpec(int groupId)
             : base(m =>
                 m.GroupId == groupId &&
-                m.Role == RoleType.Member)
+                m.Role == RoleType.Admin)
         {
             AddOrderBy(m => m.JoinedAt);
         }

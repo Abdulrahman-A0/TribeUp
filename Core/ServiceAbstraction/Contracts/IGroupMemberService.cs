@@ -11,7 +11,6 @@ namespace ServiceAbstraction.Contracts
     {
         public Task<List<GroupMemberResultDTO>> GetGroupMembersAsync(int groupId, string userId);
         
-        Task<JoinGroupResponseDTO> JoinGroupAsync(int groupId, string userId);
         Task<bool> LeaveGroupAsync(int groupId, string userId);
 
         public Task<bool> PromoteToAdminAsync(int groupId, string actorUserId, int groupMemberId);
