@@ -61,7 +61,7 @@ namespace Service.MappingProfiles
             CreateMap<Group, GroupChatInboxDTO>()
                 .ForMember(dest => dest.GroupId, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.GroupName, opt => opt.MapFrom(src => src.GroupName))
-                .ForMember(dest => dest.GroupProfilePicture,opt => opt.MapFrom(src => src.GroupProfilePicture))
+                .ForMember(dest => dest.GroupProfilePicture, opt => opt.MapFrom<GroupProfilePictureResolver>())
                 .ForMember(dest => dest.LastMessageContent, opt => opt.MapFrom(src => src.LastMessage.Content))
                 .ForMember(dest => dest.LastMessageSenderName, opt => opt.MapFrom(src => src.LastMessage.User.UserName))
                 .ForMember(dest => dest.LastMessageSentAt,  opt => opt.MapFrom(src => src.LastMessage.SentAt));
