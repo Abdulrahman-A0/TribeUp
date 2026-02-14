@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Domain.Entities.Groups;
 using Shared.DTOs.GroupMemberModule;
+using Shared.DTOs.ProfileModule;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,12 +16,13 @@ namespace Service.MappingProfiles
         {
 
             CreateMap<GroupMembers, GroupMemberResultDTO>()
-                .ForMember(dest => dest.UserName,
-                    opt => opt.MapFrom(src =>
-                    src.User != null ? src.User.UserName : string.Empty))
-                .ForMember(dest => dest.UserProfilePicture,
-                    opt => opt.MapFrom(src =>
-                    src.User != null ? src.User.ProfilePicture : string.Empty));
+            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.UserName))
+
+            
+            .ForMember(dest => dest.UserProfilePicture, opt => opt.MapFrom((src, dest, destMember, context) => {
+                var userDto = context.Mapper.Map<UserProfileDTO>(src.User);
+                return userDto.ProfilePicture;
+            }));
         }
     }
 }

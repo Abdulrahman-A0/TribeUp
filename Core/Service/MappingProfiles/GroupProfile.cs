@@ -66,6 +66,10 @@ namespace Service.MappingProfiles
                 .ForMember(dest => dest.LastMessageSenderName, opt => opt.MapFrom(src => src.LastMessage.User.UserName))
                 .ForMember(dest => dest.LastMessageSentAt,  opt => opt.MapFrom(src => src.LastMessage.SentAt));
 
+
+
+            CreateMap<Group, string>().ConvertUsing((src, dest, context) =>
+                 context.Mapper.Map<GroupResultDTO>(src).GroupProfilePicture);
         }
     }
 }

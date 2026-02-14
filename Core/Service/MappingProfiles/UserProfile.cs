@@ -16,6 +16,9 @@ namespace Service.MappingProfiles
 
             CreateMap<RegisterDTO, ApplicationUser>()
                 .ForMember(dest => dest.PasswordHash, opt => opt.Ignore());
+
+            CreateMap<ApplicationUser, string>().ConvertUsing((src, dest, context) =>
+                context.Mapper.Map<UserProfileDTO>(src).ProfilePicture);
         }
     }
 }
