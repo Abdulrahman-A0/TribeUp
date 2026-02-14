@@ -12,5 +12,9 @@ namespace ServiceAbstraction.Contracts
         Task DeleteProfilePictureAsync(string userId);
         Task UpdatePhoneNumberAsync(string userId, UpdatePhoneNumberDTO updatePhoneNumberDTO);
         Task DeletePhoneNumberAsync(string userId);
+        Task UpdateBioAsync(string userId, UpdateBioDTO updateBioDTO);
+        Task DeleteBioAsync(string userId);
+        Task UpdateCoverPictureAsync(string userId, UpdateCoverPictureDTO updateCoverPictureDTO);
+        Task DeleteCoverPictureAsync(string userId);
     }
 }

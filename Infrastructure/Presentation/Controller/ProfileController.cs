@@ -73,5 +73,43 @@ namespace Presentation.Controller
             return NoContent();
         }
 
+        [Authorize]
+        [HttpPut("Bio")]
+        public async Task<IActionResult> UpdateBio(UpdateBioDTO updateBioDTO)
+        {
+            await serviceManager.ProfileService
+                .UpdateBioAsync(UserId, updateBioDTO);
+
+            return NoContent();
+        }
+
+        [Authorize]
+        [HttpDelete("Bio/Delete")]
+        public async Task<IActionResult> DeleteBio()
+        {
+            await serviceManager.ProfileService
+                .DeleteBioAsync(UserId);
+
+            return NoContent();
+        }
+
+        [Authorize]
+        [HttpPut("Cover")]
+        public async Task<IActionResult> UpdateCoverPicture([FromForm] UpdateCoverPictureDTO updateCoverPictureDTO)
+        {
+            await serviceManager.ProfileService
+                .UpdateCoverPictureAsync(UserId, updateCoverPictureDTO);
+
+            return NoContent();
+        }
+
+        [Authorize]
+        [HttpDelete("Cover/Delete")]
+        public async Task<IActionResult> DeleteCoverPicture()
+        {
+            await serviceManager.ProfileService.DeleteCoverPictureAsync(UserId);
+            return NoContent();
+        }
+
     }
 }
