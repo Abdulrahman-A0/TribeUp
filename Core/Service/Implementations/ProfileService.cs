@@ -19,6 +19,14 @@ namespace Service.Implementations
             return mapper.Map<UserProfileDTO>(user);
         }
 
+        public async Task<ProfileSettingsDTO> GetProfileSettingsAsync(string userId)
+        {
+            var user = await userManager.FindByIdAsync(userId);
+            if (user == null) throw new UserNotFoundException(userId);
+
+            return mapper.Map<ProfileSettingsDTO>(user);
+        }
+
         public async Task UpdateProfileAsync(string userId, UpdateProfileDTO updateProfileDTO)
         {
             var user = await userManager.FindByIdAsync(userId)
@@ -91,8 +99,6 @@ namespace Service.Implementations
 
             await userManager.UpdateAsync(user);
         }
-
-
 
     }
 }

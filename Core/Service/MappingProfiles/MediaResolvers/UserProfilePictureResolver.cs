@@ -6,9 +6,10 @@ using Shared.Enums;
 
 namespace Service.MappingProfiles.MediaResolvers
 {
-    internal class UserProfilePictureResolver(IMediaUrlService mediaUrlService) : IValueResolver<ApplicationUser, UserProfileDTO, string>
+    internal class UserProfilePictureResolver(IMediaUrlService mediaUrlService)
+        : IMemberValueResolver<object, object, string?, string>
     {
-        public string Resolve(ApplicationUser source, UserProfileDTO destination, string destMember, ResolutionContext context)
-            => mediaUrlService.BuildUrl(source.ProfilePicture, MediaType.UserProfile);
+        public string Resolve(object source, object destination, string? sourceMember, string destMember, ResolutionContext context)
+            => mediaUrlService.BuildUrl(sourceMember, MediaType.UserProfile)!;
     }
 }

@@ -4,6 +4,7 @@
     {
         UserProfile,
         GroupProfile,
-        PostMedia
+        PostMedia,
+        UserCover
     }
 }
