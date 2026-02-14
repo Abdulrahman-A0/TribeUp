@@ -22,7 +22,7 @@ namespace TribeUp.Extensions
                     builder.AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials()
-                    .WithOrigins(configuration["URLs:FrontUrl"]);
+                    .WithOrigins(configuration["URLs:FrontUrl"], configuration["URLs:NetlifyUrl"]);
                 });
             });
 
