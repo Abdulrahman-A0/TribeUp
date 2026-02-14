@@ -12,6 +12,7 @@ using Service.Specifications.RefreshTokenSpecifications;
 using ServiceAbstraction.Contracts;
 using Shared.Common;
 using Shared.DTOs.IdentityModule;
+using Shared.DTOs.ProfileModule;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -48,8 +49,9 @@ namespace Service.Implementations
 
             await _userManager.UpdateAsync(user);
 
+            var userSummary = _mapper.Map<UserSummaryDTO>(user);
 
-            return new AuthResponseDTO(token, refreshToken);
+            return new AuthResponseDTO(token, refreshToken, userSummary);
         }
 
         public async Task<AuthResponseDTO> RefreshAsync(RefreshTokenRequestDTO refreshTokenDTO)
@@ -85,7 +87,9 @@ namespace Service.Implementations
 
             var newAccessToken = await CreateTokenAsync(storedToken.User);
 
-            return new AuthResponseDTO(newAccessToken, newRefreshToken);
+            var userSummary = _mapper.Map<UserSummaryDTO>(storedToken.User);
+
+            return new AuthResponseDTO(newAccessToken, newRefreshToken, userSummary);
         }
 
         public async Task<AuthResponseDTO> RegisterAsync(RegisterDTO registerDTO, string deviceId)
@@ -117,8 +121,9 @@ namespace Service.Implementations
 
             await _userManager.UpdateAsync(user);
 
+            var userSummary = _mapper.Map<UserSummaryDTO>(user);
 
-            return new AuthResponseDTO(token, refreshToken);
+            return new AuthResponseDTO(token, refreshToken, userSummary);
         }
 
         public async Task LogoutAsync(string userId, string deviceId)
