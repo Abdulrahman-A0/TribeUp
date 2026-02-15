@@ -17,6 +17,14 @@ namespace Presentation.SignalR
             await hubContext.Clients
                 .Group($"group:{groupId}")
                 .SendAsync("ReceiveGroupMessage", message);
+
+            await hubContext.Clients.Group($"group:{groupId}")
+                .SendAsync("UpdateInbox", new
+                {
+                    GroupId = groupId,
+                    LastMessage = message.Content,
+                    SentAt = message.SentAt
+                });
         }
     }
 }

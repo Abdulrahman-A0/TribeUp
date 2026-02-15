@@ -14,11 +14,8 @@ namespace Service.Specifications.GroupSpecs
         public ChatInboxProjectionSpec(string userId)
         : base(g =>
             g.LastMessageId != null &&
-            g.GroupMembers.Any(m =>
-                m.UserId == userId &&
-                (m.Role == RoleType.Member || m.Role == RoleType.Admin)
-            )
-        )
+            g.GroupMembers.Any(m => m.UserId == userId))
+
         {
             AddIncludes(g => g.LastMessage);
             AddThenIncludes(q =>
