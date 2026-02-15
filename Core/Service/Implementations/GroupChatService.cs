@@ -72,6 +72,7 @@ namespace Service.Implementations
             var mappedMessages = mapper.Map<List<GroupMessageResponseDTO>>(messages);
 
             mappedMessages.Reverse();
+
             return new PagedResult<GroupMessageResponseDTO>
             {
                 Items = mappedMessages,

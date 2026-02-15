@@ -40,9 +40,9 @@ namespace TribeUp
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-            app.UseCors("FrontPolicy");
             app.UseRouting();
-            app.UseAuthentication(); 
+            app.UseCors("FrontPolicy");
+            app.UseAuthentication();
             app.UseMiddleware<UserRelationMiddleware>();
             app.UseAuthorization();
             app.MapControllers();
