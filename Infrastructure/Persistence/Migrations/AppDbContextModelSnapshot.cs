@@ -1285,7 +1285,7 @@ namespace Persistence.Migrations
                     b.HasOne("Domain.Entities.Posts.Comment", "Comment")
                         .WithMany("Likes")
                         .HasForeignKey("CommentId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Domain.Entities.Posts.Post", "Post")
                         .WithMany("Likes")

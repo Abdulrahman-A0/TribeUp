@@ -53,7 +53,7 @@ namespace Service.MappingProfiles
                     opt => opt.MapFrom<PostMediaResolver>());
 
 
-            // Create Comment
+            // Comments
             CreateMap<Comment, CommentResultDTO>()
                 .ForMember(dest => dest.Id,
                     opt => opt.MapFrom(src => src.Id))
@@ -68,7 +68,11 @@ namespace Service.MappingProfiles
                 .ForMember(dest => dest.Content,
                     opt => opt.MapFrom(src => src.Content))
                 .ForMember(dest => dest.CreatedAt,
-                    opt => opt.MapFrom(src => src.CreatedAt));
+                    opt => opt.MapFrom(src => src.CreatedAt))
+                .ForMember(dest => dest.LikesCount,
+                     opt => opt.MapFrom(src => src.Likes.Count))
+                 .ForMember(dest => dest.IsLikedByCurrentUser,
+                     opt => opt.Ignore());
 
 
             // Get Likes

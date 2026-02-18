@@ -61,26 +61,6 @@ namespace Presentation.Controller
             => Ok(await service.PostService.GetLikesByPostIdAsync(postId, page, pageSize));
 
 
-        [HttpPost("{postId:int}/AddComment")]
-        public async Task<ActionResult<CreateEntityResultDTO>> Comment(int postId, CommentDTO dto)
-            => Ok(await service.PostService.AddCommentAsync(UserId, UserName, postId, dto));
-
-
-        [HttpPut("{commentId:int}/UpdateComment")]
-        public async Task<ActionResult<CreateEntityResultDTO>> UpdateComment(int commentId, CommentDTO dto)
-            => Ok(await service.PostService.UpdateCommentAsync(UserId, UserName, commentId, dto));
-
-
-        [HttpDelete("{commentId:int}/DeleteComment")]
-        public async Task<ActionResult<DeleteEntityResultDTO>> DeleteComment(int commentId)
-           => Ok(await service.PostService.DeleteCommentAsync(UserId, commentId));
-
-
-        [HttpGet("{postId:int}/Comments")]
-        public async Task<ActionResult<PagedResult<CommentResultDTO>>> GetComments(int postId, int page = 1, int pageSize = 20)
-            => Ok(await service.PostService.GetCommentsByPostIdAsync(UserId, postId, page, pageSize));
-
-
         [HttpGet("{groupId:int}/DeniedPostsByGroupId")]
         public async Task<ActionResult<PagedResult<PostDTO>>> GetDeniedPostsByGroupId(int groupId, int page = 1, int pageSize = 20)
             => Ok(await service.PostService.GetDeniedPostsByGroupIdAsync(UserId, groupId, page, pageSize));

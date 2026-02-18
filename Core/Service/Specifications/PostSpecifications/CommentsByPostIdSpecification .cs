@@ -31,6 +31,7 @@ namespace Service.Specifications.PostSpecifications
             )
         {
             AddIncludes(c => c.User);
+            AddIncludes(c => c.Likes);
 
             ApplyPagination(page, pageSize);
         }

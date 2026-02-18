@@ -34,9 +34,9 @@ namespace TribeUp.Extensions
 
 
             services.AddScoped<IPostService, PostService>();
-            services.AddScoped<IPostUrlService, PostUrlService>();
-            services.AddScoped<IAIModerationManager, AIModerationManager>();
+            services.AddScoped<ICommentService, CommentService>();
             services.AddScoped<IFileStorageService, FileStorageService>();
+            services.AddScoped<IAIModerationManager, AIModerationManager>();
             services.AddScoped<INotificationService, NotificationService>();
 
             services.AddScoped<IUserGroupRelationService, UserGroupRelationService>();
@@ -67,6 +67,9 @@ namespace TribeUp.Extensions
 
             services.AddScoped<Func<IPostService>>(provider =>
                 () => provider.GetRequiredService<IPostService>()
+            );
+            services.AddScoped<Func<ICommentService>>(provider =>
+                () => provider.GetRequiredService<ICommentService>()
             );
             services.AddScoped<Func<IProfileService>>(provider =>
             () => provider.GetRequiredService<IProfileService>()

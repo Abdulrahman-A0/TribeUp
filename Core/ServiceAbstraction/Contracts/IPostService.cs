@@ -22,10 +22,6 @@ namespace ServiceAbstraction.Contracts
         Task<PagedResult<PostDTO>> GetGroupFeedAsync(string userId, int groupId, int page, int pageSize);
         Task<ToggleLikeDTO> ToggeleLikePostAsync(string userId, string username, int postId);
         Task<PagedResult<LikesResultDTO>> GetLikesByPostIdAsync(int postId, int page, int pageSize);
-        Task<CreateEntityResultDTO> AddCommentAsync(string userId, string username, int postId, CommentDTO dto);
-        Task<DeleteEntityResultDTO> DeleteCommentAsync(string userId, int commentId);
-        Task<CreateEntityResultDTO> UpdateCommentAsync(string userId, string username, int commentId, CommentDTO dto);
-        Task<PagedResult<CommentResultDTO>> GetCommentsByPostIdAsync(string userId, int postId, int page, int pageSize);
         Task<PagedResult<PostDTO>> GetDeniedPostsByGroupIdAsync(string userId, int groupId, int page, int pageSize);
         Task<CreateEntityResultDTO> ChangeModerationStatusAsync(string userId, int groupId, ModerationDTO dto);
     }

@@ -19,6 +19,7 @@ using Shared.DTOs.PostModule;
 using Shared.DTOs.Posts;
 using Shared.Enums;
 using System.ComponentModel.DataAnnotations;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Service.Implementations
 {
@@ -262,7 +263,7 @@ namespace Service.Implementations
             var post = await postRepo.GetByIdAsync(spec)
                 ?? throw new PostNotFoundException(postId);
 
-            if (!_relationService.IsAdmin(post.GroupId) || !_relationService.IsOwner(post.GroupId))
+            if (!_relationService.IsAdmin(post.GroupId) && !_relationService.IsOwner(post.GroupId))
                 throw new ForbiddenActionException();
 
             await _groupScoreService.DecreaseOnActionAsync(post.GroupId, PostPoints);
@@ -520,194 +521,6 @@ namespace Service.Implementations
         }
 
 
-        public async Task<CreateEntityResultDTO> AddCommentAsync(
-            string userId,
-            string username,
-            int postId,
-            CommentDTO dto)
-        {
-            if (string.IsNullOrWhiteSpace(dto.Content))
-                throw new PostAndCommentContentValidationException(
-                    new Dictionary<string, string[]>
-                    {
-                        ["CommentContent"] = new[] { "Comment must contain text." }
-                    });
-
-            var post = await postRepo.GetByIdAsync(postId)
-                ?? throw new PostNotFoundException(postId);
-           
-            if (!_relationService.IsMember(post.GroupId) && post.Accessibility == AccessibilityType.Private)
-                throw new ForbiddenActionException();
-            
-            var comment = new Comment
-            {
-                PostId = postId,
-                UserId = userId,
-                Content = dto.Content.Trim()
-            };
-            await commentRepo.AddAsync(comment);
-
-            await _unitOfWork.SaveChangesAsync();
-
-            # region AI moderation result
-
-            var moderationResult = await _aiModerationManager.ModerateAsync(
-                comment.Content ?? string.Empty,
-                ModeratedEntityType.Comment,
-                comment.Id);
-
-            if (!moderationResult.IsAccepted)
-            {
-                return new CreateEntityResultDTO
-                {
-                    IsCreated = false,
-                    Status = ContentStatus.Denied,
-                    Message = "Comment violates community guidelines."
-                };
-            }
-
-            #endregion
-
-            await _notificationService.CreateAsync(new CreateNotificationDTO
-            {
-                RecipientUserId = post.UserId,
-                ActorUserId = userId,
-                Type = NotificationType.PostComment,
-                Title = $"New comment on your post: \"{GetFirstWord(post.Caption)}\"",
-                Message = $"{username} commented: \"{GetFirstWord(comment.Content)}\"",
-                ReferenceId = post.Id
-            });
-
-            await _groupScoreService.IncreaseOnActionAsync(post.GroupId, CommentPoints);
-            await _unitOfWork.SaveChangesAsync();
-
-            return new CreateEntityResultDTO
-            {
-                IsCreated = true,
-                Status = ContentStatus.Accepted,
-                Message = "Comment created successfully"
-            };
-
-        }
-
-        public async Task<CreateEntityResultDTO> UpdateCommentAsync(
-            string userId,
-            string username,
-            int commentId,
-            CommentDTO dto)
-        {
-            var moderatedSpec = new ChangeEntityStatusSpecification(ModeratedEntityType.Comment, commentId);
-            var moderatedComment = await moderationRepo.GetByIdAsync(moderatedSpec);
-
-            var spec = new CommentByIdSpecification(commentId);
-            var comment = await commentRepo.GetByIdAsync(spec)
-                ?? throw new CommentNotFoundException(commentId);
-
-            if (userId != comment.UserId)
-                throw new ForbiddenActionException();
-
-            comment.Content = dto.Content;
-
-            # region AI moderation result
-
-            var moderationResult = await _aiModerationManager.ModerateAsync(
-                comment.Content ?? string.Empty,
-                ModeratedEntityType.Comment,
-                comment.Id);
-
-            if (!moderationResult.IsAccepted)
-            {
-                return new CreateEntityResultDTO
-                {
-                    IsCreated = false,
-                    Status = ContentStatus.Denied,
-                    Message = "Comment violates community guidelines."
-                };
-            }
-
-            #endregion
-
-            commentRepo.Update(comment);
-            await _unitOfWork.SaveChangesAsync();
-
-            return new CreateEntityResultDTO
-            {
-                IsCreated = true,
-                Status = ContentStatus.Accepted,
-                Message = "Comment updated successfully"
-            };
-        }
-
-
-        public async Task<PagedResult<CommentResultDTO>> GetCommentsByPostIdAsync(
-            string userId,
-            int postId,
-            int page,
-            int pageSize)
-        {
-            if (page <= 0 || pageSize <= 0)
-                throw new PageIndexAndPageSizeValidationException(page, pageSize);
-
-            var post = await postRepo.GetByIdAsync(postId)
-                ?? throw new PostNotFoundException(postId);
-            
-            if (!_relationService.IsMember(post.GroupId) && post.Accessibility == AccessibilityType.Private)
-                throw new ForbiddenActionException();
-
-            var moderation = moderationRepo.AsQueryable();
-
-            var spec = new CommentsByPostIdSpecification(userId, moderation, postId, page, pageSize);
-            var comments = await commentRepo.GetAllAsync(spec);
-
-            var totalCount = await commentRepo.CountAsync(c =>
-                    c.PostId == postId &&
-                    !moderation.Any(m =>
-                        m.EntityType == ModeratedEntityType.Comment &&
-                        m.EntityId == c.Id &&
-                        m.Status == ContentStatus.Denied &&
-                        c.UserId != userId
-                    )
-                );
-
-            var mapped = _mapper.Map<List<CommentResultDTO>>(comments);
-
-            return new PagedResult<CommentResultDTO>
-            {
-                Items = mapped,
-                Page = page,
-                PageSize = pageSize,
-                TotalCount = totalCount,
-                HasMore = totalCount == pageSize
-            };
-
-        }
-
-
-        public async Task<DeleteEntityResultDTO> DeleteCommentAsync(
-            string userId,
-            int commentId)
-        {
-
-            var spec = new CommentByIdSpecification(commentId);
-            var comment = await commentRepo.GetByIdAsync(spec)
-                ?? throw new CommentNotFoundException(commentId);
-
-            var post = await postRepo.GetByIdAsync(comment.PostId)
-                ?? throw new PostNotFoundException(comment.PostId);
-
-            if (!_relationService.IsAdmin(post.GroupId) || !_relationService.IsOwner(post.GroupId))
-                throw new ForbiddenActionException();
-
-
-            await _groupScoreService.DecreaseOnActionAsync(post.GroupId, CommentPoints);
-            commentRepo.Delete(comment);
-            await _unitOfWork.SaveChangesAsync();
-            return new DeleteEntityResultDTO
-            {
-                Message = "Deleted successfully"
-            };
-
-        }
 
 
         public async Task<PagedResult<PostDTO>> GetDeniedPostsByGroupIdAsync(
@@ -719,7 +532,7 @@ namespace Service.Implementations
             if (page <= 0 || pageSize <= 0)
                 throw new PageIndexAndPageSizeValidationException(page, pageSize);
 
-            if (!_relationService.IsAdmin(groupId) || !_relationService.IsOwner(groupId))
+            if (!_relationService.IsAdmin(groupId) && !_relationService.IsOwner(groupId))
                 throw new ForbiddenActionException();
 
             var moderation = moderationRepo.AsQueryable();
@@ -758,7 +571,7 @@ namespace Service.Implementations
             int groupId,
             ModerationDTO dto)
         {
-            if (!_relationService.IsAdmin(groupId) || !_relationService.IsOwner(groupId))
+            if (!_relationService.IsAdmin(groupId) && !_relationService.IsOwner(groupId))
                 throw new ForbiddenActionException();
 
             var group = await groupRepo.GetByIdAsync(groupId)

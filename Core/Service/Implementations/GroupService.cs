@@ -105,7 +105,7 @@ namespace Service.Implementations
             var group = await repo.GetByIdAsync(groupId)
                 ?? throw new GroupNotFoundException(groupId);
 
-            if (!_relationService.IsOwner(groupId) || ! _relationService.IsAdmin(groupId))
+            if (!_relationService.IsOwner(groupId) && ! _relationService.IsAdmin(groupId))
                 throw new ForbiddenActionException();
 
             // AutoMapper will only update non-null fields

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class Init : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -52,6 +52,8 @@ namespace Persistence.Migrations
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ProfilePicture = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Avatar = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CoverPicture = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Bio = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -72,23 +74,6 @@ namespace Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Groups",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    GroupName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    GroupProfilePicture = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Accessibility = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Groups", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -203,9 +188,12 @@ namespace Persistence.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    Type = table.Column<int>(type: "int", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsRead = table.Column<bool>(type: "bit", nullable: false),
                     CreateAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ReferenceId = table.Column<int>(type: "int", nullable: true),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
@@ -255,12 +243,6 @@ namespace Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ActivityLogs", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_ActivityLogs_Groups_GroupId",
-                        column: x => x.GroupId,
-                        principalTable: "Groups",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -277,12 +259,6 @@ namespace Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Albums", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Albums_Groups_GroupId",
-                        column: x => x.GroupId,
-                        principalTable: "Groups",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -299,10 +275,26 @@ namespace Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Badges", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Comments",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    PostId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Comments", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Badges_Groups_GroupId",
-                        column: x => x.GroupId,
-                        principalTable: "Groups",
+                        name: "FK_Comments_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -323,8 +315,77 @@ namespace Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Events", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "GroupChatMessages",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Content = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
+                    SentAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    GroupId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GroupChatMessages", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Events_Groups_GroupId",
+                        name: "FK_GroupChatMessages_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Groups",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    GroupName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    GroupProfilePicture = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Accessibility = table.Column<int>(type: "int", nullable: false),
+                    LastMessageSentAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastMessageId = table.Column<long>(type: "bigint", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Groups", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Groups_GroupChatMessages_LastMessageId",
+                        column: x => x.LastMessageId,
+                        principalTable: "GroupChatMessages",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "GroupFollowers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FollowedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    GroupId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GroupFollowers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_GroupFollowers_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_GroupFollowers_Groups_GroupId",
                         column: x => x.GroupId,
                         principalTable: "Groups",
                         principalColumn: "Id",
@@ -332,27 +393,32 @@ namespace Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "GroupJoinRequest",
+                name: "GroupInvitation",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Status = table.Column<int>(type: "int", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    GroupId = table.Column<int>(type: "int", nullable: false),
+                    Token = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    GroupId = table.Column<int>(type: "int", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    MaxUses = table.Column<int>(type: "int", nullable: true),
+                    UsedCount = table.Column<int>(type: "int", nullable: false),
+                    IsRevoked = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_GroupJoinRequest", x => x.Id);
+                    table.PrimaryKey("PK_GroupInvitation", x => x.Id);
+                    table.CheckConstraint("CK_GroupInvitation_Usage", "MaxUses IS NULL OR UsedCount <= MaxUses");
                     table.ForeignKey(
-                        name: "FK_GroupJoinRequest_AspNetUsers_UserId",
+                        name: "FK_GroupInvitation_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_GroupJoinRequest_Groups_GroupId",
+                        name: "FK_GroupInvitation_Groups_GroupId",
                         column: x => x.GroupId,
                         principalTable: "Groups",
                         principalColumn: "Id",
@@ -463,18 +529,11 @@ namespace Persistence.Migrations
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Accessibility = table.Column<int>(type: "int", nullable: false),
                     GroupId = table.Column<int>(type: "int", nullable: false),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    AI_ModerationId = table.Column<int>(type: "int", nullable: false)
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Posts", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Posts_AIModerations_AI_ModerationId",
-                        column: x => x.AI_ModerationId,
-                        principalTable: "AIModerations",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Posts_AspNetUsers_UserId",
                         column: x => x.UserId,
@@ -564,57 +623,37 @@ namespace Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Comments",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    PostId = table.Column<int>(type: "int", nullable: false),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Comments", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Comments_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
-                    table.ForeignKey(
-                        name: "FK_Comments_Posts_PostId",
-                        column: x => x.PostId,
-                        principalTable: "Posts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Likes",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    PostId = table.Column<int>(type: "int", nullable: false),
+                    PostId = table.Column<int>(type: "int", nullable: true),
+                    CommentId = table.Column<int>(type: "int", nullable: true),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Likes", x => x.Id);
+                    table.CheckConstraint("CK_Likes_PostOrComment", "(PostId IS NOT NULL AND CommentId IS NULL) OR (PostId IS NULL AND CommentId IS NOT NULL)");
                     table.ForeignKey(
                         name: "FK_Likes_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Likes_Comments_CommentId",
+                        column: x => x.CommentId,
+                        principalTable: "Comments",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Likes_Posts_PostId",
                         column: x => x.PostId,
                         principalTable: "Posts",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -651,24 +690,32 @@ namespace Persistence.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    PostId = table.Column<int>(type: "int", nullable: false),
+                    PostId = table.Column<int>(type: "int", nullable: true),
+                    CommentId = table.Column<int>(type: "int", nullable: true),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Tags", x => x.Id);
+                    table.CheckConstraint("CK_Tags_PostOrComment", "(PostId IS NOT NULL AND CommentId IS NULL) OR (PostId IS NULL AND CommentId IS NOT NULL)");
                     table.ForeignKey(
                         name: "FK_Tags_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Tags_Comments_CommentId",
+                        column: x => x.CommentId,
+                        principalTable: "Comments",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Tags_Posts_PostId",
                         column: x => x.PostId,
                         principalTable: "Posts",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -795,13 +842,39 @@ namespace Persistence.Migrations
                 column: "GroupId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_GroupJoinRequest_GroupId",
-                table: "GroupJoinRequest",
+                name: "IX_GroupChatMessages_GroupId_SentAt",
+                table: "GroupChatMessages",
+                columns: new[] { "GroupId", "SentAt" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GroupChatMessages_UserId",
+                table: "GroupChatMessages",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GroupFollowers_GroupId",
+                table: "GroupFollowers",
                 column: "GroupId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_GroupJoinRequest_UserId",
-                table: "GroupJoinRequest",
+                name: "IX_GroupFollowers_UserId",
+                table: "GroupFollowers",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GroupInvitation_GroupId",
+                table: "GroupInvitation",
+                column: "GroupId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GroupInvitation_Token",
+                table: "GroupInvitation",
+                column: "Token",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GroupInvitation_UserId",
+                table: "GroupInvitation",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -815,10 +888,25 @@ namespace Persistence.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Groups_LastMessageId",
+                table: "Groups",
+                column: "LastMessageId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Groups_LastMessageSentAt",
+                table: "Groups",
+                column: "LastMessageSentAt");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_GroupScores_GroupId",
                 table: "GroupScores",
                 column: "GroupId",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Likes_CommentId",
+                table: "Likes",
+                column: "CommentId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Likes_PostId",
@@ -871,11 +959,6 @@ namespace Persistence.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Posts_AI_ModerationId",
-                table: "Posts",
-                column: "AI_ModerationId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Posts_GroupId",
                 table: "Posts",
                 column: "GroupId");
@@ -922,6 +1005,11 @@ namespace Persistence.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Tags_CommentId",
+                table: "Tags",
+                column: "CommentId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Tags_PostId",
                 table: "Tags",
                 column: "PostId");
@@ -930,13 +1018,68 @@ namespace Persistence.Migrations
                 name: "IX_Tags_UserId",
                 table: "Tags",
                 column: "UserId");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_ActivityLogs_Groups_GroupId",
+                table: "ActivityLogs",
+                column: "GroupId",
+                principalTable: "Groups",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Albums_Groups_GroupId",
+                table: "Albums",
+                column: "GroupId",
+                principalTable: "Groups",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Badges_Groups_GroupId",
+                table: "Badges",
+                column: "GroupId",
+                principalTable: "Groups",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Comments_Posts_PostId",
+                table: "Comments",
+                column: "PostId",
+                principalTable: "Posts",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Events_Groups_GroupId",
+                table: "Events",
+                column: "GroupId",
+                principalTable: "Groups",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_GroupChatMessages_Groups_GroupId",
+                table: "GroupChatMessages",
+                column: "GroupId",
+                principalTable: "Groups",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_GroupChatMessages_Groups_GroupId",
+                table: "GroupChatMessages");
+
             migrationBuilder.DropTable(
                 name: "ActivityLogs");
+
+            migrationBuilder.DropTable(
+                name: "AIModerations");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
@@ -957,13 +1100,13 @@ namespace Persistence.Migrations
                 name: "Badges");
 
             migrationBuilder.DropTable(
-                name: "Comments");
-
-            migrationBuilder.DropTable(
                 name: "Events");
 
             migrationBuilder.DropTable(
-                name: "GroupJoinRequest");
+                name: "GroupFollowers");
+
+            migrationBuilder.DropTable(
+                name: "GroupInvitation");
 
             migrationBuilder.DropTable(
                 name: "GroupMembers");
@@ -1011,19 +1154,22 @@ namespace Persistence.Migrations
                 name: "Stories");
 
             migrationBuilder.DropTable(
-                name: "Posts");
+                name: "Comments");
 
             migrationBuilder.DropTable(
                 name: "Polls");
 
             migrationBuilder.DropTable(
-                name: "AIModerations");
-
-            migrationBuilder.DropTable(
-                name: "AspNetUsers");
+                name: "Posts");
 
             migrationBuilder.DropTable(
                 name: "Groups");
+
+            migrationBuilder.DropTable(
+                name: "GroupChatMessages");
+
+            migrationBuilder.DropTable(
+                name: "AspNetUsers");
         }
     }
 }

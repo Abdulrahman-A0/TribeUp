@@ -9,5 +9,7 @@ namespace Shared.DTOs.Posts
     public class CommentDTO
     {
         public string Content { get; set; } = null!;
+        public List<string> TaggedUserIds { get; set; } = [];
+
     }
 }

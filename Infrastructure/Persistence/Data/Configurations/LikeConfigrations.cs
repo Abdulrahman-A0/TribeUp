@@ -16,7 +16,7 @@ namespace Persistence.Data.Configurations
             builder.HasOne(l => l.Comment)
                   .WithMany(c => c.Likes)
                   .HasForeignKey(l => l.CommentId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                  .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(l => l.User)
                   .WithMany(u => u.Likes)
