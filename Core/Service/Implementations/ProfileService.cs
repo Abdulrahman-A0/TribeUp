@@ -19,6 +19,14 @@ namespace Service.Implementations
             return mapper.Map<UserProfileDTO>(user);
         }
 
+        public async Task<ProfileSettingsDTO> GetProfileSettingsAsync(string userId)
+        {
+            var user = await userManager.FindByIdAsync(userId);
+            if (user == null) throw new UserNotFoundException(userId);
+
+            return mapper.Map<ProfileSettingsDTO>(user);
+        }
+
         public async Task UpdateProfileAsync(string userId, UpdateProfileDTO updateProfileDTO)
         {
             var user = await userManager.FindByIdAsync(userId)
@@ -92,7 +100,55 @@ namespace Service.Implementations
             await userManager.UpdateAsync(user);
         }
 
+        public async Task UpdateBioAsync(string userId, UpdateBioDTO updateBioDTO)
+        {
+            var user = await userManager.FindByIdAsync(userId)
+                ?? throw new UserNotFoundException(userId);
 
+            user.Bio = updateBioDTO.Bio;
 
+            await userManager.UpdateAsync(user);
+        }
+
+        public async Task DeleteBioAsync(string userId)
+        {
+            var user = await userManager.FindByIdAsync(userId)
+                ?? throw new UserNotFoundException(userId);
+
+            user.Bio = null;
+
+            await userManager.UpdateAsync(user);
+        }
+
+        public async Task UpdateCoverPictureAsync(string userId, UpdateCoverPictureDTO updateCoverPictureDTO)
+        {
+            var user = await userManager.FindByIdAsync(userId)
+                ?? throw new UserNotFoundException(userId);
+
+            var newRelativePath = await fileStorage
+                .SaveAsync(updateCoverPictureDTO.CoverPicture, MediaType.UserCover);
+
+            if (!string.IsNullOrEmpty(user.CoverPicture))
+                await fileStorage.DeleteAsync(user.CoverPicture);
+
+            user.CoverPicture = newRelativePath;
+
+            await userManager.UpdateAsync(user);
+        }
+
+        public async Task DeleteCoverPictureAsync(string userId)
+        {
+            var user = await userManager.FindByIdAsync(userId)
+                ?? throw new UserNotFoundException(userId);
+
+            if (string.IsNullOrWhiteSpace(user.CoverPicture))
+                return;
+
+            await fileStorage.DeleteAsync(user.CoverPicture);
+
+            user.CoverPicture = null;
+
+            await userManager.UpdateAsync(user);
+        }
     }
 }

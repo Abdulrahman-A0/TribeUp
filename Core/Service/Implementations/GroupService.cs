@@ -145,7 +145,7 @@ namespace Service.Implementations
             var group = await groupRepo.GetByIdAsync(groupId)
                 ?? throw new GroupNotFoundException(groupId);
 
-            if (!_relationService.IsOwner(groupId) || !_relationService.IsAdmin(groupId))
+            if (!_relationService.IsOwner(groupId) && !_relationService.IsAdmin(groupId))
                 throw new ForbiddenActionException();
 
             var newRelativePath = await fileStorage
@@ -172,7 +172,7 @@ namespace Service.Implementations
             var group = await groupRepo.GetByIdAsync(groupId)
                 ?? throw new GroupNotFoundException(groupId);
 
-            if (!_relationService.IsOwner(groupId) || !_relationService.IsAdmin(groupId))
+            if (!_relationService.IsOwner(groupId) && !_relationService.IsAdmin(groupId))
                 throw new ForbiddenActionException();
 
             if (string.IsNullOrWhiteSpace(group.GroupProfilePicture))

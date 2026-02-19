@@ -61,6 +61,7 @@ namespace Service.Implementations
             {
                 case MediaType.UserProfile:
                 case MediaType.GroupProfile:
+                case MediaType.UserCover:
                     ValidateImage(file, errors);
                     break;
 
@@ -86,13 +87,13 @@ namespace Service.Implementations
                 errors["File"] = new[] { "Unsupported image format" };
 
             if (file.Length > 5 * 1024 * 1024)
-                errors["File"] = new[] { "Image must be under 2MB" };
+                errors["File"] = new[] { "Image must be under 5MB" };
         }
 
         private static void ValidatePostImage(IFormFile file, Dictionary<string, string[]> errors)
         {
             if (file.Length > 20 * 1024 * 1024)
-                errors["File"] = new[] { "Post image must be under 5MB" };
+                errors["File"] = new[] { "Post image must be under 20MB" };
         }
 
         private static void ValidatePostVideo(IFormFile file, Dictionary<string, string[]> errors)
@@ -118,6 +119,9 @@ namespace Service.Implementations
 
                 MediaType.GroupProfile =>
                     Path.Combine(environment.WebRootPath, "images", "ProfilePictures", "Groups"),
+
+                MediaType.UserCover =>
+                    Path.Combine(environment.WebRootPath, "images", "CoverPictures"),
 
                 _ => throw new ArgumentOutOfRangeException(nameof(type))
             };

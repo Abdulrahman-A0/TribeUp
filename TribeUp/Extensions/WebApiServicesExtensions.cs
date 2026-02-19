@@ -19,8 +19,10 @@ namespace TribeUp.Extensions
             {
                 options.AddPolicy("FrontPolicy", builder =>
                 {
-                    builder.AllowAnyHeader().AllowAnyMethod()
-                    .WithOrigins(configuration["URLs:FrontUrl"]);
+                    builder.AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials()
+                    .WithOrigins(configuration["URLs:FrontUrl"], configuration["URLs:NetlifyUrl"]);
                 });
             });
 

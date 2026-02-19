@@ -8,7 +8,7 @@ namespace Service.Specifications.NotificationSpecifications
             : base(n => n.UserId == userId)
         {
             AddOrderByDescending(n => n.CreateAt);
-            ApplyPagination(pageSize, pageIndex);
+            ApplyPagination(pageIndex, pageSize);
         }
     }
 }

@@ -39,7 +39,7 @@ namespace Persistence
                 inputQuery = inputQuery.OrderBy(specifications.OrderBy);
 
             if (specifications.OrderByDescending is not null)
-                inputQuery = inputQuery.OrderBy(specifications.OrderByDescending);
+                inputQuery = inputQuery.OrderByDescending(specifications.OrderByDescending);
 
             if (specifications.IsPaginated)
             {

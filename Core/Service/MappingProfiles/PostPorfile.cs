@@ -26,7 +26,8 @@ namespace Service.MappingProfiles
                  .ForMember(dest => dest.GroupName,
                      opt => opt.MapFrom(src => src.Group.GroupName))
                  .ForMember(dest => dest.GroupProfilePicture,
-                     opt => opt.MapFrom(src => src.Group.GroupProfilePicture))
+                     opt => opt.MapFrom((src, dest, destMember, context) =>
+                    context.Mapper.Map<string>(src.Group)))
                  .ForMember(dest => dest.LikesCount,
                      opt => opt.MapFrom(src => src.Likes.Count))
                  .ForMember(dest => dest.CommentCount,
