@@ -163,7 +163,7 @@ namespace Service.Implementations
         }
 
         // not working yet
-        public async Task<CreateEntityResultDTO> UpdatePostAsync(
+        public async Task<CreateEntityResultDTO> EditPostAsync(
            string userId,
            string username,
            int postId,
@@ -295,6 +295,7 @@ namespace Service.Implementations
 
         public async Task<PagedResult<PostDTO>> GetPersonalFeedAsync(
            string userId,
+           string username,
            int page,
            int pageSize)
         {
@@ -302,7 +303,7 @@ namespace Service.Implementations
                 throw new PageIndexAndPageSizeValidationException(page, pageSize);
 
             var moderation = moderationRepo.AsQueryable();
-            var spec = new PersonalPostFeedSpecification(userId, moderation, page, pageSize);
+            var spec = new PersonalPostFeedSpecification(userId, username, moderation, page, pageSize);
             var posts = await postRepo.GetAllAsync(spec);
 
             var postIds = posts.Select(p => p.Id).ToList();

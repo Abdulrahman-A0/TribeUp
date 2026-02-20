@@ -234,7 +234,7 @@ namespace Service.Implementations
 
         }
 
-        public async Task<CreateEntityResultDTO> UpdateCommentAsync(
+        public async Task<CreateEntityResultDTO> EditCommentAsync(
             string userId,
             string username,
             int commentId,
@@ -357,7 +357,7 @@ namespace Service.Implementations
                 Page = page,
                 PageSize = pageSize,
                 TotalCount = totalCount,
-                HasMore = totalCount == pageSize
+                HasMore = totalCount > page * pageSize
             };
 
         }

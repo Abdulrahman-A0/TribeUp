@@ -14,7 +14,7 @@ namespace ServiceAbstraction.Contracts
         public Task<PagedResult<LikesResultDTO>> GetLikesByCommentIdAsync(int commentId, int page, int pageSize);
         Task<CreateEntityResultDTO> AddCommentAsync(string userId, string username, int postId, CommentDTO dto);
         Task<DeleteEntityResultDTO> DeleteCommentAsync(string userId, int commentId);
-        Task<CreateEntityResultDTO> UpdateCommentAsync(string userId, string username, int commentId, CommentDTO dto);
+        Task<CreateEntityResultDTO> EditCommentAsync(string userId, string username, int commentId, CommentDTO dto);
         Task<PagedResult<CommentResultDTO>> GetCommentsByPostIdAsync(string userId, int postId, int page, int pageSize);
 
     }

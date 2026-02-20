@@ -18,12 +18,12 @@ namespace Presentation.Controller
             => Ok(await service.PostService.CreatePostAsync(UserId, UserName, dto, mediaFiles));
 
 
-        [HttpPut("{postId:int}/UpdatePost")]
-        public async Task<ActionResult<CreateEntityResultDTO>> UpdatePost(
+        [HttpPut("{postId:int}/EditPost")]
+        public async Task<ActionResult<CreateEntityResultDTO>> EditPost(
             int postId,
             [FromForm] CreatePostDTO dto,
             [FromForm] List<IFormFile> mediaFiles)
-            => Ok(await service.PostService.UpdatePostAsync(UserId, UserName, postId, dto, mediaFiles));
+            => Ok(await service.PostService.EditPostAsync(UserId, UserName, postId, dto, mediaFiles));
 
 
         [HttpDelete("{postId:int}/DeletePost")]
@@ -37,8 +37,8 @@ namespace Presentation.Controller
 
 
         [HttpGet("PersonalFeed")]
-        public async Task<ActionResult<PagedResult<PostDTO>>> GetPersonalFeed(int page = 1, int pageSize = 20)
-            => Ok(await service.PostService.GetPersonalFeedAsync(UserId, page, pageSize));
+        public async Task<ActionResult<PagedResult<PostDTO>>> GetPersonalFeed(string username, int page = 1, int pageSize = 20)
+            => Ok(await service.PostService.GetPersonalFeedAsync(UserId, username, page, pageSize));
 
 
         [HttpGet("Feed")]
@@ -51,7 +51,7 @@ namespace Presentation.Controller
             => Ok(await service.PostService.GetGroupFeedAsync(UserId, groupId, page, pageSize));
 
 
-        [HttpPost("{postId:int}/ToggleLike")]
+        [HttpPost("{postId:int}/PostToggleLike")]
         public async Task<ActionResult<ToggleLikeDTO>> ToggleLikePost(int postId)
             => Ok(await service.PostService.ToggeleLikePostAsync(UserId, UserName, postId));
 

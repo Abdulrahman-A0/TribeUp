@@ -14,10 +14,10 @@ namespace ServiceAbstraction.Contracts
     public interface IPostService
     {
         Task<CreateEntityResultDTO> CreatePostAsync(string userId, string username, CreatePostDTO dto, List<IFormFile> mediaFiles);
-        Task<CreateEntityResultDTO> UpdatePostAsync(string userId, string username, int postId, CreatePostDTO dto, List<IFormFile> mediaFiles);
+        Task<CreateEntityResultDTO> EditPostAsync(string userId, string username, int postId, CreatePostDTO dto, List<IFormFile> mediaFiles);
         Task<DeleteEntityResultDTO> DeletePostAsync(string userId, int postId);
         Task<PostDTO> GetPostByIdAsync(string userId, int postId);
-        Task<PagedResult<PostDTO>> GetPersonalFeedAsync(string userId, int page, int pageSize);
+        Task<PagedResult<PostDTO>> GetPersonalFeedAsync(string userId, string username, int page, int pageSize);
         Task<PagedResult<PostDTO>> GetFeedAsync(string userId, int page, int pageSize);
         Task<PagedResult<PostDTO>> GetGroupFeedAsync(string userId, int groupId, int page, int pageSize);
         Task<ToggleLikeDTO> ToggeleLikePostAsync(string userId, string username, int postId);

@@ -12,11 +12,12 @@ namespace Service.Specifications.PostSpecifications
     {
         public PersonalPostFeedSpecification(
             string currentUserId,
+            string username,
             IQueryable<AIModeration> moderations,
             int page,
             int pageSize)
             : base(p =>
-                    p.UserId == currentUserId
+                    p.User.UserName == username
                 &&
                 (
                     p.Group.Accessibility == AccessibilityType.Public ||

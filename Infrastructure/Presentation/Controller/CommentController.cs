@@ -28,9 +28,9 @@ namespace Presentation.Controller
             => Ok(await service.CommentService.AddCommentAsync(UserId, UserName, postId, dto));
 
 
-        [HttpPut("{commentId:int}/UpdateComment")]
-        public async Task<ActionResult<CreateEntityResultDTO>> UpdateComment(int commentId, CommentDTO dto)
-            => Ok(await service.CommentService.UpdateCommentAsync(UserId, UserName, commentId, dto));
+        [HttpPut("{commentId:int}/EditComment")]
+        public async Task<ActionResult<CreateEntityResultDTO>> EditComment(int commentId, CommentDTO dto)
+            => Ok(await service.CommentService.EditCommentAsync(UserId, UserName, commentId, dto));
 
 
         [HttpDelete("{commentId:int}/DeleteComment")]
