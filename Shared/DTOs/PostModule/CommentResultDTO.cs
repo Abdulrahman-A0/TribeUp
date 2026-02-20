@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Hosting;
+using Shared.DTOs.CommentModule;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -20,6 +21,7 @@ namespace Shared.DTOs.PostModule
         public int PostId { get; set; }
         public bool IsLikedByCurrentUser { get; set; }
         public int LikesCount { get; set; }
+        public CommentPermissionDTO Permissions { get; set; }= new();
 
     }
 }

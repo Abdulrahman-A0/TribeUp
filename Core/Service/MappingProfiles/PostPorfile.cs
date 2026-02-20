@@ -2,7 +2,10 @@
 using Domain.Entities.Media;
 using Domain.Entities.Posts;
 using Microsoft.Extensions.Configuration;
+using Service.Helper;
 using Service.MappingProfiles.MediaResolvers;
+using Service.MappingProfiles.PermissionResolver;
+using ServiceAbstraction.Contracts;
 using Shared.DTOs.PostModule;
 using Shared.DTOs.Posts;
 
@@ -41,7 +44,9 @@ namespace Service.MappingProfiles
                  .ForMember(dest => dest.FeedScore,
                      opt => opt.Ignore())
                  .ForMember(dest => dest.IsDenied,
-                     opt => opt.Ignore());
+                     opt => opt.Ignore())
+                 .ForMember(dest => dest.GroupPermissions,
+                     opt => opt.MapFrom<GroupPermissionsResolver>());
 
             // Create Post
 
@@ -65,7 +70,8 @@ namespace Service.MappingProfiles
                 .ForMember(dest => dest.Username,
                     opt => opt.MapFrom(src => src.User.UserName))
                 .ForMember(dest => dest.ProfilePicture,
-                    opt => opt.MapFrom(src => src.User.ProfilePicture))
+                     opt => opt.MapFrom((src, dest, destMember, context) =>
+                    context.Mapper.Map<string>(src.User)))
                 .ForMember(dest => dest.Content,
                     opt => opt.MapFrom(src => src.Content))
                 .ForMember(dest => dest.CreatedAt,
@@ -73,7 +79,9 @@ namespace Service.MappingProfiles
                 .ForMember(dest => dest.LikesCount,
                      opt => opt.MapFrom(src => src.Likes.Count))
                  .ForMember(dest => dest.IsLikedByCurrentUser,
-                     opt => opt.Ignore());
+                     opt => opt.Ignore())
+                 .ForMember(dest => dest.Permissions,
+                     opt => opt.MapFrom<CommentPermissionResolver>());
 
 
             // Get Likes

@@ -1,4 +1,5 @@
-﻿using Shared.Enums;
+﻿using Shared.DTOs.GroupModule;
+using Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,6 +31,9 @@ namespace Shared.DTOs.Posts
 
         public IReadOnlyCollection<MediaItemFeedDTO> Media { get; set; }
                  = new List<MediaItemFeedDTO>();
+
+        public GroupPermissionsDTO GroupPermissions { get; set; }
+            = new GroupPermissionsDTO();
 
         public bool IsDenied { get; set; }
     }
