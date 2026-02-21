@@ -10,6 +10,7 @@ namespace Shared.DTOs.GroupInvitationModule
     {
         public int Id { get; set; }
         public string Token { get; set; }
+        public string InvitationUrl { get; set; } = null!;
         public DateTime CreatedAt { get; set; }
         public DateTime? ExpiresAt { get; set; }
         public int? MaxUses { get; set; }
