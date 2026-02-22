@@ -29,6 +29,15 @@ namespace Service.MappingProfiles
                 .ForMember(dest => dest.ProfilePicture, opt => opt.MapFrom<UserProfilePictureResolver, string>(src => src.ProfilePicture!))
                 .ForMember(dest => dest.CoverPicture, opt => opt.MapFrom<UserCoverPictureResolver<ProfileSettingsDTO>>());
 
+
+            CreateMap<ApplicationUser, UserProfileHeaderDTO>()
+                .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.FirstName} {src.LastName}"))
+                .ForMember(dest => dest.ProfilePicture, opt => opt.MapFrom<UserProfilePictureResolver, string>(src => src.ProfilePicture))
+                .ForMember(dest => dest.CoverPicture, opt => opt.MapFrom<UserCoverPictureResolver<UserProfileHeaderDTO>>())
+                .ForMember(dest => dest.PostsCount, opt => opt.MapFrom(src => src.Posts.Count))
+                .ForMember(dest => dest.TribesCount, opt => opt.MapFrom(src => src.GroupMembers.Count));
+
+
         }
     }
 }

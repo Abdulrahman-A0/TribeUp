@@ -1,4 +1,7 @@
 ﻿using AutoMapper;
+using Domain.Contracts;
+using Domain.Entities.Groups;
+using Domain.Entities.Posts;
 using Domain.Entities.Users;
 using Domain.Exceptions.UserExceptions;
 using Microsoft.AspNetCore.Identity;
@@ -9,7 +12,7 @@ using Shared.Enums;
 namespace Service.Implementations
 {
     public class ProfileService(UserManager<ApplicationUser> userManager,
-        IMapper mapper, IFileStorageService fileStorage) : IProfileService
+        IMapper mapper, IFileStorageService fileStorage, IUnitOfWork unitOfWork) : IProfileService
     {
         public async Task<UserProfileDTO> GetMyProfileAsync(string userId)
         {
@@ -17,6 +20,28 @@ namespace Service.Implementations
                 ?? throw new UserNotFoundException(userId);
 
             return mapper.Map<UserProfileDTO>(user);
+        }
+        public async Task<UserProfileHeaderDTO> GetUserProfileHeaderAsync(string targetUserName, string currentUserId)
+        {
+            var targetUser = await userManager.FindByNameAsync(targetUserName)
+                ?? throw new UserNotFoundException(targetUserName);
+
+            var profileDto = mapper.Map<UserProfileHeaderDTO>(targetUser);
+
+            var postsCount = await unitOfWork
+                .GetRepository<Post, int>()
+                .CountAsync(p => p.UserId == targetUser.Id);
+
+            var tribesCount = await unitOfWork
+                .GetRepository<GroupMembers, int>()
+                .CountAsync(gm => gm.UserId == targetUser.Id);
+
+            return profileDto with
+            {
+                PostsCount = postsCount,
+                TribesCount = tribesCount,
+                IsOwnProfile = (targetUser.Id == currentUserId)
+            };
         }
 
         public async Task<ProfileSettingsDTO> GetProfileSettingsAsync(string userId)
@@ -150,5 +175,6 @@ namespace Service.Implementations
 
             await userManager.UpdateAsync(user);
         }
+
     }
 }
