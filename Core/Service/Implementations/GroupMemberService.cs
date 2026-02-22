@@ -3,7 +3,6 @@ using Domain.Contracts;
 using Domain.Entities.Groups;
 using Domain.Exceptions.ForbiddenExceptions;
 using Domain.Exceptions.GroupExceptions;
-using Domain.Exceptions.GroupJoinRequestExceptions;
 using Domain.Exceptions.GroupMemberExceptions;
 using Service.Specifications.GroupMemberSpecs;
 using ServiceAbstraction.Contracts;

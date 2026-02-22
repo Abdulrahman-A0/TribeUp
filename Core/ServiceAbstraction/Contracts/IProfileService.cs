@@ -5,6 +5,7 @@ namespace ServiceAbstraction.Contracts
     public interface IProfileService
     {
         Task<UserProfileDTO> GetMyProfileAsync(string userId);
+        Task<UserProfileHeaderDTO> GetUserProfileHeaderAsync(string targetUserName, string currentUserId);
         Task<ProfileSettingsDTO> GetProfileSettingsAsync(string userId);
         Task UpdateProfileAsync(string userId, UpdateProfileDTO updateProfileDTO);
         Task UpdateAvatarAsync(string userId, UpdateAvatarDTO updateAvatarDTO);

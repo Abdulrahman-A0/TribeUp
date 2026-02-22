@@ -1,10 +1,15 @@
-﻿using Domain.Contracts;
+﻿using AutoMapper;
+using Domain.Contracts;
 using Domain.Entities.Groups;
+using Domain.Exceptions.Abstraction;
 using Domain.Exceptions.ForbiddenExceptions;
+using Domain.Exceptions.GroupInvitationExceptions;
 using Domain.Exceptions.ValidationExceptions;
+using Microsoft.Extensions.Configuration;
 using Service.Specifications.GroupInvitaionSpecs;
 using ServiceAbstraction.Contracts;
 using Shared.DTOs.GroupInvitationModule;
+using Shared.DTOs.Posts;
 using Shared.Enums;
 
 namespace Service.Implementations
@@ -12,53 +17,52 @@ namespace Service.Implementations
     public class GroupInvitationService : IGroupInvitationService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
         private readonly IUserGroupRelationService _relationService;
+        private readonly IConfiguration _configuration;
 
         public GroupInvitationService(
             IUnitOfWork unitOfWork,
+            IMapper mapper,
+            IConfiguration configuration,
             IUserGroupRelationService relationService)
         {
             _unitOfWork = unitOfWork;
+            _mapper = mapper;
+            _configuration = configuration;
             _relationService = relationService;
         }
 
-        public async Task<InvitationResultDTO> CreateInvitationAsync(
-            int groupId,
-            string userId,
-            CreateInvitationDTO dto)
+        
+
+
+        public async Task<InvitationResultDTO> CreateInvitationAsync(int groupId, string userId, CreateInvitationDTO dto)
         {
-            if (!_relationService.IsAdmin(groupId) &&
-                !_relationService.IsOwner(groupId))
+            if (!_relationService.IsAdmin(groupId) && !_relationService.IsOwner(groupId))
                 throw new ForbiddenActionException();
 
-            var token = Guid.NewGuid().ToString("N");
+            var repo = _unitOfWork.GetRepository<GroupInvitation, int>();
 
-            var invitation = new GroupInvitation
-            {
-                GroupId = groupId,
-                Token = token,
-                UserId = userId,
-                ExpiresAt = dto.ExpiresAt,
-                MaxUses = dto.MaxUses
-            };
+            var spec = new ActiveGroupInvitationSpecification(groupId);
+            var activeInvitation = (await repo.GetAllAsync(spec)).FirstOrDefault();
 
-            await _unitOfWork
-                .GetRepository<GroupInvitation, int>()
-                .AddAsync(invitation);
+            if (activeInvitation != null)
+                throw new ActiveInvitationAlreadyExistsException();
 
+            var invitation = _mapper.Map<GroupInvitation>(dto);
+
+            invitation.Token = Guid.NewGuid().ToString("N");
+            invitation.GroupId = groupId;
+            invitation.UserId = userId;
+
+            await repo.AddAsync(invitation);
             await _unitOfWork.SaveChangesAsync();
 
-            return new InvitationResultDTO
-            {
-                Id = invitation.Id,
-                Token = invitation.Token,
-                CreatedAt = invitation.CreatedAt,
-                ExpiresAt = invitation.ExpiresAt,
-                MaxUses = invitation.MaxUses,
-                UsedCount = invitation.UsedCount,
-                IsRevoked = invitation.IsRevoked
-            };
+            var frontUrl = _configuration["URLs:NetlifyUrl"];
+            return _mapper.Map<InvitationResultDTO>(invitation, opt => opt.Items["FrontUrl"] = frontUrl);
         }
+
+
 
 
 
@@ -130,14 +134,77 @@ namespace Service.Implementations
             };
         }
 
-        public Task<List<InvitationResultDTO>> GetGroupInvitationsAsync(int groupId, string userId)
+        
+
+        
+
+        public async Task<PagedResult<InvitationResultDTO>> GetGroupInvitationsAsync(int groupId, string userId, int page, int pageSize)
         {
-            throw new NotImplementedException();
+            if (!_relationService.IsAdmin(groupId) && !_relationService.IsOwner(groupId))
+                throw new ForbiddenActionException();
+
+            var repo = _unitOfWork.GetRepository<GroupInvitation, int>();
+            var spec = new GetGroupInvitationsSpecification(groupId, page, pageSize);
+
+            var invitations = await repo.GetAllAsync(spec);
+            var totalCount = await repo.CountAsync(i => i.GroupId == groupId);
+
+            var mappedInvitations = _mapper.Map<List<InvitationResultDTO>>(invitations);
+
+            return new PagedResult<InvitationResultDTO>
+            {
+                Items = mappedInvitations,
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = totalCount,
+                HasMore = (page * pageSize) < totalCount
+            };
         }
 
-        public Task<bool> RevokeInvitationAsync(int invitationId, string userId)
+
+
+
+
+        public async Task<bool> RevokeInvitationAsync(int invitationId, string userId)
         {
-            throw new NotImplementedException();
+            var repo = _unitOfWork.GetRepository<GroupInvitation, int>();
+
+            var invitation = await repo.GetByIdAsync(invitationId)
+                ?? throw new InvitationNotFoundException(invitationId);
+
+            if (!_relationService.IsAdmin(invitation.GroupId) && !_relationService.IsOwner(invitation.GroupId))
+                throw new ForbiddenActionException();
+
+            invitation.IsRevoked = true;
+            await _unitOfWork.SaveChangesAsync();
+            return true;
+
+        }
+
+
+
+
+        public async Task<bool> RevokeAllGroupInvitationsAsync(int groupId, string userId)
+        {
+            if (!_relationService.IsAdmin(groupId) && !_relationService.IsOwner(groupId))
+                throw new ForbiddenActionException();
+
+            var repo = _unitOfWork.GetRepository<GroupInvitation, int>();
+
+            var spec = new GroupInvitationsByStatusSpecification(groupId, isRevoked: false);
+            var activeInvitations = await repo.GetAllAsync(spec);
+
+            if (!activeInvitations.Any())
+                return true;
+
+            foreach (var invitation in activeInvitations)
+            {
+                invitation.IsRevoked = true;
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+
+            return true;
         }
     }
 }
