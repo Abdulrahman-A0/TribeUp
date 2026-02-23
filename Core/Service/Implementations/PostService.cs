@@ -263,7 +263,7 @@ namespace Service.Implementations
             var post = await postRepo.GetByIdAsync(spec)
                 ?? throw new PostNotFoundException(postId);
 
-            if (!_relationService.IsAdmin(post.GroupId) && !_relationService.IsOwner(post.GroupId))
+            if (!_relationService.IsAdmin(post.GroupId) && !_relationService.IsOwner(post.GroupId) && userId != post.UserId)
                 throw new ForbiddenActionException();
 
             await _groupScoreService.DecreaseOnActionAsync(post.GroupId, PostPoints);
