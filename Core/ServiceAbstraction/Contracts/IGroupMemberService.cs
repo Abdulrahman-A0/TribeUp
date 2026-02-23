@@ -1,4 +1,6 @@
-﻿using Shared.DTOs.GroupMemberModule;
+﻿using Microsoft.AspNetCore.Mvc.RazorPages;
+using Shared.DTOs.GroupMemberModule;
+using Shared.DTOs.Posts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +11,7 @@ namespace ServiceAbstraction.Contracts
 {
     public interface IGroupMemberService
     {
-        public Task<List<GroupMemberResultDTO>> GetGroupMembersAsync(int groupId, string userId);
+        public Task<PagedResult<GroupMemberResultDTO>> GetGroupMembersAsync(int groupId, string userId, int page, int pageSize, string? searchTerm = null);
         
         Task<bool> LeaveGroupAsync(int groupId, string userId);
 

@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ServiceAbstraction.Contracts;
+using Shared.DTOs.GroupInvitationModule;
 using Shared.DTOs.GroupMemberModule;
+using Shared.DTOs.Posts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,9 +16,12 @@ namespace Presentation.Controller
     [Authorize]
     public class GroupMembersController(IServiceManager serviceManager) : ApiController
     {
+
         [HttpGet("GroupMembers/{groupId:int}")]
-        public async Task<ActionResult<List<GroupMemberResultDTO>>> GetGroupMembersAsync(int groupId)
-            => Ok(await serviceManager.GroupMemberService.GetGroupMembersAsync(groupId, UserId));
+        public async Task<ActionResult<PagedResult<GroupMemberResultDTO>>> GetGroupMembersAsync(int groupId, int page = 1, int pageSize = 10, string? search = null)
+            => Ok(await serviceManager.GroupMemberService.GetGroupMembersAsync(groupId, UserId, page, pageSize, search));
+
+
 
 
         [HttpPost("LeaveGroup/{groupId:int}")]
