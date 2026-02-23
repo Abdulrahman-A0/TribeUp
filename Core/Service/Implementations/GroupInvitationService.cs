@@ -19,17 +19,20 @@ namespace Service.Implementations
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly IUserGroupRelationService _relationService;
+        private readonly IGroupScoreService _groupScoreService;
         private readonly IConfiguration _configuration;
 
         public GroupInvitationService(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IConfiguration configuration,
+            IGroupScoreService groupScoreService,
             IUserGroupRelationService relationService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _configuration = configuration;
+            _groupScoreService = groupScoreService;
             _relationService = relationService;
         }
 
@@ -66,9 +69,7 @@ namespace Service.Implementations
 
 
 
-        public async Task<AcceptInvitationResponseDTO> AcceptInvitationAsync(
-            string token,
-            string userId)
+        public async Task<AcceptInvitationResponseDTO> AcceptInvitationAsync(string token, string userId)
         {
             var repo = _unitOfWork.GetRepository<GroupInvitation, int>();
 
@@ -76,41 +77,24 @@ namespace Service.Implementations
             var invitation = (await repo.GetAllAsync(spec)).FirstOrDefault();
 
             if (invitation == null)
-                throw new DomainValidationException(
-                    new Dictionary<string, string[]>
-                    {
-                        ["Invitation"] = new[] { "Invalid invitation." }
-                    });
-
-            if (invitation.IsRevoked)
-                throw new DomainValidationException(
-                    new Dictionary<string, string[]>
-                    {
-                        ["Invitation"] = new[] { "Invitation revoked." }
-                    });
-
-            if (invitation.ExpiresAt.HasValue &&
-                invitation.ExpiresAt < DateTime.UtcNow)
-                throw new DomainValidationException(
-                    new Dictionary<string, string[]>
-                    {
-                        ["Invitation"] = new[] { "Invitation expired." }
-                    });
-
-            if (invitation.MaxUses.HasValue &&
-                invitation.UsedCount >= invitation.MaxUses)
-                throw new DomainValidationException(
-                    new Dictionary<string, string[]>
-                    {
-                        ["Invitation"] = new[] { "Invitation usage exceeded." }
-                    });
+                throw new DomainValidationException(new Dictionary<string, string[]> 
+                { ["Invitation"] = new[] { "Invalid invitation." } });
 
             if (_relationService.IsMember(invitation.GroupId))
-                throw new DomainValidationException(
-                    new Dictionary<string, string[]>
-                    {
-                        ["Invitation"] = new[] { "Already a member." }
-                    });
+                throw new DomainValidationException(new Dictionary<string, string[]> 
+                { ["Invitation"] = new[] { "Already a member." } });
+
+            if (invitation.IsRevoked)
+                throw new DomainValidationException(new Dictionary<string, string[]> 
+                { ["Invitation"] = new[] { "Invitation revoked." } });
+
+            if (invitation.ExpiresAt.HasValue && invitation.ExpiresAt < DateTime.UtcNow)
+                throw new DomainValidationException(new Dictionary<string, string[]> 
+                { ["Invitation"] = new[] { "Invitation expired." } });
+
+            if (invitation.MaxUses.HasValue && invitation.UsedCount >= invitation.MaxUses)
+                throw new DomainValidationException(new Dictionary<string, string[]> 
+                { ["Invitation"] = new[] { "Invitation usage exceeded." } });
 
             var member = new GroupMembers
             {
@@ -119,24 +103,19 @@ namespace Service.Implementations
                 Role = RoleType.Member
             };
 
-            await _unitOfWork
-                .GetRepository<GroupMembers, int>()
-                .AddAsync(member);
-
+            await _unitOfWork.GetRepository<GroupMembers, int>().AddAsync(member);
             invitation.UsedCount++;
+
+            await _groupScoreService.IncreaseOnActionAsync(invitation.GroupId, 10);
 
             await _unitOfWork.SaveChangesAsync();
 
-            return new AcceptInvitationResponseDTO
-            {
-                Success = true,
-                Message = "Joined successfully."
-            };
+            return new AcceptInvitationResponseDTO { Success = true, Message = "Joined successfully." };
         }
 
-        
 
-        
+
+
 
         public async Task<PagedResult<InvitationResultDTO>> GetGroupInvitationsAsync(int groupId, string userId, int page, int pageSize)
         {
