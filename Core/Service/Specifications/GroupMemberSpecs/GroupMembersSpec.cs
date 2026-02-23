@@ -9,10 +9,12 @@ namespace Service.Specifications.GroupMemberSpecs
 {
     public class GroupMembersSpec : BaseSpecifications<GroupMembers, int>
     {
-        public GroupMembersSpec(int groupId)
-            : base(m => m.GroupId == groupId)
+        public GroupMembersSpec(int groupId, int page, int pageSize, string? searchTerm = null)
+            : base(m => m.GroupId == groupId &&
+                   (string.IsNullOrEmpty(searchTerm) || m.User.UserName.ToLower().Contains(searchTerm.ToLower())))
         {
             AddIncludes(m => m.User);
+            ApplyPagination(page, pageSize);
             AddOrderBy(m => m.JoinedAt);
         }
     }
