@@ -104,10 +104,15 @@ namespace Service.Implementations
             };
 
             await _unitOfWork.GetRepository<GroupMembers, int>().AddAsync(member);
+
             invitation.UsedCount++;
 
-            await _groupScoreService.IncreaseOnActionAsync(invitation.GroupId, 10);
+            if (invitation.MaxUses.HasValue && invitation.UsedCount >= invitation.MaxUses)
+            {
+                invitation.IsRevoked = true;
+            }
 
+            await _groupScoreService.IncreaseOnActionAsync(invitation.GroupId, 10);
             await _unitOfWork.SaveChangesAsync();
 
             return new AcceptInvitationResponseDTO { Success = true, Message = "Joined successfully." };
