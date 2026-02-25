@@ -11,21 +11,21 @@ using System.Threading.Tasks;
 namespace Presentation.Hubs
 {
     [Authorize]
-    public class GroupChatHub(IGroupAuthorizationService groupAuthorizationService) : Hub
+    public class GroupChatHub(IUserGroupRelationService relationService) : Hub
     {
         public async Task JoinGroupChat(int groupId)
         {
             var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
-                throw new HubException("Unauthorized");
 
-            await groupAuthorizationService.EnsureUserCanChatAsync(groupId, userId);
+            await relationService.InitializeAsync(userId!);
 
-            await Groups.AddToGroupAsync(
-                Context.ConnectionId,
-                GetGroupName(groupId)
-            );
+            if (!relationService.IsMember(groupId))
+                throw new HubException("You must be a member of this group to join its chat.");
+
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"group:{groupId}");
         }
+
+
 
         public async Task LeaveGroupChat(int groupId)
         {
