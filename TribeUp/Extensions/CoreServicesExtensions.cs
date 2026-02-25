@@ -30,7 +30,6 @@ namespace TribeUp.Extensions
             services.AddScoped<IGroupScoreService, GroupScoreService>();
             services.AddScoped<IGroupChatService, GroupChatService>();
             services.AddScoped<IGroupInvitationService, GroupInvitationService>();
-            services.AddScoped<IGroupAuthorizationService, GroupAuthorizationService>();
 
 
             services.AddScoped<IPostService, PostService>();
@@ -60,9 +59,6 @@ namespace TribeUp.Extensions
             
             services.AddScoped<Func<IGroupInvitationService>>(provider =>
             () => provider.GetRequiredService<IGroupInvitationService>());
-
-            services.AddScoped<Func<IGroupAuthorizationService>>(provider =>
-            () => provider.GetRequiredService<IGroupAuthorizationService>());
 
 
             services.AddScoped<Func<IPostService>>(provider =>
