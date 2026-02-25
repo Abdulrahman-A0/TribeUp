@@ -13,6 +13,7 @@ using Domain.Exceptions.ValidationExceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Service.Specifications.ModerationSpecifications;
 using Service.Specifications.PostSpecifications;
 using ServiceAbstraction.Contracts;
@@ -118,6 +119,7 @@ namespace Service.Implementations
             await _unitOfWork.SaveChangesAsync();
 
             var mappedPost = _mapper.Map<PostDTO>(post);
+            mappedPost.IsAuthor = mappedPost.UserId == userId;
 
             # region AI moderation result
 
@@ -302,6 +304,7 @@ namespace Service.Implementations
                 ?? throw new PostNotFoundException(postId);
 
             var mapped = _mapper.Map<PostDTO>(post);
+            mapped.IsAuthor = post.UserId == userId;
 
             return mapped;
         }
@@ -332,6 +335,7 @@ namespace Service.Implementations
                 Items = ordered.Select(x =>
                 {
                     var dto = _mapper.Map<PostDTO>(x);
+                    dto.IsAuthor = x.UserId == userId;
                     dto.IsLikedByCurrentUser = x.Likes.Any(l => l.UserId == userId);
                     dto.IsDenied =
                     deniedPostIds.Contains(x.Id) &&
@@ -382,6 +386,7 @@ namespace Service.Implementations
                 Items = ordered.Select(x =>
                 {
                     var dto = _mapper.Map<PostDTO>(x.Post);
+                    dto.IsAuthor = x.Post.UserId == userId;
                     dto.IsLikedByCurrentUser = x.IsLikedByUser;
                     dto.FeedScore = x.FeedScore;
                     dto.IsDenied =
@@ -436,6 +441,7 @@ namespace Service.Implementations
                 Items = ordered.Select(x =>
                 {
                     var dto = _mapper.Map<PostDTO>(x.Post);
+                    dto.IsAuthor = x.Post.UserId == userId;
                     dto.IsLikedByCurrentUser = x.IsLikedByUser;
                     dto.FeedScore = x.FeedScore;
                     dto.IsDenied =
@@ -534,7 +540,6 @@ namespace Service.Implementations
             };
 
         }
-
 
 
 

@@ -183,7 +183,7 @@ namespace Service.Implementations
             await _unitOfWork.SaveChangesAsync();
 
             var mappedComment = _mapper.Map<CommentResultDTO>(comment);
-
+            mappedComment.IsAuthor = mappedComment.UserId == userId;
             # region AI moderation result
 
             var moderationResult = await _aiModerationManager.ModerateAsync(
@@ -362,6 +362,7 @@ namespace Service.Implementations
                 var comment = comments.First(c => c.Id == dto.Id);
                 dto.IsLikedByCurrentUser =
                     comment.Likes.Any(l => l.UserId == userId);
+                dto.IsAuthor = comment.UserId == userId;
             }
 
             return new PagedResult<CommentResultDTO>

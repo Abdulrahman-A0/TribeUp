@@ -19,6 +19,7 @@ namespace Shared.DTOs.PostModule
         public string Content { get; set; } = null!;
         public DateTime CreatedAt { get; set; }
         public int PostId { get; set; }
+        public bool IsAuthor { get; set; }
         public bool IsLikedByCurrentUser { get; set; }
         public int LikesCount { get; set; }
         public CommentPermissionDTO Permissions { get; set; }= new();

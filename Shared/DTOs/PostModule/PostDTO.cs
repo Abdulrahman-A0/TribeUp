@@ -23,6 +23,7 @@ namespace Shared.DTOs.Posts
         public int LikesCount { get; set; }
         public int CommentCount { get; set; }
 
+        public bool IsAuthor { get; set; }
         public bool IsLikedByCurrentUser { get; set; }
 
         public double FeedScore { get; set; }
@@ -32,8 +33,8 @@ namespace Shared.DTOs.Posts
         public IReadOnlyCollection<MediaItemFeedDTO> Media { get; set; }
                  = new List<MediaItemFeedDTO>();
 
-        public GroupPermissionsDTO GroupPermissions { get; set; }
-            = new GroupPermissionsDTO();
+        public PostPermissionsDTO PostPermissions { get; set; }
+            = new PostPermissionsDTO();
 
         public bool IsDenied { get; set; }
     }

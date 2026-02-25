@@ -7,21 +7,21 @@ using Shared.DTOs.Posts;
 
 namespace Service.MappingProfiles.PermissionResolver
 {
-    public class GroupPermissionsResolver
-    : IValueResolver<Post, PostDTO, GroupPermissionsDTO>
+    public class PostPermissionsResolver
+    : IValueResolver<Post, PostDTO, PostPermissionsDTO>
     {
         private readonly IUserGroupRelationService _relationService;
 
-        public GroupPermissionsResolver(
+        public PostPermissionsResolver(
             IUserGroupRelationService relationService)
         {
             _relationService = relationService;
         }
 
-        public GroupPermissionsDTO Resolve(
+        public PostPermissionsDTO Resolve(
             Post source,
             PostDTO destination,
-            GroupPermissionsDTO destMember,
+            PostPermissionsDTO destMember,
             ResolutionContext context)
         {
             var relation = _relationService.GetRelation(source.GroupId);

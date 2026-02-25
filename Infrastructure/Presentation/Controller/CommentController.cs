@@ -24,7 +24,7 @@ namespace Presentation.Controller
             => Ok(await service.CommentService.GetLikesByCommentIdAsync(commentId, page, pageSize));
 
         [HttpPost("{postId:int}/AddComment")]
-        public async Task<ActionResult<CreateEntityResultDTO>> Comment(int postId, CommentDTO dto)
+        public async Task<ActionResult<CreateEntityResultDTO>> Comment(int postId, [FromForm] CommentDTO dto)
             => Ok(await service.CommentService.AddCommentAsync(UserId, UserName, postId, dto));
 
 
