@@ -9,6 +9,10 @@ namespace Service.Helper
         {
             return relation switch
             {
+                GroupRelationType.None => new(),
+                GroupRelationType.Follower => new(),
+                GroupRelationType.Member => new(),
+
                 GroupRelationType.Admin => new()
                 {
                     CanModerate = true,
@@ -20,6 +24,7 @@ namespace Service.Helper
                     CanModerate = true,
                     CanDelete = true,
                 }
+                //_ => throw new ArgumentOutOfRangeException(nameof(relation), relation, null)
             };
         }
     }
