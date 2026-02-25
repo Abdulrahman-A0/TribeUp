@@ -7,8 +7,10 @@ using Domain.Exceptions.GroupInvitationExceptions;
 using Domain.Exceptions.ValidationExceptions;
 using Microsoft.Extensions.Configuration;
 using Service.Specifications.GroupInvitaionSpecs;
+using Service.Specifications.GroupMemberSpecs;
 using ServiceAbstraction.Contracts;
 using Shared.DTOs.GroupInvitationModule;
+using Shared.DTOs.NotificationModule;
 using Shared.DTOs.Posts;
 using Shared.Enums;
 
@@ -20,6 +22,7 @@ namespace Service.Implementations
         private readonly IMapper _mapper;
         private readonly IUserGroupRelationService _relationService;
         private readonly IGroupScoreService _groupScoreService;
+        private readonly INotificationService _notificationService;
         private readonly IConfiguration _configuration;
 
         public GroupInvitationService(
@@ -27,12 +30,14 @@ namespace Service.Implementations
             IMapper mapper,
             IConfiguration configuration,
             IGroupScoreService groupScoreService,
+            INotificationService notificationService,
             IUserGroupRelationService relationService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _configuration = configuration;
             _groupScoreService = groupScoreService;
+            _notificationService = notificationService;
             _relationService = relationService;
         }
 
@@ -113,6 +118,24 @@ namespace Service.Implementations
             }
 
             await _groupScoreService.IncreaseOnActionAsync(invitation.GroupId, 10);
+
+            var memberRepo = _unitOfWork.GetRepository<GroupMembers, int>();
+            var adminsSpec = new GroupAdminsAndOwnerSpec(invitation.GroupId);
+            var managers = await memberRepo.GetAllAsync(adminsSpec);
+
+            foreach (var manager in managers)
+            {
+                await _notificationService.CreateAsync(new CreateNotificationDTO
+                {
+                    RecipientUserId = manager.UserId,
+                    ActorUserId = userId,
+                    Type = NotificationType.NewMemberJoined,
+                    Title = "New Member Joined",
+                    Message = $"A new member has joined '{invitation.Group.GroupName}' via invitation link.",
+                    ReferenceId = invitation.GroupId
+                });
+            }
+
             await _unitOfWork.SaveChangesAsync();
 
             return new AcceptInvitationResponseDTO { Success = true, Message = "Joined successfully." };
