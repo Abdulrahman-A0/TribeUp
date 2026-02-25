@@ -3,6 +3,7 @@ using Domain.Contracts;
 using Domain.Entities.Groups;
 using Domain.Entities.Media;
 using Domain.Entities.Posts;
+using Domain.Entities.Users;
 using Domain.Exceptions;
 using Domain.Exceptions.ForbiddenExceptions;
 using Domain.Exceptions.GroupExceptions;
@@ -10,6 +11,7 @@ using Domain.Exceptions.ModerationExceptions;
 using Domain.Exceptions.PostExceptions;
 using Domain.Exceptions.ValidationExceptions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Service.Specifications.ModerationSpecifications;
 using Service.Specifications.PostSpecifications;
@@ -40,6 +42,8 @@ namespace Service.Implementations
         private readonly IGenericRepository<Comment, int> commentRepo;
         private readonly IGenericRepository<AIModeration, int> moderationRepo;
 
+        UserManager<ApplicationUser> _userManager;
+
         private readonly int PostPoints = 5;
         private readonly int CommentPoints = 1;
 
@@ -51,8 +55,8 @@ namespace Service.Implementations
             IGroupScoreService groupScoreService,
             INotificationService notificationService,
             IAIModerationManager aiModerationManager,
-            IUserGroupRelationService relationService
-            )
+            IUserGroupRelationService relationService,
+            UserManager<ApplicationUser> userManager)
         {
             _mapper = mapper;
             _unitOfWork = unitOfWork;
@@ -61,6 +65,8 @@ namespace Service.Implementations
             _notificationService = notificationService;
             _aiModerationManager = aiModerationManager;
             _relationService = relationService;
+
+            _userManager = userManager;
 
             tagRepo = _unitOfWork.GetRepository<Tag, int>();
             postRepo = _unitOfWork.GetRepository<Post, int>();
@@ -76,12 +82,13 @@ namespace Service.Implementations
             CreatePostDTO dto,
             List<IFormFile> mediaFiles)
         {
+            await _userManager.FindByIdAsync(userId);
+
             if (!_relationService.IsMember(dto.GroupId))
                 throw new ForbiddenActionException();
 
             var post = _mapper.Map<Post>(dto);
             post.Caption = post.Caption?.Trim();
-            post.CreatedAt = DateTime.UtcNow;
             post.UserId = userId;
 
             var group = await groupRepo.GetByIdAsync(dto.GroupId)
@@ -110,6 +117,8 @@ namespace Service.Implementations
             await postRepo.AddAsync(post);
             await _unitOfWork.SaveChangesAsync();
 
+            var mappedPost = _mapper.Map<PostDTO>(post);
+
             # region AI moderation result
 
             var moderationResult = await _aiModerationManager.ModerateAsync(
@@ -117,13 +126,15 @@ namespace Service.Implementations
                 ModeratedEntityType.Post,
                 post.Id);
 
+
             if (!moderationResult.IsAccepted)
             {
                 return new CreateEntityResultDTO
                 {
-                    IsCreated = false,
+                    IsCreated = true,
                     Status = ContentStatus.Denied,
-                    Message = "Post violates community guidelines."
+                    Message = "Post violates community guidelines.",
+                    Post = mappedPost
                 };
             }
 
@@ -157,7 +168,8 @@ namespace Service.Implementations
             {
                 IsCreated = true,
                 Status = ContentStatus.Accepted,
-                Message = "Post created successfully."
+                Message = "Post created successfully.",
+                Post = mappedPost
             };
 
         }
@@ -244,11 +256,13 @@ namespace Service.Implementations
 
             //await _groupScoreService.IncreaseOnActionAsync(dto.GroupId, 5);
 
+
             return new CreateEntityResultDTO
             {
                 IsCreated = true,
                 Status = ContentStatus.Accepted,
-                Message = "Post created successfully."
+                Message = "Post created successfully.",
+                Post = _mapper.Map<PostDTO>(post)
             };
 
         }

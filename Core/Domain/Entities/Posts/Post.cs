@@ -37,13 +37,14 @@ namespace Domain.Entities.Posts
 
         // Navigation properties
         [ForeignKey("GroupId")]
-        public virtual Group Group { get; set; }
+        public virtual Group Group { get; set; } = null!;
         [Required]
         public int GroupId { get; set; }
-
+        
+        [ForeignKey("UserId")]
+        public string UserId { get; set; } = null!;
         [Required]
-        public string UserId { get; set; }   
-        public virtual ApplicationUser User { get; set; }
+        public virtual ApplicationUser User { get; set; } = null!;
 
         //public virtual AIModeration AI_Moderation { get; set; } = null!;
         public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();

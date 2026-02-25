@@ -2,10 +2,12 @@
 using Domain.Contracts;
 using Domain.Entities.Groups;
 using Domain.Entities.Posts;
+using Domain.Entities.Users;
 using Domain.Exceptions;
 using Domain.Exceptions.ForbiddenExceptions;
 using Domain.Exceptions.PostExceptions;
 using Domain.Exceptions.ValidationExceptions;
+using Microsoft.AspNetCore.Identity;
 using Service.Specifications.CommentSpecification;
 using Service.Specifications.ModerationSpecifications;
 using Service.Specifications.PostSpecifications;
@@ -39,6 +41,8 @@ namespace Service.Implementations
         private readonly IGenericRepository<Comment, int> commentRepo;
         private readonly IGenericRepository<AIModeration, int> moderationRepo;
 
+        UserManager<ApplicationUser> _userManager;
+
         private readonly int PostPoints = 5;
         private readonly int CommentPoints = 1;
         public CommentService(
@@ -48,7 +52,8 @@ namespace Service.Implementations
             IGroupScoreService groupScoreService,
             INotificationService notificationService,
             IAIModerationManager aiModerationManager,
-            IUserGroupRelationService relationService)
+            IUserGroupRelationService relationService,
+            UserManager<ApplicationUser> userManager)
         {
             _mapper = mapper;
             _unitOfWork = unitOfWork;
@@ -57,6 +62,8 @@ namespace Service.Implementations
             _notificationService = notificationService;
             _aiModerationManager = aiModerationManager;
             _relationService = relationService;
+
+            _userManager = userManager;
 
             tagRepo = _unitOfWork.GetRepository<Tag, int>();
             postRepo = _unitOfWork.GetRepository<Post, int>();
@@ -146,11 +153,13 @@ namespace Service.Implementations
         }
 
         public async Task<CreateEntityResultDTO> AddCommentAsync(
-    string userId,
-    string username,
-    int postId,
-    CommentDTO dto)
+        string userId,
+        string username,
+        int postId,
+        CommentDTO dto)
         {
+            await _userManager.FindByIdAsync(userId);
+
             if (string.IsNullOrWhiteSpace(dto.Content))
                 throw new PostAndCommentContentValidationException(
                     new Dictionary<string, string[]>
@@ -164,15 +173,16 @@ namespace Service.Implementations
             if (!_relationService.IsMember(post.GroupId) && post.Accessibility == AccessibilityType.Private)
                 throw new ForbiddenActionException();
 
-            var comment = new Comment
-            {
-                PostId = postId,
-                UserId = userId,
-                Content = dto.Content.Trim()
-            };
-            await commentRepo.AddAsync(comment);
+            var comment = _mapper.Map<Comment>(dto);
+            comment.Content = comment.Content.Trim();
+            comment.UserId = userId;
+            comment.PostId = postId;
 
+
+            await commentRepo.AddAsync(comment);
             await _unitOfWork.SaveChangesAsync();
+
+            var mappedComment = _mapper.Map<CommentResultDTO>(comment);
 
             # region AI moderation result
 
@@ -185,9 +195,10 @@ namespace Service.Implementations
             {
                 return new CreateEntityResultDTO
                 {
-                    IsCreated = false,
+                    IsCreated = true,
                     Status = ContentStatus.Denied,
-                    Message = "Comment violates community guidelines."
+                    Message = "Comment violates community guidelines.",
+                    Comment = mappedComment
                 };
             }
 
@@ -229,7 +240,9 @@ namespace Service.Implementations
             {
                 IsCreated = true,
                 Status = ContentStatus.Accepted,
-                Message = "Comment created successfully"
+                Message = "Comment created successfully",
+                Comment = mappedComment
+
             };
 
         }

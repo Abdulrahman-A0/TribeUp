@@ -1,4 +1,5 @@
-﻿using Shared.Enums;
+﻿using Shared.DTOs.Posts;
+using Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,5 +13,7 @@ namespace Shared.DTOs.PostModule
         public bool IsCreated { get; set; }
         public ContentStatus Status { get; set; }
         public string Message { get; set; }
+        public PostDTO Post { get; set; }
+        public CommentResultDTO Comment { get; set; }
     }
 }

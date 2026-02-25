@@ -21,7 +21,7 @@ namespace Service.MappingProfiles
                  .ForMember(dest => dest.PostId,
                      opt => opt.MapFrom(src => src.Id))
                  .ForMember(dest => dest.UserId,
-                     opt => opt.MapFrom(src => src.User.Id))
+                     opt => opt.MapFrom(src => src.UserId))
                  .ForMember(dest => dest.Username,
                      opt => opt.MapFrom(src => src.User.UserName))
                  .ForMember(dest => dest.GroupId,
@@ -57,7 +57,11 @@ namespace Service.MappingProfiles
             CreateMap<MediaItem, MediaItemFeedDTO>()
                 .ForMember(dest => dest.MediaURL,
                     opt => opt.MapFrom<PostMediaResolver>());
-
+            
+            // Create Comment
+            CreateMap<CommentDTO, Comment>()
+                  .ForMember(dest => dest.UserId,
+                      opt => opt.Ignore());
 
             // Comments
             CreateMap<Comment, CommentResultDTO>()
