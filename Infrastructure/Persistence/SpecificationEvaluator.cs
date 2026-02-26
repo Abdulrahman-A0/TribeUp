@@ -16,10 +16,12 @@ namespace Persistence
     public static class SpecificationEvaluator
     {
         public static IQueryable<TEntity> CreateQuery<TEntity, TKey>(IQueryable<TEntity> inputQuery,
-            ISpecifications<TEntity, TKey> specifications) where TEntity : BaseEntity<TKey>
+            ISpecifications<TEntity, TKey> specifications, bool isCountQuery = false) where TEntity : BaseEntity<TKey>
         {
             if (specifications.Criteria is not null)
                 inputQuery = inputQuery.Where(specifications.Criteria);
+
+            if (isCountQuery) return inputQuery;
 
 
             if (specifications.IncludeExpressions is not null && specifications.IncludeExpressions.Count > 0)

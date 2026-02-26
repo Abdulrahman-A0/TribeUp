@@ -44,6 +44,8 @@ namespace Persistence.Repositories
         {
             return await dbContext.Set<TEntity>().CountAsync(predicate);
         }
+
+
         public IQueryable<TEntity> AsQueryable()
         {
             return dbContext.Set<TEntity>();
@@ -54,12 +56,23 @@ namespace Persistence.Repositories
         #region Specifications
         public async Task<IEnumerable<TEntity>> GetAllAsync(ISpecifications<TEntity, TKey> specifications)
         {
-            return await SpecificationEvaluator.CreateQuery(dbContext.Set<TEntity>(), specifications).ToListAsync();
+            return await ApplySpecification(specifications).ToListAsync();
         }
 
         public async Task<TEntity?> GetByIdAsync(ISpecifications<TEntity, TKey> specifications)
         {
-            return await SpecificationEvaluator.CreateQuery(dbContext.Set<TEntity>(), specifications).FirstOrDefaultAsync();
+            return await ApplySpecification(specifications).FirstOrDefaultAsync();
+        }
+        public async Task<int> CountAsync(ISpecifications<TEntity, TKey> specifications)
+        {
+            return await ApplySpecification(specifications, isCountQuery: true).CountAsync();
+        }
+
+
+
+        private IQueryable<TEntity> ApplySpecification(ISpecifications<TEntity, TKey> specifications, bool isCountQuery = false)
+        {
+            return SpecificationEvaluator.CreateQuery(dbContext.Set<TEntity>().AsQueryable(), specifications, isCountQuery);
         }
         #endregion
     }
