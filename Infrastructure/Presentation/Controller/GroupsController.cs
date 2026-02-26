@@ -14,14 +14,11 @@ namespace Presentation.Controller
     [Authorize]
     public class GroupsController(IServiceManager serviceManager) : ApiController
     {
-        [HttpGet("GetAllGroups")]
-        public async Task<ActionResult<List<GroupResultDTO>>> GetAllGroupsAsync()
-            => Ok(await serviceManager.GroupService.GetAllGroupsAsync());
-
+        
 
         [HttpGet("MyGroups")]
-        public async Task<ActionResult<List<GroupResultDTO>>> GetMyGroupsAsync()
-            => Ok(await serviceManager.GroupService.GetMyGroupsAsync(UserId));
+        public async Task<ActionResult<List<GroupResultDTO>>> GetMyGroupsAsync(int page = 1, int pageSize = 10)
+            => Ok(await serviceManager.GroupService.GetMyGroupsAsync(page, pageSize,UserId));
 
 
         [HttpGet("GetGroup/{Id:int}")]
