@@ -253,6 +253,8 @@ namespace Service.Implementations
             int commentId,
             CommentDTO dto)
         {
+            await _userManager.FindByIdAsync(userId);
+
             var moderatedSpec = new ChangeEntityStatusSpecification(ModeratedEntityType.Comment, commentId);
             var moderatedComment = await moderationRepo.GetByIdAsync(moderatedSpec);
 
@@ -265,6 +267,9 @@ namespace Service.Implementations
 
             comment.Content = dto.Content;
 
+            var mappedComment = _mapper.Map<CommentResultDTO>(comment);
+            mappedComment.IsAuthor = mappedComment.UserId == userId;
+
             # region AI moderation result
 
             var moderationResult = await _aiModerationManager.ModerateAsync(
@@ -276,9 +281,10 @@ namespace Service.Implementations
             {
                 return new CreateEntityResultDTO
                 {
-                    IsCreated = false,
+                    IsCreated = true,
                     Status = ContentStatus.Denied,
-                    Message = "Comment violates community guidelines."
+                    Message = "Comment violates community guidelines.",
+                    Comment = mappedComment
                 };
             }
 
@@ -320,7 +326,8 @@ namespace Service.Implementations
             {
                 IsCreated = true,
                 Status = ContentStatus.Accepted,
-                Message = "Comment updated successfully"
+                Message = "Comment updated successfully",
+                Comment = mappedComment
             };
         }
 
