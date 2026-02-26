@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
+using Service.Specifications.CommentSpecification;
 using Service.Specifications.ModerationSpecifications;
 using Service.Specifications.PostSpecifications;
 using ServiceAbstraction.Contracts;
@@ -281,6 +282,8 @@ namespace Service.Implementations
 
             if (!_relationService.IsAdmin(post.GroupId) && !_relationService.IsOwner(post.GroupId) && userId != post.UserId)
                 throw new ForbiddenActionException();
+
+            await DeletePostsCommentsAsync(postId);
 
             await _groupScoreService.DecreaseOnActionAsync(post.GroupId, PostPoints);
             postRepo.Delete(post);
@@ -719,6 +722,21 @@ namespace Service.Implementations
                     p.UserId != userId
                 )
             );
+        }
+
+
+        private async Task DeletePostsCommentsAsync(int postId)
+        {
+            var spec = new AllCommentsByPostIdSpecification(postId);
+            var comments = await commentRepo.GetAllAsync(spec);
+
+            foreach (var comment in comments)
+            {
+                foreach (var like in comment.Likes)
+                    likeRepo.Delete(like);
+                commentRepo.Delete(comment);
+            }
+            await _unitOfWork.SaveChangesAsync();
         }
 
         #endregion
