@@ -30,6 +30,11 @@ namespace Persistence.Repositories
         {
             await dbContext.Set<TEntity>().AddAsync(entity);
         }
+
+        public async Task AddRangeAsync(IEnumerable<TEntity> entities)
+        {
+            await dbContext.Set<TEntity>().AddRangeAsync(entities);
+        }
         public void Update(TEntity entity)
         {
             dbContext.Set<TEntity>().Update(entity);

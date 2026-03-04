@@ -60,5 +60,26 @@ namespace Service.Implementations
 
             await publisher.PublishAsync(dto.RecipientUserId, responseDto);
         }
+
+
+        public async Task CreateRangeAsync(IEnumerable<CreateNotificationDTO> dtos)
+        {
+            var dtoList = dtos.ToList();
+            var notifications = mapper.Map<List<Notification>>(dtoList);
+
+            await unitOfWork.GetRepository<Notification, int>().AddRangeAsync(notifications);
+            await unitOfWork.SaveChangesAsync();
+
+            var publishTasks = notifications.Select((n, index) =>
+            {
+                var responseDto = mapper.Map<NotificationResponseDTO>(n);
+
+                var recipientId = dtoList[index].RecipientUserId;
+
+                return publisher.PublishAsync(recipientId, responseDto);
+            });
+
+            await Task.WhenAll(publishTasks);
+        }
     }
 }

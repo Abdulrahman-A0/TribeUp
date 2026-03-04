@@ -6,6 +6,7 @@ using Domain.Exceptions.ForbiddenExceptions;
 using Domain.Exceptions.GroupInvitationExceptions;
 using Domain.Exceptions.ValidationExceptions;
 using Microsoft.Extensions.Configuration;
+using Service.Specifications.GroupFollowerSpecs;
 using Service.Specifications.GroupInvitaionSpecs;
 using Service.Specifications.GroupMemberSpecs;
 using ServiceAbstraction.Contracts;
@@ -78,28 +79,49 @@ namespace Service.Implementations
         {
             var repo = _unitOfWork.GetRepository<GroupInvitation, int>();
 
+            var followerRepo = _unitOfWork.GetRepository<GroupFollowers, int>();
+
             var spec = new GetInvitationByTokenSpecification(token);
             var invitation = (await repo.GetAllAsync(spec)).FirstOrDefault();
 
             if (invitation == null)
-                throw new DomainValidationException(new Dictionary<string, string[]> 
+                throw new DomainValidationException(new Dictionary<string, string[]>
                 { ["Invitation"] = new[] { "Invalid invitation." } });
 
             if (_relationService.IsMember(invitation.GroupId))
-                throw new DomainValidationException(new Dictionary<string, string[]> 
+                throw new DomainValidationException(new Dictionary<string, string[]>
                 { ["Invitation"] = new[] { "Already a member." } });
 
             if (invitation.IsRevoked)
-                throw new DomainValidationException(new Dictionary<string, string[]> 
+                throw new DomainValidationException(new Dictionary<string, string[]>
                 { ["Invitation"] = new[] { "Invitation revoked." } });
 
             if (invitation.ExpiresAt.HasValue && invitation.ExpiresAt < DateTime.UtcNow)
-                throw new DomainValidationException(new Dictionary<string, string[]> 
+                throw new DomainValidationException(new Dictionary<string, string[]>
                 { ["Invitation"] = new[] { "Invitation expired." } });
 
             if (invitation.MaxUses.HasValue && invitation.UsedCount >= invitation.MaxUses)
-                throw new DomainValidationException(new Dictionary<string, string[]> 
+                throw new DomainValidationException(new Dictionary<string, string[]>
                 { ["Invitation"] = new[] { "Invitation usage exceeded." } });
+
+
+            bool wasFollower = _relationService.IsFollower(invitation.GroupId);
+
+            if (wasFollower)
+            {
+                var followerSpec = new GroupFollwerByUserIdSpec(invitation.GroupId, userId);
+                var follower = (await followerRepo.GetAllAsync(followerSpec)).FirstOrDefault();
+
+                if (follower != null)
+                    followerRepo.Delete(follower);
+
+            }
+            else
+            {
+                await _groupScoreService.IncreaseOnActionAsync(invitation.GroupId, 10);
+            }
+
+            
 
             var member = new GroupMembers
             {
@@ -107,35 +129,30 @@ namespace Service.Implementations
                 UserId = userId,
                 Role = RoleType.Member
             };
-
             await _unitOfWork.GetRepository<GroupMembers, int>().AddAsync(member);
 
             invitation.UsedCount++;
-
             if (invitation.MaxUses.HasValue && invitation.UsedCount >= invitation.MaxUses)
             {
                 invitation.IsRevoked = true;
             }
 
-            await _groupScoreService.IncreaseOnActionAsync(invitation.GroupId, 10);
 
             var memberRepo = _unitOfWork.GetRepository<GroupMembers, int>();
             var adminsSpec = new GroupAdminsAndOwnerSpec(invitation.GroupId);
             var managers = await memberRepo.GetAllAsync(adminsSpec);
 
-            foreach (var manager in managers)
+            var notificationDtos = managers.Select(manager => new CreateNotificationDTO
             {
-                await _notificationService.CreateAsync(new CreateNotificationDTO
-                {
-                    RecipientUserId = manager.UserId,
-                    ActorUserId = userId,
-                    Type = NotificationType.NewMemberJoined,
-                    Title = "New Member Joined",
-                    Message = $"A new member has joined '{invitation.Group.GroupName}' via invitation link.",
-                    ReferenceId = invitation.GroupId
-                });
-            }
+                RecipientUserId = manager.UserId,
+                ActorUserId = userId,
+                Type = NotificationType.NewMemberJoined,
+                Title = "New Member Joined",
+                Message = $"A new member has joined '{invitation.Group.GroupName}' via invitation link.",
+                ReferenceId = invitation.GroupId
+            }).ToList();
 
+            await _notificationService.CreateRangeAsync(notificationDtos);
             await _unitOfWork.SaveChangesAsync();
 
             return new AcceptInvitationResponseDTO { Success = true, Message = "Joined successfully." };

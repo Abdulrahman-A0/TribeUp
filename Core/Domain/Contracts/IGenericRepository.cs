@@ -13,6 +13,7 @@ namespace Domain.Contracts
         Task<IEnumerable<TEntity>> GetAllAsync(bool asNoTracking = false);
         Task<TEntity?> GetByIdAsync(TKey Id);
         Task AddAsync(TEntity entity);
+        Task AddRangeAsync(IEnumerable<TEntity> entities);
         void Update(TEntity entity);
         void Delete(TEntity entity);
         Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate);
