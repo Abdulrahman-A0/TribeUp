@@ -396,7 +396,9 @@ namespace Service.Implementations
             var post = await postRepo.GetByIdAsync(comment.PostId)
                 ?? throw new PostNotFoundException(comment.PostId);
 
-            if (!_relationService.IsAdmin(post.GroupId) && !_relationService.IsOwner(post.GroupId))
+            if (!_relationService.IsAdmin(post.GroupId) 
+                && !_relationService.IsOwner(post.GroupId) 
+                && userId != comment.UserId)
                 throw new ForbiddenActionException();
 
 
