@@ -349,7 +349,7 @@ namespace Service.Implementations
 
             var moderation = moderationRepo.AsQueryable();
 
-            var spec = new CommentsByPostIdSpecification(userId, moderation, postId, page, pageSize);
+            var spec = new CommentsByPostIdSpecification(userId, moderation, postId, post.GroupId, post.UserId, page, pageSize);
             var comments = await commentRepo.GetAllAsync(spec);
 
             var totalCount = await commentRepo.CountAsync(c =>
