@@ -12,5 +12,8 @@
         public DateTime CreatedAt { get; init; }
 
         public int? ReferenceId { get; init; }
+
+        public string? ActorUserName { get; set; }
+        public string? ActorPicture { get; set; }
     }
 }

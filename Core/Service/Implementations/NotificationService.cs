@@ -2,14 +2,18 @@
 using Domain.Contracts;
 using Domain.Entities.Users;
 using Domain.Exceptions.NotificationExceptions;
+using Microsoft.AspNetCore.Identity;
 using Service.Specifications.NotificationSpecifications;
 using ServiceAbstraction.Contracts;
 using Shared.DTOs.NotificationModule;
+using Shared.Enums;
 
 namespace Service.Implementations
 {
     public class NotificationService(IUnitOfWork unitOfWork, IMapper mapper,
-        INotificationPublisher publisher) : INotificationService
+        INotificationPublisher publisher,
+        UserManager<ApplicationUser> userManager,
+        IMediaUrlService mediaUrlService) : INotificationService
     {
         public async Task<PagedNotificationsDTO> GetMyNotificationsAsync(string userId, int pageIndex, int pageSize)
         {
@@ -23,8 +27,26 @@ namespace Service.Implementations
                 .GetRepository<Notification, int>()
                 .CountAsync(n => n.UserId == userId && !n.IsRead);
 
-            return new PagedNotificationsDTO
-                (mapper.Map<IEnumerable<NotificationResponseDTO>>(notifications), unreadCount);
+            var dtos = mapper.Map<List<NotificationResponseDTO>>(notifications);
+
+            foreach (var dto in dtos)
+            {
+                var originalNotif = notifications.FirstOrDefault(n => n.Id == dto.Id);
+
+                if (originalNotif != null && !string.IsNullOrEmpty(originalNotif.ActorUserId))
+                {
+
+                    var actorUser = await userManager.FindByIdAsync(originalNotif.ActorUserId);
+
+                    if (actorUser != null)
+                    {
+                        dto.ActorUserName = actorUser.UserName;
+                        dto.ActorPicture = mediaUrlService.BuildUrl(actorUser.ProfilePicture, MediaType.UserProfile);
+                    }
+                }
+            }
+
+            return new PagedNotificationsDTO(dtos, unreadCount);
         }
 
         public async Task MarkAsReadAsync(int notificationId, string userId)

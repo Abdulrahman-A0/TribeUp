@@ -11,6 +11,7 @@ namespace Domain.Entities.Users
         public bool IsRead { get; set; }
         public DateTime CreateAt { get; set; } = DateTime.UtcNow;
 
+        public string? ActorUserId { get; set; }
         public int? ReferenceId { get; set; }
 
         #region Relations
