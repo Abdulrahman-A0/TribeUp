@@ -14,10 +14,13 @@ namespace Persistence.Repositories
     {
         private readonly AppDbContext dbContext;
         private readonly ConcurrentDictionary<string, object> repositories;
+        public INotificationRepository NotificationRepository { get; }
+
         public UnitOfWork(AppDbContext dbContext)
         {
             this.dbContext = dbContext;
             repositories = new();
+            NotificationRepository = new NotificationRepository(dbContext);
         }
         public IGenericRepository<TEntity, TKey> GetRepository<TEntity, TKey>() where TEntity : BaseEntity<TKey>
         {

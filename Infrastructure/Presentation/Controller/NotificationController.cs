@@ -23,5 +23,15 @@ namespace Presentation.Controller
 
             return NoContent();
         }
+
+        [HttpPut("read/all")]
+        public async Task<IActionResult> MarkAllAsReadAsync()
+        {
+            await serviceManager
+                .NotificationService
+                .MarkAllAsReadAsync(UserId);
+
+            return NoContent();
+        }
     }
 }
