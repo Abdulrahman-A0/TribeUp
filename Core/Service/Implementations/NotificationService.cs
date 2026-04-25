@@ -65,6 +65,11 @@ namespace Service.Implementations
             await unitOfWork.SaveChangesAsync();
         }
 
+        public async Task MarkAllAsReadAsync(string userId)
+        {
+            await unitOfWork.NotificationRepository.MarkAllAsReadAsync(userId);
+        }
+
         public async Task CreateAsync(CreateNotificationDTO dto)
         {
             if (dto.RecipientUserId == dto.ActorUserId)

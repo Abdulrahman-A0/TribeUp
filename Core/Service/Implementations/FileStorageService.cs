@@ -66,6 +66,7 @@ namespace Service.Implementations
                     break;
 
                 case MediaType.PostMedia:
+                case MediaType.StoryMedia:
                     if (isImage)
                         ValidatePostImage(file, errors);
                     else if (isVideo)
@@ -122,6 +123,9 @@ namespace Service.Implementations
 
                 MediaType.UserCover =>
                     Path.Combine(environment.WebRootPath, "images", "CoverPictures"),
+
+                MediaType.StoryMedia =>
+                    Path.Combine(environment.WebRootPath, "images", "StoryUploads"),
 
                 _ => throw new ArgumentOutOfRangeException(nameof(type))
             };
