@@ -38,6 +38,7 @@ namespace TribeUp.Extensions
             services.AddScoped<IFileStorageService, FileStorageService>();
             services.AddScoped<IAIModerationManager, AIModerationManager>();
             services.AddScoped<INotificationService, NotificationService>();
+            services.AddScoped<IStoryService, StoryService>();
 
             services.AddScoped<IUserGroupRelationService, UserGroupRelationService>();
 
@@ -54,10 +55,10 @@ namespace TribeUp.Extensions
 
             services.AddScoped<Func<IGroupScoreService>>(provider =>
             () => provider.GetRequiredService<IGroupScoreService>());
-                
+
             services.AddScoped<Func<IGroupChatService>>(provider =>
             () => provider.GetRequiredService<IGroupChatService>());
-            
+
             services.AddScoped<Func<IGroupInvitationService>>(provider =>
             () => provider.GetRequiredService<IGroupInvitationService>());
 
@@ -77,6 +78,9 @@ namespace TribeUp.Extensions
 
             services.AddScoped<Func<INotificationService>>(provider =>
             () => provider.GetRequiredService<INotificationService>());
+
+            services.AddScoped<Func<IStoryService>>(provider =>
+            () => provider.GetRequiredService<IStoryService>());
 
 
             return services;

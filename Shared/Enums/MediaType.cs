@@ -5,6 +5,7 @@
         UserProfile,
         GroupProfile,
         PostMedia,
-        UserCover
+        UserCover,
+        StoryMedia
     }
 }
