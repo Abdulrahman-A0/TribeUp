@@ -11,6 +11,7 @@ namespace Service.Specifications.StorySpecifications
                    (isMember || s.Accessibility == AccessibilityType.Public))
         {
             AddIncludes(s => s.User);
+            AddIncludes(s => s.Group);
             AddIncludes(s => s.StoryViews);
             AddOrderByDescending(s => s.CreatedAt);
         }

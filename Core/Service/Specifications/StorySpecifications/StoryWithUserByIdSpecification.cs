@@ -8,6 +8,7 @@ namespace Service.Specifications.StorySpecifications
             : base(s => s.Id == storyId)
         {
             AddIncludes(s => s.User);
+            AddIncludes(s => s.Group);
         }
     }
 }
