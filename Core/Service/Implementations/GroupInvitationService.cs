@@ -109,7 +109,7 @@ namespace Service.Implementations
 
             if (wasFollower)
             {
-                var followerSpec = new GroupFollwerByUserIdSpec(invitation.GroupId, userId);
+                var followerSpec = new GroupFollowerByUserIdSpec(invitation.GroupId, userId);
                 var follower = (await followerRepo.GetAllAsync(followerSpec)).FirstOrDefault();
 
                 if (follower != null)
