@@ -12,7 +12,7 @@
         // Creator info
         public string CreatorId { get; init; }
         public string CreatorUserName { get; init; }
-        public string? CreatorProfilePicture { get; init; }
+        public string? GroupProfilePicture { get; init; }
 
         public bool IsViewedByCurrentUser { get; init; }
     }

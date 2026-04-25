@@ -20,7 +20,6 @@ namespace Service.MappingProfiles
             CreateMap<Story, StoryResponseDTO>()
                 .ForMember(dest => dest.CreatorId, opt => opt.MapFrom(src => src.UserId))
                 .ForMember(dest => dest.CreatorUserName, opt => opt.MapFrom(src => src.User.UserName))
-                .ForMember(dest => dest.CreatorProfilePicture, opt => opt.MapFrom<UserProfilePictureResolver, string>(src => src.User.ProfilePicture!))
                 .ForMember(dest => dest.MediaURL, opt => opt.MapFrom<StoryMediaResolver>())
                 .ForMember(dest => dest.IsViewedByCurrentUser, opt => opt.Ignore())
                 .ForMember(dest => dest.ViewsCount, opt => opt.Ignore());

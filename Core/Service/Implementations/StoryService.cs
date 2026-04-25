@@ -13,7 +13,8 @@ using Shared.Enums;
 namespace Service.Implementations
 {
     public class StoryService(IUnitOfWork unitOfWork, IMapper mapper,
-        IFileStorageService fileStorage, IUserGroupRelationService userGroupRelation) : IStoryService
+        IFileStorageService fileStorage, IUserGroupRelationService userGroupRelation,
+        IMediaUrlService mediaUrlService) : IStoryService
     {
         public async Task<StoryResponseDTO> CreateStoryAsync(CreateStoryDTO dto, string currentUserId)
         {
@@ -39,6 +40,7 @@ namespace Service.Implementations
 
             var response = mapper.Map<StoryResponseDTO>(storyWithUser) with
             {
+                GroupProfilePicture = mediaUrlService.BuildUrl(story.Group.GroupProfilePicture, MediaType.GroupProfile),
                 IsViewedByCurrentUser = false
             };
 
@@ -73,6 +75,7 @@ namespace Service.Implementations
             var responses = stories
                 .Select(s => mapper.Map<StoryResponseDTO>(s) with
                 {
+                    GroupProfilePicture = mediaUrlService.BuildUrl(s.Group.GroupProfilePicture, MediaType.GroupProfile),
                     IsViewedByCurrentUser = s.StoryViews.Any(v => v.UserId == currentUserId),
                     ViewsCount = s.ViewsCount
                 })
@@ -102,7 +105,7 @@ namespace Service.Implementations
                 {
                     GroupId = g.Key.GroupId,
                     GroupName = g.Key.GroupName,
-                    GroupProfilePicture = g.Key.GroupProfilePicture,
+                    GroupProfilePicture = mediaUrlService.BuildUrl(g.Key.GroupProfilePicture, MediaType.GroupProfile),
                     HasUnseenStories = g.Any(story => !story.StoryViews.Any(v => v.UserId == currentUserId)),
                     LatestStoryDate = g.Max(story => story.CreatedAt)
 
