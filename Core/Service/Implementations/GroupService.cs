@@ -21,25 +21,34 @@ namespace Service.Implementations
         IFileStorageService fileStorage, 
         IUserGroupRelationService _relationService) : IGroupService
     {
-        public async Task<List<GroupResultDTO>> GetAllGroupsAsync()
-        {
-            var repo = unitOfWork.GetRepository<Group, int>();
-            var spec = new GroupsWithMembersSpec();
-
-            var groups = await repo.GetAllAsync(spec);
-
-            return mapper.Map<List<GroupResultDTO>>(groups);
-        }
+        
 
 
 
-
-        public async Task<List<GroupResultDTO>> GetMyGroupsAsync(string userId)
+        public async Task<PagedResult<GroupResultDTO>> GetMyGroupsAsync(int page, int pageSize, string userId)
         {
             var groupRepo = unitOfWork.GetRepository<Group, int>();
-            var spec = new GroupsByUserSpec(userId);
+
+            var spec = new GroupsByUserSpec(userId, page, pageSize);
             var groups = await groupRepo.GetAllAsync(spec);
-            return mapper.Map<List<GroupResultDTO>>(groups);
+
+            var totalCount = await groupRepo.CountAsync(g => g.GroupMembers.Any(m => m.UserId == userId));
+
+            var mappedGroups = mapper.Map<List<GroupResultDTO>>(groups);
+
+            foreach (var groupDto in mappedGroups)
+            {
+                groupDto.UserRelation = _relationService.GetRelation(groupDto.Id);
+            }
+
+            return new PagedResult<GroupResultDTO>
+            {
+                Items = mappedGroups,
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = totalCount,
+                HasMore = (page * pageSize) < totalCount
+            };
         }
 
 
@@ -108,10 +117,7 @@ namespace Service.Implementations
             if (!_relationService.IsOwner(groupId) && ! _relationService.IsAdmin(groupId))
                 throw new ForbiddenActionException();
 
-            // AutoMapper will only update non-null fields
             mapper.Map(updateGroupDTO, group);
-
-            // No repo.Update(group) needed if EF is tracking
             await unitOfWork.SaveChangesAsync();
 
             return mapper.Map<GroupResultDTO>(group);
@@ -191,42 +197,30 @@ namespace Service.Implementations
 
 
 
-        public async Task<PagedResult<GroupResultDTO>> ExploreGroupsAsync(int page, int pageSize, string userId)
+        public async Task<PagedResult<GroupResultDTO>> ExploreGroupsAsync(int page, int pageSize, string userId, string? searchTerm = null)
         {
-            var spec = new ExploreGroupsSpec(page, pageSize);
-            var groups = await unitOfWork.GetRepository<Group, int>().GetAllAsync(spec);
+            var repo = unitOfWork.GetRepository<Group, int>();
 
-            const int memberBonus = 5;
-            const int membershipPenalty = 1000;
+            var spec = new ExploreGroupsSpec(page, pageSize, userId, searchTerm);
 
-            var scored =
-                groups.Select(group =>
-                {
-                    int baseScore = group.GroupScore?.TotalPoints ?? 0;
-                    int popularityScore = group.GroupMembers.Count * memberBonus;
-                    bool isMember = group.GroupMembers.Any(m => m.UserId == userId);
+            var groups = await repo.GetAllAsync(spec);
 
+            var totalCount = await repo.CountAsync(spec);
 
-                    int exploreScore = baseScore + popularityScore - (isMember ? membershipPenalty : 0);
-
-                    return new
-                    {
-                        Group = group,
-                        ExploreScore = exploreScore
-                    };
-                });
-
-            var ordered = scored
-               .OrderByDescending(x => x.ExploreScore).ToList();
+            var mappedGroups = groups.Select(g =>
+            {
+                var dto = mapper.Map<GroupResultDTO>(g);
+                dto.UserRelation = _relationService.GetRelation(g.Id);
+                return dto;
+            }).ToList();
 
             return new PagedResult<GroupResultDTO>
             {
-                Items = ordered
-                .Select(x => mapper.Map<GroupResultDTO>(x.Group))
-                .ToList(),
+                Items = mappedGroups,
                 Page = page,
                 PageSize = pageSize,
-                HasMore = ordered.Count == pageSize
+                TotalCount = totalCount,
+                HasMore = (page * pageSize) < totalCount
             };
         }
 

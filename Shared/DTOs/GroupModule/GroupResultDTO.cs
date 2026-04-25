@@ -10,11 +10,12 @@ namespace Shared.DTOs.GroupModule
     public record GroupResultDTO
     {
         public int Id { get; init; }
-        public string GroupName { get; init; }
+        public string GroupName { get; init; } = string.Empty;
         public string Description { get; init; } = string.Empty;
         public string GroupProfilePicture { get; init; } = string.Empty;
         public DateTime CreatedAt { get; init; }
         public AccessibilityType Accessibility { get; init; }
+        public GroupRelationType UserRelation { get; set; }
         public int MembersCount { get; init; }
     }
 }

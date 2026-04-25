@@ -1,4 +1,5 @@
 ﻿using Shared.DTOs.GroupFollowerModule;
+using Shared.DTOs.Posts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,8 @@ namespace ServiceAbstraction.Contracts
 {
     public interface IGroupFollowerService
     {
-        public Task<FollowResultDTO> ToggleFollow(int groupId, string userId);
+        Task<PagedResult<GroupFollowerResultDTO>> GetGroupFollowersAsync(int groupId, int page, int pageSize, string? searchTerm = null);
+        public Task<FollowActionResponseDTO> ToggleFollowAsync(int groupId, string userId);
+        Task RemoveFollowerAsync(int groupId, int followerId, string userId);
     }
 }

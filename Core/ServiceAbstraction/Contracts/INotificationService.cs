@@ -6,6 +6,7 @@ namespace ServiceAbstraction.Contracts
     public interface INotificationService
     {
         Task CreateAsync(CreateNotificationDTO dto);
+        Task CreateRangeAsync(IEnumerable<CreateNotificationDTO> dtos);
 
         Task<PagedNotificationsDTO> GetMyNotificationsAsync(string userId, int pageNumber, int pageSize);
 

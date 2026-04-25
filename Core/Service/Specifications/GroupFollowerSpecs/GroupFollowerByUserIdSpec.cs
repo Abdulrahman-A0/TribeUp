@@ -3,9 +3,9 @@
 
 namespace Service.Specifications.GroupFollowerSpecs
 {
-    public class GroupFollwerByUserIdSpec : BaseSpecifications<GroupFollowers, int>
+    public class GroupFollowerByUserIdSpec : BaseSpecifications<GroupFollowers, int>
     {
-        public GroupFollwerByUserIdSpec(int groupId, string userId) 
+        public GroupFollowerByUserIdSpec(int groupId, string userId) 
             :base(f => f.GroupId == groupId && f.UserId == userId)
         {
         }

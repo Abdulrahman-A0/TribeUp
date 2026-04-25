@@ -13,6 +13,7 @@ namespace Domain.Contracts
         Task<IEnumerable<TEntity>> GetAllAsync(bool asNoTracking = false);
         Task<TEntity?> GetByIdAsync(TKey Id);
         Task AddAsync(TEntity entity);
+        Task AddRangeAsync(IEnumerable<TEntity> entities);
         void Update(TEntity entity);
         void Delete(TEntity entity);
         Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate);
@@ -22,6 +23,7 @@ namespace Domain.Contracts
         #region Specifications
         Task<IEnumerable<TEntity>> GetAllAsync(ISpecifications<TEntity, TKey> specifications);
         Task<TEntity?> GetByIdAsync(ISpecifications<TEntity, TKey> specifications);
+        Task<int> CountAsync(ISpecifications<TEntity, TKey> spec);
         #endregion
     }
 }

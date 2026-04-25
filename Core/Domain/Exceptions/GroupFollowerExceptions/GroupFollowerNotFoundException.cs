@@ -6,7 +6,7 @@ namespace Domain.Exceptions.GroupFollowerExceptions
     public class GroupFollowerNotFoundException : NotFoundException
     {
         public GroupFollowerNotFoundException(string groupFollowerId)
-            : base($"Group member with id `{groupFollowerId}` was not found.")
+            : base($"Group Follower with id `{groupFollowerId}` was not found.")
         {
         }
     }
