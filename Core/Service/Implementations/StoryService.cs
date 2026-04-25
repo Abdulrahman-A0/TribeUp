@@ -136,6 +136,9 @@ namespace Service.Implementations
             if (story.ExpiresAt.HasValue && story.ExpiresAt.Value <= DateTime.UtcNow)
                 throw new StoryNotFoundException(story.Id);
 
+            if (story.UserId == currentUserId)
+                return;
+
             // 4. If already viewed by this user do nothing
             var alreadyViewed = story.StoryViews.Any(v => v.UserId == currentUserId);
             if (alreadyViewed)
