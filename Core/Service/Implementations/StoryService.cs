@@ -84,7 +84,7 @@ namespace Service.Implementations
             return responses;
         }
 
-        public async Task<IEnumerable<StoryFeedItemDTO>> GetStoryFeedAsync(string currentUserId)
+        public async Task<IEnumerable<StoryFeedItemDTO>> GetStoryFeedAsync(string currentUserId, int pageNumber = 1, int pageSize = 10)
         {
             var allowedGroupIds = userGroupRelation
                 .GetAccessibleGroupIds()
@@ -111,7 +111,11 @@ namespace Service.Implementations
 
                 })
                 .OrderByDescending(f => f.HasUnseenStories)
-                .ThenByDescending(f => f.LatestStoryDate);
+                .ThenByDescending(f => f.LatestStoryDate)
+
+
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize);
 
             return await query.ToListAsync();
         }

@@ -24,8 +24,8 @@ namespace Presentation.Controller
             => Ok(await serviceManager.StoryService.GetActiveGroupStoriesAsync(groupId, UserId));
 
         [HttpGet("GetStoryFeed")]
-        public async Task<ActionResult<IEnumerable<StoryFeedItemDTO>>> GetStoryFeedAsync()
-            => Ok(await serviceManager.StoryService.GetStoryFeedAsync(UserId));
+        public async Task<ActionResult<IEnumerable<StoryFeedItemDTO>>> GetStoryFeedAsync(int pageNumber = 1, int pageSize = 10)
+            => Ok(await serviceManager.StoryService.GetStoryFeedAsync(UserId, pageNumber, pageSize));
 
         [HttpPut("MarkAsViewed/{storyId}")]
         public async Task<IActionResult> MarkAsViewedAsync(int storyId)
