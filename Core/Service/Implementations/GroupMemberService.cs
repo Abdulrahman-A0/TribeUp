@@ -122,7 +122,7 @@ namespace Service.Implementations
 
         public async Task<bool> PromoteToAdminAsync(int groupId, string actorUserId, int groupMemberId)
         {
-            if (!relationService.IsOwner(groupId))
+            if (!relationService.IsOwner(groupId) && !relationService.IsAdmin(groupId))
                 throw new ForbiddenActionException();
 
             var groupRepo = unitOfWork.GetRepository<Group, int>();
@@ -164,7 +164,7 @@ namespace Service.Implementations
 
         public async Task<bool> DemoteAdminAsync(int groupId, string actorUserId, int groupMemberId)
         {
-            if (!relationService.IsOwner(groupId))
+            if (!relationService.IsOwner(groupId) && !relationService.IsAdmin(groupId))
                 throw new ForbiddenActionException();
 
             var groupRepo = unitOfWork.GetRepository<Group, int>();
@@ -183,6 +183,9 @@ namespace Service.Implementations
 
             if (target.Role == RoleType.Owner)
                 throw new CannotDemoteCreatorException();
+
+            if (target.Role == RoleType.Admin && !relationService.IsOwner(groupId))
+                throw new OnlyOwnerCanDemoteAdminException();
 
             target.Role = RoleType.Member;
             memberRepo.Update(target);
@@ -229,7 +232,7 @@ namespace Service.Implementations
                 throw new CannotKickCreatorException();
 
             if (target.Role == RoleType.Admin && !relationService.IsOwner(groupId))
-                throw new ForbiddenActionException();
+                throw new OnlyOwnerCanKickAdminException();
 
             if (target.Role == RoleType.Member || target.Role == RoleType.Admin)
             {
@@ -237,7 +240,6 @@ namespace Service.Implementations
             }
 
             memberRepo.Delete(target);
-
             await unitOfWork.SaveChangesAsync();
 
             await notificationService.CreateAsync(new CreateNotificationDTO
