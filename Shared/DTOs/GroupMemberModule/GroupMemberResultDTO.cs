@@ -9,10 +9,10 @@ namespace Shared.DTOs.GroupMemberModule
 {
     public record GroupMemberResultDTO
     {
-        public string UserId { get; init; }
-        public string UserName { get; init; }
+        public int Id { get; init; }
+        public string UserName { get; init; } = string.Empty;
         public string UserProfilePicture { get; init; } = string.Empty;
-        public RoleType Role { get; init; }
+        public string Role { get; init; }
         public DateTime JoinedAt { get; init; }
     }
 }

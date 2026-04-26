@@ -46,11 +46,12 @@ namespace Service.Implementations
                 throw new ForbiddenActionException();
 
             var memberRepo = unitOfWork.GetRepository<GroupMembers, int>();
+
             var spec = new GroupMembersSpec(groupId, page, pageSize, searchTerm);
             var members = await memberRepo.GetAllAsync(spec);
 
             var totalCount = await memberRepo.CountAsync(m => m.GroupId == groupId &&
-            (string.IsNullOrEmpty(searchTerm) || m.User.UserName.ToLower().Contains(searchTerm.ToLower())));
+                (string.IsNullOrEmpty(searchTerm) || m.User.UserName.ToLower().Contains(searchTerm.ToLower())));
 
             var mappedMembers = mapper.Map<List<GroupMemberResultDTO>>(members);
 
