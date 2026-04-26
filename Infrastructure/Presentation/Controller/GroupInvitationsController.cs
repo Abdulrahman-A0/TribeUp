@@ -34,10 +34,6 @@ namespace Presentation.Controller
         public async Task<ActionResult<bool>> Revoke(int invitationId)
             => Ok(await serviceManager.GroupInvitationService.RevokeInvitationAsync(invitationId, UserId));
 
-
-        [HttpDelete("RevokeAllInvitations/{groupId:int}")]
-        public async Task<ActionResult<bool>> RevokeAll(int groupId)
-            => Ok(await serviceManager.GroupInvitationService.RevokeAllGroupInvitationsAsync(groupId, UserId));
     }
 
 }
