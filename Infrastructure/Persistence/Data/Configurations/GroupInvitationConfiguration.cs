@@ -17,6 +17,10 @@ namespace Persistence.Data.Configurations
             builder.HasIndex(i => i.Token)
                    .IsUnique();
 
+            builder.Property(i => i.MaxUses)
+                   .IsRequired()
+                   .HasDefaultValue(1);
+
             builder.HasOne(i => i.Group)
                    .WithMany(g => g.Invitations)
                    .HasForeignKey(i => i.GroupId)
@@ -27,12 +31,11 @@ namespace Persistence.Data.Configurations
                    .HasForeignKey(i => i.UserId)
                    .OnDelete(DeleteBehavior.Restrict);
 
-            // Optional check constraint (UsedCount cannot exceed MaxUses)
             builder.ToTable(t =>
-                t.HasCheckConstraint(
-                    "CK_GroupInvitation_Usage",
-                    "MaxUses IS NULL OR UsedCount <= MaxUses"
-                ));
+                    t.HasCheckConstraint(
+                        "CK_GroupInvitation_Usage",
+                        "MaxUses >= 1 AND UsedCount <= MaxUses"
+                    ));
         }
     }
 }

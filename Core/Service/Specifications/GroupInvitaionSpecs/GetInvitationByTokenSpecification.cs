@@ -12,6 +12,7 @@ namespace Service.Specifications.GroupInvitaionSpecs
         public GetInvitationByTokenSpecification(string token)
             : base(i => i.Token == token)
         {
+            AddIncludes(i => i.User);
             AddIncludes(i => i.Group);
         }
     }

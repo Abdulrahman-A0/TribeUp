@@ -42,7 +42,7 @@ namespace Service.Implementations
             _relationService = relationService;
         }
 
-        
+
 
 
         public async Task<InvitationResultDTO> CreateInvitationAsync(int groupId, string userId, CreateInvitationDTO dto)
@@ -52,7 +52,7 @@ namespace Service.Implementations
 
             var repo = _unitOfWork.GetRepository<GroupInvitation, int>();
 
-            var spec = new ActiveGroupInvitationSpecification(groupId);
+            var spec = new ActiveGroupInvitationSpecification(groupId, userId);
             var activeInvitation = (await repo.GetAllAsync(spec)).FirstOrDefault();
 
             if (activeInvitation != null)
@@ -71,14 +71,13 @@ namespace Service.Implementations
             return _mapper.Map<InvitationResultDTO>(invitation, opt => opt.Items["FrontUrl"] = frontUrl);
         }
 
-
+        
 
 
 
         public async Task<AcceptInvitationResponseDTO> AcceptInvitationAsync(string token, string userId)
         {
             var repo = _unitOfWork.GetRepository<GroupInvitation, int>();
-
             var followerRepo = _unitOfWork.GetRepository<GroupFollowers, int>();
 
             var spec = new GetInvitationByTokenSpecification(token);
@@ -100,10 +99,9 @@ namespace Service.Implementations
                 throw new DomainValidationException(new Dictionary<string, string[]>
                 { ["Invitation"] = new[] { "Invitation expired." } });
 
-            if (invitation.MaxUses.HasValue && invitation.UsedCount >= invitation.MaxUses)
+            if (invitation.UsedCount >= invitation.MaxUses)
                 throw new DomainValidationException(new Dictionary<string, string[]>
                 { ["Invitation"] = new[] { "Invitation usage exceeded." } });
-
 
             bool wasFollower = _relationService.IsFollower(invitation.GroupId);
 
@@ -114,14 +112,11 @@ namespace Service.Implementations
 
                 if (follower != null)
                     followerRepo.Delete(follower);
-
             }
             else
             {
                 await _groupScoreService.IncreaseOnActionAsync(invitation.GroupId, 10);
             }
-
-            
 
             var member = new GroupMembers
             {
@@ -132,11 +127,10 @@ namespace Service.Implementations
             await _unitOfWork.GetRepository<GroupMembers, int>().AddAsync(member);
 
             invitation.UsedCount++;
-            if (invitation.MaxUses.HasValue && invitation.UsedCount >= invitation.MaxUses)
+            if (invitation.UsedCount >= invitation.MaxUses)
             {
                 invitation.IsRevoked = true;
             }
-
 
             var memberRepo = _unitOfWork.GetRepository<GroupMembers, int>();
             var adminsSpec = new GroupAdminsAndOwnerSpec(invitation.GroupId);
@@ -148,16 +142,16 @@ namespace Service.Implementations
                 ActorUserId = userId,
                 Type = NotificationType.NewMemberJoined,
                 Title = "New Member Joined",
-                Message = $"A new member has joined '{invitation.Group.GroupName}' via invitation link.",
+                Message = $"A new member has joined '{invitation.Group?.GroupName ?? "the group"}' via {invitation.User?.UserName ?? "an administrator"}'s link.",
                 ReferenceId = invitation.GroupId
             }).ToList();
 
             await _notificationService.CreateRangeAsync(notificationDtos);
+
             await _unitOfWork.SaveChangesAsync();
 
             return new AcceptInvitationResponseDTO { Success = true, Message = "Joined successfully." };
         }
-
 
 
 
@@ -168,12 +162,18 @@ namespace Service.Implementations
                 throw new ForbiddenActionException();
 
             var repo = _unitOfWork.GetRepository<GroupInvitation, int>();
-            var spec = new GetGroupInvitationsSpecification(groupId, page, pageSize);
+            var spec = new GetGroupInvitationsSpecification(groupId, userId, page, pageSize);
 
             var invitations = await repo.GetAllAsync(spec);
-            var totalCount = await repo.CountAsync(i => i.GroupId == groupId);
+            var totalCount = await repo.CountAsync(i => i.GroupId == groupId && i.UserId == userId);
 
-            var mappedInvitations = _mapper.Map<List<InvitationResultDTO>>(invitations);
+            // ١. اسحب الـ URL من الـ Configuration
+            var frontUrl = _configuration["URLs:NetlifyUrl"];
+
+            var mappedInvitations = _mapper.Map<List<InvitationResultDTO>>(invitations, opt =>
+            {
+                opt.Items["FrontUrl"] = frontUrl;
+            });
 
             return new PagedResult<InvitationResultDTO>
             {
@@ -188,7 +188,6 @@ namespace Service.Implementations
 
 
 
-
         public async Task<bool> RevokeInvitationAsync(int invitationId, string userId)
         {
             var repo = _unitOfWork.GetRepository<GroupInvitation, int>();
@@ -196,39 +195,15 @@ namespace Service.Implementations
             var invitation = await repo.GetByIdAsync(invitationId)
                 ?? throw new InvitationNotFoundException(invitationId);
 
-            if (!_relationService.IsAdmin(invitation.GroupId) && !_relationService.IsOwner(invitation.GroupId))
+            if (invitation.UserId != userId)
+            {
                 throw new ForbiddenActionException();
+            }
 
             invitation.IsRevoked = true;
             await _unitOfWork.SaveChangesAsync();
             return true;
-
         }
 
-
-
-
-        public async Task<bool> RevokeAllGroupInvitationsAsync(int groupId, string userId)
-        {
-            if (!_relationService.IsAdmin(groupId) && !_relationService.IsOwner(groupId))
-                throw new ForbiddenActionException();
-
-            var repo = _unitOfWork.GetRepository<GroupInvitation, int>();
-
-            var spec = new GroupInvitationsByStatusSpecification(groupId, isRevoked: false);
-            var activeInvitations = await repo.GetAllAsync(spec);
-
-            if (!activeInvitations.Any())
-                return true;
-
-            foreach (var invitation in activeInvitations)
-            {
-                invitation.IsRevoked = true;
-            }
-
-            await _unitOfWork.SaveChangesAsync();
-
-            return true;
-        }
     }
 }

@@ -9,11 +9,11 @@ namespace Service.Specifications.GroupInvitaionSpecs
 {
     public class GetGroupInvitationsSpecification : BaseSpecifications<GroupInvitation, int>
     {
-        public GetGroupInvitationsSpecification(int groupId, int page, int pageSize)
-            : base(i => i.GroupId == groupId)
+        public GetGroupInvitationsSpecification(int groupId, string userId, int page, int pageSize)
+        : base(i => i.GroupId == groupId && i.UserId == userId)
         {
-            AddOrderByDescending(i => i.CreatedAt);
             ApplyPagination(page, pageSize);
+            AddOrderByDescending(i => i.CreatedAt);
         }
     }
 
