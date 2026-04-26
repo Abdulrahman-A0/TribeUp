@@ -17,6 +17,5 @@ namespace Shared.DTOs.GroupModule
         public DateTime CreatedAt { get; init; }
         public AccessibilityType Accessibility { get; init; }
         public int MembersCount { get; init; }
-        public List<GroupMemberResultDTO> Members { get; init; }
     }
 }

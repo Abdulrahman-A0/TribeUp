@@ -15,13 +15,13 @@ using Shared.Enums;
 namespace Service.Implementations
 {
     public class GroupService(
-        IUnitOfWork unitOfWork, 
+        IUnitOfWork unitOfWork,
         IMapper mapper,
-        IWebHostEnvironment environment, 
-        IFileStorageService fileStorage, 
+        IWebHostEnvironment environment,
+        IFileStorageService fileStorage,
         IUserGroupRelationService _relationService) : IGroupService
     {
-        
+
 
 
 
@@ -61,7 +61,14 @@ namespace Service.Implementations
 
             var group = await repo.GetByIdAsync(spec)
                 ?? throw new GroupNotFoundException(groupId);
-            return mapper.Map<GroupDetailsResultDTO>(group);
+
+            var membersCount = await unitOfWork.GetRepository<GroupMembers, int>()
+                .CountAsync(m => m.GroupId == groupId);
+
+            return mapper.Map<GroupDetailsResultDTO>(group) with
+            {
+                MembersCount = membersCount
+            };
         }
 
 
@@ -114,7 +121,7 @@ namespace Service.Implementations
             var group = await repo.GetByIdAsync(groupId)
                 ?? throw new GroupNotFoundException(groupId);
 
-            if (!_relationService.IsOwner(groupId) && ! _relationService.IsAdmin(groupId))
+            if (!_relationService.IsOwner(groupId) && !_relationService.IsAdmin(groupId))
                 throw new ForbiddenActionException();
 
             mapper.Map(updateGroupDTO, group);
