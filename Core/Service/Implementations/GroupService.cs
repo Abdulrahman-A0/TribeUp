@@ -65,8 +65,11 @@ namespace Service.Implementations
             var membersCount = await unitOfWork.GetRepository<GroupMembers, int>()
                 .CountAsync(m => m.GroupId == groupId);
 
+            var userRelation = _relationService.GetRelation(groupId);
+
             return mapper.Map<GroupDetailsResultDTO>(group) with
             {
+                GroupRelationType = userRelation.ToString(),
                 MembersCount = membersCount
             };
         }
