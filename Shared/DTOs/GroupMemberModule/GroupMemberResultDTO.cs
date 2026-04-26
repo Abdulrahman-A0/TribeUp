@@ -13,7 +13,6 @@ namespace Shared.DTOs.GroupMemberModule
         public string UserName { get; init; }
         public string UserProfilePicture { get; init; } = string.Empty;
         public RoleType Role { get; init; }
-        public bool IsCreator { get; init; }
         public DateTime JoinedAt { get; init; }
     }
 }
