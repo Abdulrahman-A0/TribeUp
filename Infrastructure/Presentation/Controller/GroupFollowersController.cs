@@ -8,10 +8,10 @@ using System.Security.Claims;
 namespace Presentation.Controller
 {
     [Authorize]
-    [Route("api/groups/{groupId:int}/GetFollowers")]
+    [Route("api/groups/{groupId:int}")]
     public class GroupFollowersController(IServiceManager serviceManager) : ApiController
     {
-        [HttpGet]
+        [HttpGet("GetFollowers")]
         public async Task<ActionResult<PagedResult<GroupFollowerResultDTO>>> GetFollowers(int groupId, int page = 1, int pageSize = 10, string? searchTerm = null)
         {
             var result = await serviceManager.GroupFollowerService
@@ -31,7 +31,7 @@ namespace Presentation.Controller
         }
 
 
-        [HttpDelete("{followerId}")]
+        [HttpDelete("DeleteFollower/{followerId}")]
         public async Task<ActionResult<bool>> RemoveFollower(int groupId, int followerId)
         {
 
