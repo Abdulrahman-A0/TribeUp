@@ -16,7 +16,9 @@ namespace Service.MappingProfiles
         {
             CreateMap<GroupMembers, GroupMemberResultDTO>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
-                
+
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.UserName))
                 
                 .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role.ToString()))
