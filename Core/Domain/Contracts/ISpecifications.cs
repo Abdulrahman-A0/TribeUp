@@ -13,11 +13,11 @@ namespace Domain.Contracts
         public Expression<Func<TEntity, bool>>? Criteria { get; }
         public List<Expression<Func<TEntity, object>>> IncludeExpressions { get; }
         public List<Func<IQueryable<TEntity>, IQueryable<TEntity>>> ThenIncludeExpressions { get; }
-        public Expression<Func<TEntity, object>> OrderBy { get; }
-        public Expression<Func<TEntity, object>> OrderByDescending { get; }
+        public Expression<Func<TEntity, object>>? OrderBy { get; }
+        public Expression<Func<TEntity, object>>? OrderByDescending { get; }
+        public List<(Expression<Func<TEntity, object>> Expression, bool IsDescending)> OrderByExpressions { get; }
         int Take { get; }
         int Skip { get; }
         bool IsPaginated { get; }
-
     }
 }

@@ -39,11 +39,30 @@ namespace Persistence
             }
 
 
-            if (specifications.OrderByDescending is not null && specifications.OrderBy is not null)
+            if (specifications.OrderByExpressions != null && specifications.OrderByExpressions.Count > 0)
             {
-                inputQuery = inputQuery.OrderByDescending(specifications.OrderByDescending)
-                                       .ThenBy(specifications.OrderBy);
+                IOrderedQueryable<TEntity> orderedQuery = null!;
+
+                for (int i = 0; i < specifications.OrderByExpressions.Count; i++)
+                {
+                    var sort = specifications.OrderByExpressions[i];
+
+                    if (i == 0)
+                    {
+                        orderedQuery = sort.IsDescending
+                            ? inputQuery.OrderByDescending(sort.Expression)
+                            : inputQuery.OrderBy(sort.Expression);
+                    }
+                    else
+                    {
+                        orderedQuery = sort.IsDescending
+                            ? orderedQuery.ThenByDescending(sort.Expression)
+                            : orderedQuery.ThenBy(sort.Expression);
+                    }
+                }
+                inputQuery = orderedQuery ?? inputQuery;
             }
+            // To keep older versions of "OrderBy" and "OrderByDescending" properties working
             else if (specifications.OrderByDescending is not null)
             {
                 inputQuery = inputQuery.OrderByDescending(specifications.OrderByDescending);
@@ -56,9 +75,7 @@ namespace Persistence
 
             if (specifications.IsPaginated)
             {
-                inputQuery = inputQuery
-                    .Skip(specifications.Skip)
-                    .Take(specifications.Take);
+                inputQuery = inputQuery.Skip(specifications.Skip).Take(specifications.Take);
             }
 
             return inputQuery;
