@@ -21,6 +21,7 @@ namespace Persistence
             if (specifications.Criteria is not null)
                 inputQuery = inputQuery.Where(specifications.Criteria);
 
+
             if (isCountQuery) return inputQuery;
 
 
@@ -37,11 +38,21 @@ namespace Persistence
                 }
             }
 
-            if (specifications.OrderBy is not null)
-                inputQuery = inputQuery.OrderBy(specifications.OrderBy);
 
-            if (specifications.OrderByDescending is not null)
+            if (specifications.OrderByDescending is not null && specifications.OrderBy is not null)
+            {
+                inputQuery = inputQuery.OrderByDescending(specifications.OrderByDescending)
+                                       .ThenBy(specifications.OrderBy);
+            }
+            else if (specifications.OrderByDescending is not null)
+            {
                 inputQuery = inputQuery.OrderByDescending(specifications.OrderByDescending);
+            }
+            else if (specifications.OrderBy is not null)
+            {
+                inputQuery = inputQuery.OrderBy(specifications.OrderBy);
+            }
+
 
             if (specifications.IsPaginated)
             {
