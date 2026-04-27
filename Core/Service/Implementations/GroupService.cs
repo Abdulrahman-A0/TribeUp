@@ -38,7 +38,8 @@ namespace Service.Implementations
 
             foreach (var groupDto in mappedGroups)
             {
-                groupDto.UserRelation = _relationService.GetRelation(groupDto.Id);
+                var relation = _relationService.GetRelation(groupDto.Id);
+                groupDto.UserRelation = relation;
             }
 
             return new PagedResult<GroupResultDTO>
