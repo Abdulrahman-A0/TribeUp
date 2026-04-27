@@ -54,8 +54,8 @@ namespace Presentation.Controller
 
 
         [HttpGet("ExploreGroups")]
-        public async Task<ActionResult<PagedResult<GroupResultDTO>>> ExploreGroupsAsync(int page = 1, int pageSize = 20)
-            => Ok(await serviceManager.GroupService.ExploreGroupsAsync(page, pageSize, UserId));
+        public async Task<ActionResult<PagedResult<GroupResultDTO>>> ExploreGroupsAsync(int page = 1, int pageSize = 20, string? search = null)
+            => Ok(await serviceManager.GroupService.ExploreGroupsAsync(page, pageSize, UserId, search));
 
     }
 }
