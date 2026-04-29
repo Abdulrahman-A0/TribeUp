@@ -9,7 +9,7 @@
         public string Type { get; init; }
 
         public bool IsRead { get; init; }
-        public DateTime CreatedAt { get; init; }
+        public DateTime CreateAt { get; init; }
 
         public int? ReferenceId { get; init; }
 
