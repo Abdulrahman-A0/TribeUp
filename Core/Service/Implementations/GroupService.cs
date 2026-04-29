@@ -221,7 +221,7 @@ namespace Service.Implementations
             var mappedGroups = groups.Select(g =>
             {
                 var dto = mapper.Map<GroupResultDTO>(g);
-                dto.UserRelation = _relationService.GetRelation(g.Id);
+                dto.UserRelation = GroupRelationType.None;
                 return dto;
             }).ToList();
 
