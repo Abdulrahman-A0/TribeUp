@@ -44,7 +44,6 @@ namespace Service.Implementations
 
 
 
-
         public async Task<InvitationResultDTO> CreateInvitationAsync(int groupId, string userId, CreateInvitationDTO dto)
         {
             if (!_relationService.IsAdmin(groupId) && !_relationService.IsOwner(groupId))
@@ -52,17 +51,27 @@ namespace Service.Implementations
 
             var repo = _unitOfWork.GetRepository<GroupInvitation, int>();
 
-            var spec = new ActiveGroupInvitationSpecification(groupId, userId);
-            var activeInvitation = (await repo.GetAllAsync(spec)).FirstOrDefault();
+            var activeSpec = new ActiveGroupInvitationSpecification(groupId, userId);
+            var activeInvitation = await repo.GetByIdAsync(activeSpec);
 
             if (activeInvitation != null)
+            {
                 throw new ActiveInvitationAlreadyExistsException();
+            }
+
+            var expiredSpec = new ExpiredGroupInvitationSpecification(groupId, userId);
+            var expiredInvitation = await repo.GetByIdAsync(expiredSpec);
+
+            if (expiredInvitation != null)
+            {
+                expiredInvitation.IsRevoked = true;
+            }
 
             var invitation = _mapper.Map<GroupInvitation>(dto);
-
             invitation.Token = Guid.NewGuid().ToString("N");
             invitation.GroupId = groupId;
             invitation.UserId = userId;
+            invitation.CreatedAt = DateTime.UtcNow;
 
             await repo.AddAsync(invitation);
             await _unitOfWork.SaveChangesAsync();
@@ -71,7 +80,7 @@ namespace Service.Implementations
             return _mapper.Map<InvitationResultDTO>(invitation, opt => opt.Items["FrontUrl"] = frontUrl);
         }
 
-        
+
 
 
 
@@ -81,34 +90,29 @@ namespace Service.Implementations
             var followerRepo = _unitOfWork.GetRepository<GroupFollowers, int>();
 
             var spec = new GetInvitationByTokenSpecification(token);
-            var invitation = (await repo.GetAllAsync(spec)).FirstOrDefault();
+            var invitation = await repo.GetByIdAsync(spec);
 
             if (invitation == null)
-                throw new DomainValidationException(new Dictionary<string, string[]>
-                { ["Invitation"] = new[] { "Invalid invitation." } });
+                throw new DomainValidationException(new Dictionary<string, string[]> { ["Invitation"] = new[] { "Invalid invitation." } });
 
             if (_relationService.IsMember(invitation.GroupId))
-                throw new DomainValidationException(new Dictionary<string, string[]>
-                { ["Invitation"] = new[] { "Already a member." } });
+                throw new DomainValidationException(new Dictionary<string, string[]> { ["Invitation"] = new[] { "Already a member." } });
 
             if (invitation.IsRevoked)
-                throw new DomainValidationException(new Dictionary<string, string[]>
-                { ["Invitation"] = new[] { "Invitation revoked." } });
+                throw new DomainValidationException(new Dictionary<string, string[]> { ["Invitation"] = new[] { "Invitation revoked." } });
 
             if (invitation.ExpiresAt.HasValue && invitation.ExpiresAt < DateTime.UtcNow)
-                throw new DomainValidationException(new Dictionary<string, string[]>
-                { ["Invitation"] = new[] { "Invitation expired." } });
+                throw new DomainValidationException(new Dictionary<string, string[]> { ["Invitation"] = new[] { "Invitation expired." } });
 
             if (invitation.UsedCount >= invitation.MaxUses)
-                throw new DomainValidationException(new Dictionary<string, string[]>
-                { ["Invitation"] = new[] { "Invitation usage exceeded." } });
+                throw new DomainValidationException(new Dictionary<string, string[]> { ["Invitation"] = new[] { "Invitation usage exceeded." } });
 
             bool wasFollower = _relationService.IsFollower(invitation.GroupId);
 
             if (wasFollower)
             {
                 var followerSpec = new GroupFollowerByUserIdSpec(invitation.GroupId, userId);
-                var follower = (await followerRepo.GetAllAsync(followerSpec)).FirstOrDefault();
+                var follower = await followerRepo.GetByIdAsync(followerSpec);
 
                 if (follower != null)
                     followerRepo.Delete(follower);
@@ -132,57 +136,38 @@ namespace Service.Implementations
                 invitation.IsRevoked = true;
             }
 
-            var memberRepo = _unitOfWork.GetRepository<GroupMembers, int>();
-            var adminsSpec = new GroupAdminsAndOwnerSpec(invitation.GroupId);
-            var managers = await memberRepo.GetAllAsync(adminsSpec);
-
-            var notificationDtos = managers.Select(manager => new CreateNotificationDTO
-            {
-                RecipientUserId = manager.UserId,
-                ActorUserId = userId,
-                Type = NotificationType.NewMemberJoined,
-                Title = "New Member Joined",
-                Message = $"A new member has joined '{invitation.Group?.GroupName ?? "the group"}' via {invitation.User?.UserName ?? "an administrator"}'s link.",
-                ReferenceId = invitation.GroupId
-            }).ToList();
-
-            await _notificationService.CreateRangeAsync(notificationDtos);
+            await SendJoinNotifications(invitation, userId);
 
             await _unitOfWork.SaveChangesAsync();
 
             return new AcceptInvitationResponseDTO { Success = true, Message = "Joined successfully." };
         }
 
+        
 
 
 
-        public async Task<PagedResult<InvitationResultDTO>> GetGroupInvitationsAsync(int groupId, string userId, int page, int pageSize)
+
+
+
+        public async Task<InvitationResultDTO?> GetActiveInvitationAsync(int groupId, string userId)
         {
             if (!_relationService.IsAdmin(groupId) && !_relationService.IsOwner(groupId))
                 throw new ForbiddenActionException();
 
             var repo = _unitOfWork.GetRepository<GroupInvitation, int>();
-            var spec = new GetGroupInvitationsSpecification(groupId, userId, page, pageSize);
 
-            var invitations = await repo.GetAllAsync(spec);
-            var totalCount = await repo.CountAsync(i => i.GroupId == groupId && i.UserId == userId);
+            var spec = new ActiveGroupInvitationSpecification(groupId, userId);
 
-            // ١. اسحب الـ URL من الـ Configuration
+            var invitation = await repo.GetByIdAsync(spec)
+                             ?? throw new ActiveInvitationNotFoundException();
+
             var frontUrl = _configuration["URLs:NetlifyUrl"];
 
-            var mappedInvitations = _mapper.Map<List<InvitationResultDTO>>(invitations, opt =>
+            return _mapper.Map<InvitationResultDTO>(invitation, opt =>
             {
                 opt.Items["FrontUrl"] = frontUrl;
             });
-
-            return new PagedResult<InvitationResultDTO>
-            {
-                Items = mappedInvitations,
-                Page = page,
-                PageSize = pageSize,
-                TotalCount = totalCount,
-                HasMore = (page * pageSize) < totalCount
-            };
         }
 
 
@@ -195,14 +180,42 @@ namespace Service.Implementations
             var invitation = await repo.GetByIdAsync(invitationId)
                 ?? throw new InvitationNotFoundException(invitationId);
 
-            if (invitation.UserId != userId)
+            if (invitation.UserId != userId && !_relationService.IsOwner(invitation.GroupId))
             {
                 throw new ForbiddenActionException();
+            }
+
+            if (invitation.IsRevoked)
+            {
+                return true;
             }
 
             invitation.IsRevoked = true;
             await _unitOfWork.SaveChangesAsync();
             return true;
+        }
+
+
+
+
+
+        private async Task SendJoinNotifications(GroupInvitation invitation, string joinedUserId)
+        {
+            var memberRepo = _unitOfWork.GetRepository<GroupMembers, int>();
+            var adminsSpec = new GroupAdminsAndOwnerSpec(invitation.GroupId);
+            var managers = await memberRepo.GetAllAsync(adminsSpec);
+
+            var notificationDtos = managers.Select(manager => new CreateNotificationDTO
+            {
+                RecipientUserId = manager.UserId,
+                ActorUserId = joinedUserId,
+                Type = NotificationType.NewMemberJoined,
+                Title = "New Member Joined",
+                Message = $"A new member has joined '{invitation.Group?.GroupName ?? "the group"}' via {invitation.User?.UserName ?? "an administrator"}'s link.",
+                ReferenceId = invitation.GroupId
+            }).ToList();
+
+            await _notificationService.CreateRangeAsync(notificationDtos);
         }
 
     }

@@ -15,7 +15,6 @@ namespace Shared.DTOs.GroupInvitationModule
         public DateTime? ExpiresAt { get; set; }
         public int MaxUses { get; set; }
         public int UsedCount { get; set; }
-        public bool IsRevoked { get; set; }
     }
 
 }
