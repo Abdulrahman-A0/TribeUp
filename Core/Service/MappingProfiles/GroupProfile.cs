@@ -20,10 +20,6 @@ namespace Service.MappingProfiles
             CreateMap<CreateGroupDTO, Group>();
 
             CreateMap<Group, GroupResultDTO>()
-                .ForMember(dest => dest.MembersCount,
-                    opt => opt.MapFrom(src =>
-                    src.GroupMembers != null ? src.GroupMembers.Count : 0))
-
                 .ForMember(dest => dest.GroupProfilePicture,
                 opt => opt.MapFrom<GroupProfilePictureResolver>());
 

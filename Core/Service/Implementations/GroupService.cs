@@ -40,6 +40,8 @@ namespace Service.Implementations
             {
                 var relation = _relationService.GetRelation(groupDto.Id);
                 groupDto.UserRelation = relation;
+                groupDto.MembersCount = await unitOfWork.GetRepository<GroupMembers, int>()
+                                                .CountAsync(gm => gm.GroupId == groupDto.Id);
             }
 
             return new PagedResult<GroupResultDTO>
