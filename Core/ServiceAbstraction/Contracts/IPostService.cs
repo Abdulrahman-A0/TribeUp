@@ -14,7 +14,7 @@ namespace ServiceAbstraction.Contracts
     public interface IPostService
     {
         Task<CreateEntityResultDTO> CreatePostAsync(string userId, string username, CreatePostDTO dto, List<IFormFile> mediaFiles);
-        Task<CreateEntityResultDTO> EditPostAsync(string userId, string username, int postId, CreatePostDTO dto, List<IFormFile> mediaFiles);
+        Task<CreateEntityResultDTO> EditPostAsync(string userId, string username, int postId, CreatePostDTO dto, List<IFormFile> newMediaFiles, List<int> deleteMediaIds);
         Task<DeleteEntityResultDTO> DeletePostAsync(string userId, int postId);
         Task<PostDTO> GetPostByIdAsync(string userId, int postId);
         Task<PagedResult<PostDTO>> GetPersonalFeedAsync(string userId, string username, int page, int pageSize);

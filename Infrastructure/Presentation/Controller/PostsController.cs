@@ -22,8 +22,9 @@ namespace Presentation.Controller
         public async Task<ActionResult<CreateEntityResultDTO>> EditPost(
             int postId,
             [FromForm] CreatePostDTO dto,
-            [FromForm] List<IFormFile> mediaFiles)
-            => Ok(await service.PostService.EditPostAsync(UserId, UserName, postId, dto, mediaFiles));
+            [FromForm] List<IFormFile> newMediaFiles,
+            [FromForm] List<int> deleteMediaIds)
+            => Ok(await service.PostService.EditPostAsync(UserId, UserName, postId, dto, newMediaFiles, deleteMediaIds));
 
 
         [HttpDelete("{postId:int}/DeletePost")]

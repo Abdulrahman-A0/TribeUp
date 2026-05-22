@@ -183,7 +183,8 @@ namespace Service.Implementations
            string username,
            int postId,
            CreatePostDTO dto,
-           List<IFormFile> mediaFiles)
+           List<IFormFile> newMediaFiles,
+           List<int> deleteMediaIds)
         {
             if (!_relationService.IsMember(dto.GroupId))
                 throw new ForbiddenActionException();
@@ -193,10 +194,26 @@ namespace Service.Implementations
             var post = await postRepo.GetByIdAsync(spec)
                 ?? throw new PostNotFoundException(postId);
 
-            if (string.IsNullOrWhiteSpace(post.Caption) && !mediaFiles.Any())
+            if (string.IsNullOrWhiteSpace(post.Caption) && !newMediaFiles.Any())
                 throw new ValidationException("Post must contain text or media.");
 
-            foreach (var file in mediaFiles)
+            var mediaToDelete = post.MediaItems
+                .Where(m => deleteMediaIds.Contains(m.Order))
+                .ToList();
+
+            foreach (var media in mediaToDelete)
+            {
+                post.MediaItems.Remove(media);
+                await _fileStorage.DeleteAsync(media.MediaURL);
+            }
+
+            //await _unitOfWork.SaveChangesAsync();
+
+            var remainingMedia = post.MediaItems.ToList();
+            for (int i = 0; i < remainingMedia.Count(); i++)
+                remainingMedia[i].Order = i;
+
+            foreach (var file in newMediaFiles)
             {
                 var savedPath = await _fileStorage.SaveAsync(file, MediaType.PostMedia);
 
@@ -215,6 +232,25 @@ namespace Service.Implementations
             //await postRepo.AddAsync(post);
 
             //await _unitOfWork.SaveChangesAsync();
+
+            # region AI moderation result
+
+            var moderationResult = await _aiModerationManager.ModerateAsync(
+                post.Caption ?? string.Empty,
+                ModeratedEntityType.Post,
+                post.Id);
+
+            if (!moderationResult.IsAccepted)
+            {
+                return new CreateEntityResultDTO
+                {
+                    IsCreated = false,
+                    Status = ContentStatus.Denied,
+                    Message = "Post violates community guidelines."
+                };
+            }
+
+            #endregion
 
 
             foreach (var taggedUserId in dto.TaggedUserIds.Distinct())
@@ -238,33 +274,15 @@ namespace Service.Implementations
                 });
             }
 
-            # region AI moderation result
-
-            var moderationResult = await _aiModerationManager.ModerateAsync(
-                post.Caption ?? string.Empty,
-                ModeratedEntityType.Post,
-                post.Id);
-
-            if (!moderationResult.IsAccepted)
-            {
-                return new CreateEntityResultDTO
-                {
-                    IsCreated = false,
-                    Status = ContentStatus.Denied,
-                    Message = "Post violates community guidelines."
-                };
-            }
-
-            #endregion
-
             //await _groupScoreService.IncreaseOnActionAsync(dto.GroupId, 5);
 
+            await _unitOfWork.SaveChangesAsync();
 
             return new CreateEntityResultDTO
             {
                 IsCreated = true,
                 Status = ContentStatus.Accepted,
-                Message = "Post created successfully.",
+                Message = "Post updated successfully.",
                 Post = _mapper.Map<PostDTO>(post)
             };
 
