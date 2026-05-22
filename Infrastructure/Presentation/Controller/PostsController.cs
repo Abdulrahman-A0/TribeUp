@@ -17,6 +17,30 @@ namespace Presentation.Controller
             [FromForm] List<IFormFile> mediaFiles)
             => Ok(await service.PostService.CreatePostAsync(UserId, UserName, dto, mediaFiles));
 
+        /// <summary>
+        /// Updates an existing post.
+        /// </summary>
+        /// <remarks>
+        /// Allows the post owner to:
+        /// 
+        /// - Update post content
+        /// - Upload new media files
+        /// - Delete existing media files
+        /// 
+        /// Request must be sent as multipart/form-data.
+        /// 
+        /// Existing media not included in deleteMediaIds remain unchanged.
+        /// - param postId The ID of the target post.
+        /// - param dto Updated post information.
+        /// - param newMediaFiles New media files to upload.
+        /// - param deleteMediaIds IDs of media files to delete. (insert the order of the media to delete into deletedMediaIds)
+        /// </remarks>
+        /// <returns>Returns success result containing updated post info.</returns>
+        /// <response code="200">Post updated successfully.</response>
+        /// <response code="400">Invalid request data.</response>
+        /// <response code="401">Unauthorized.</response>
+        /// <response code="403">User is not allowed to edit this post.</response>
+        /// <response code="404">Post not found.</response>
 
         [HttpPut("{postId:int}/EditPost")]
         public async Task<ActionResult<CreateEntityResultDTO>> EditPost(

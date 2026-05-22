@@ -3,6 +3,7 @@ using Microsoft.OpenApi.Models;
 using Presentation.SignalR;
 using ServiceAbstraction.Contracts;
 using Shared.ErrorModels;
+using System.Reflection;
 using TribeUp.BackgroundServices;
 using TribeUp.Factories;
 using TribeUp.Filters;
@@ -37,6 +38,11 @@ namespace TribeUp.Extensions
                     Title = "TribeUp",
                     Description = "TribeUp Social Media"
                 });
+
+                var xmlFile = "Presentation.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+
+                swagger.IncludeXmlComments(xmlPath);
 
                 swagger.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
                 {
