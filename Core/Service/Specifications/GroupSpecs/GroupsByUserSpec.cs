@@ -9,11 +9,19 @@ namespace Service.Specifications.GroupSpecs
 {
     public class GroupsByUserSpec : BaseSpecifications<Group, int>
     {
-        public GroupsByUserSpec(string userId)
+        public GroupsByUserSpec(string userId, int page, int pageSize)
             : base(g => g.GroupMembers.Any(m => m.UserId == userId))
         {
-            AddIncludes(g => g.GroupMembers);
             AddIncludes(g => g.GroupScore);
+
+            ApplyPagination(page, pageSize);
+
+            AddOrderByDescending(g => g.GroupMembers
+                .Where(m => m.UserId == userId)
+                .Select(m => (object)m.Role)
+                .FirstOrDefault());
+
+            AddOrderBy(g => g.CreatedAt); 
         }
     }
 }

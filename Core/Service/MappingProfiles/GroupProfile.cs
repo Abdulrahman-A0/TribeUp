@@ -16,7 +16,7 @@ namespace Service.MappingProfiles
     {
         public GroupProfile()
         {
-            
+
             CreateMap<CreateGroupDTO, Group>();
 
             CreateMap<Group, GroupResultDTO>()
@@ -24,25 +24,18 @@ namespace Service.MappingProfiles
                     opt => opt.MapFrom(src =>
                     src.GroupMembers != null ? src.GroupMembers.Count : 0))
 
-                .ForMember(dest => dest.GroupProfilePicture, 
+                .ForMember(dest => dest.GroupProfilePicture,
                 opt => opt.MapFrom<GroupProfilePictureResolver>());
 
 
 
 
             CreateMap<Group, GroupDetailsResultDTO>()
-                .ForMember(dest => dest.MembersCount,
-                    opt => opt.MapFrom(src =>
-                    src.GroupMembers != null ? src.GroupMembers.Count : 0))
-
-                .ForMember(dest => dest.Members,
-                    opt => opt.MapFrom(src => src.GroupMembers))
-
                 .ForMember(dest => dest.GroupProfilePicture,
-                opt => opt.MapFrom<GroupProfilePictureResolver>()); 
+                opt => opt.MapFrom<GroupProfilePictureResolver>());
 
 
-            
+
             CreateMap<UpdateGroupDTO, Group>()
                 .ForMember(dest => dest.GroupName,
                     opt => opt.Condition(src => src.GroupName is not null))
@@ -64,7 +57,7 @@ namespace Service.MappingProfiles
                 .ForMember(dest => dest.GroupProfilePicture, opt => opt.MapFrom<GroupProfilePictureResolver>())
                 .ForMember(dest => dest.LastMessageContent, opt => opt.MapFrom(src => src.LastMessage.Content))
                 .ForMember(dest => dest.LastMessageSenderName, opt => opt.MapFrom(src => src.LastMessage.User.UserName))
-                .ForMember(dest => dest.LastMessageSentAt,  opt => opt.MapFrom(src => src.LastMessage.SentAt));
+                .ForMember(dest => dest.LastMessageSentAt, opt => opt.MapFrom(src => src.LastMessage.SentAt));
 
 
 

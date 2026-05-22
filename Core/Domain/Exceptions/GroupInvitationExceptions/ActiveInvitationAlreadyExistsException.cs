@@ -10,7 +10,7 @@ namespace Domain.Exceptions.GroupInvitationExceptions
     public sealed class ActiveInvitationAlreadyExistsException : ConflictException
     {
         public ActiveInvitationAlreadyExistsException()
-            : base("An active invitation already exists for this group.")
+            : base("This user has already created an active invitation.")
         {
         }
     }

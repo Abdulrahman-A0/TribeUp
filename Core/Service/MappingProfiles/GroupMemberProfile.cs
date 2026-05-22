@@ -14,15 +14,19 @@ namespace Service.MappingProfiles
     {
         public GroupMemberProfile()
         {
-
             CreateMap<GroupMembers, GroupMemberResultDTO>()
-            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.UserName))
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
 
-            
-            .ForMember(dest => dest.UserProfilePicture, opt => opt.MapFrom((src, dest, destMember, context) => {
-                var userDto = context.Mapper.Map<UserProfileDTO>(src.User);
-                return userDto.ProfilePicture;
-            }));
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.UserName))
+                
+                .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role.ToString()))
+                
+                .ForMember(dest => dest.UserProfilePicture, opt => opt.MapFrom((src, dest, destMember, context) => {
+                    var userDto = context.Mapper.Map<UserProfileDTO>(src.User);
+                    return userDto?.ProfilePicture ?? string.Empty;
+                }));
         }
     }
 }

@@ -9,7 +9,7 @@ namespace Shared.DTOs.GroupInvitationModule
     public class CreateInvitationDTO
     {
         public DateTime? ExpiresAt { get; set; }
-        public int? MaxUses { get; set; }
+        public int MaxUses { get; set; }
 
     }
 

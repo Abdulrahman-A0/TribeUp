@@ -15,6 +15,7 @@ namespace Service.Specifications.GroupMemberSpecs
         {
             AddIncludes(m => m.User);
             ApplyPagination(page, pageSize);
+            AddOrderByDescending(m => m.Role);
             AddOrderBy(m => m.JoinedAt);
         }
     }

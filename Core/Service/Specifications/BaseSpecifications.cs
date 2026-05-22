@@ -54,12 +54,19 @@ namespace Service.Specifications
         #endregion
 
         #region Sorting
-        public Expression<Func<TEntity, object>> OrderBy { get; private set; }
+        public List<(Expression<Func<TEntity, object>> Expression, bool IsDescending)> OrderByExpressions { get; } = new();
 
-        public Expression<Func<TEntity, object>> OrderByDescending { get; private set; }
+        public Expression<Func<TEntity, object>>? OrderBy =>
+            OrderByExpressions.Where(x => !x.IsDescending).Select(x => x.Expression).FirstOrDefault();
 
-        protected void AddOrderBy(Expression<Func<TEntity, object>> orderByExpression) => OrderBy = orderByExpression;
-        protected void AddOrderByDescending(Expression<Func<TEntity, object>> orderByDescendingExpression) => OrderByDescending = orderByDescendingExpression;
+        public Expression<Func<TEntity, object>>? OrderByDescending =>
+            OrderByExpressions.Where(x => x.IsDescending).Select(x => x.Expression).FirstOrDefault();
+
+        protected void AddOrderBy(Expression<Func<TEntity, object>> orderByExpression)
+             => OrderByExpressions.Add((orderByExpression, false));
+
+        protected void AddOrderByDescending(Expression<Func<TEntity, object>> orderByDescendingExpression)
+             => OrderByExpressions.Add((orderByDescendingExpression, true));
         #endregion
 
     }

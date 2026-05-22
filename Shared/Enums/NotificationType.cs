@@ -8,6 +8,7 @@
         PostLike = 3,
         PostComment = 4,
         System = 5,
-        NewMemberJoined = 6
+        NewMemberJoined = 6,
+        FollowerRemoved = 7
     }
 }

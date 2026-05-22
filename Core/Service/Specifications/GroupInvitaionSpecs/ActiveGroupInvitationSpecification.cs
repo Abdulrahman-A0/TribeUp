@@ -9,13 +9,12 @@ namespace Service.Specifications.GroupInvitaionSpecs
 {
     public class ActiveGroupInvitationSpecification : BaseSpecifications<GroupInvitation, int>
     {
-        public ActiveGroupInvitationSpecification(int groupId)
-            : base(i =>
-                i.GroupId == groupId &&
-                !i.IsRevoked &&
-                (i.ExpiresAt == null || i.ExpiresAt > DateTime.UtcNow))
+        public ActiveGroupInvitationSpecification(int groupId, string userId)
+            : base(i => i.GroupId == groupId &&
+                        i.UserId == userId &&
+                        !i.IsRevoked &&
+                        (i.ExpiresAt == null || i.ExpiresAt > DateTime.UtcNow))
         {
-            AddOrderByDescending(i => i.CreatedAt);
         }
     }
 }

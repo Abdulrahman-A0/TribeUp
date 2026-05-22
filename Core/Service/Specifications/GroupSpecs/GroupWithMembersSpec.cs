@@ -13,9 +13,6 @@ namespace Service.Specifications.GroupSpecs
     {
         public GroupWithMembersSpec(int groupId) : base(g => g.Id == groupId)
         {
-            AddIncludes(g => g.GroupMembers);
-            AddThenIncludes(q => q.Include(g => g.GroupMembers)
-                                            .ThenInclude(m => m.User));
         }
     }
 }

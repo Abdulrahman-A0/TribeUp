@@ -18,6 +18,7 @@ namespace Service.Implementations
                     MediaType.GroupProfile => $"{baseUrl}/images/ProfilePictures/Groups/default-group.jpg",
                     MediaType.PostMedia => null,
                     MediaType.UserCover => null,
+                    MediaType.StoryMedia => null,
                     _ => null
                 };
 

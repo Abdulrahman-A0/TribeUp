@@ -55,7 +55,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("GroupId");
 
-                    b.ToTable("Events", (string)null);
+                    b.ToTable("Events");
                 });
 
             modelBuilder.Entity("Domain.Entities.Engagement.Poll", b =>
@@ -83,7 +83,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("GroupId");
 
-                    b.ToTable("Polls", (string)null);
+                    b.ToTable("Polls");
                 });
 
             modelBuilder.Entity("Domain.Entities.Engagement.PollOption", b =>
@@ -108,7 +108,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("PollId");
 
-                    b.ToTable("PollOptions", (string)null);
+                    b.ToTable("PollOptions");
                 });
 
             modelBuilder.Entity("Domain.Entities.Engagement.PollVote", b =>
@@ -135,7 +135,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PollVotes", (string)null);
+                    b.ToTable("PollVotes");
                 });
 
             modelBuilder.Entity("Domain.Entities.Groups.ActivityLog", b =>
@@ -163,7 +163,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("GroupId");
 
-                    b.ToTable("ActivityLogs", (string)null);
+                    b.ToTable("ActivityLogs");
                 });
 
             modelBuilder.Entity("Domain.Entities.Groups.Badge", b =>
@@ -191,7 +191,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("GroupId");
 
-                    b.ToTable("Badges", (string)null);
+                    b.ToTable("Badges");
                 });
 
             modelBuilder.Entity("Domain.Entities.Groups.Group", b =>
@@ -297,7 +297,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("GroupFollowers", (string)null);
+                    b.ToTable("GroupFollowers");
                 });
 
             modelBuilder.Entity("Domain.Entities.Groups.GroupInvitation", b =>
@@ -320,8 +320,10 @@ namespace Persistence.Migrations
                     b.Property<bool>("IsRevoked")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("MaxUses")
-                        .HasColumnType("int");
+                    b.Property<int>("MaxUses")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
 
                     b.Property<string>("Token")
                         .IsRequired()
@@ -344,9 +346,9 @@ namespace Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("GroupInvitation", null, t =>
+                    b.ToTable("GroupInvitation", t =>
                         {
-                            t.HasCheckConstraint("CK_GroupInvitation_Usage", "MaxUses IS NULL OR UsedCount <= MaxUses");
+                            t.HasCheckConstraint("CK_GroupInvitation_Usage", "MaxUses >= 1 AND UsedCount <= MaxUses");
                         });
                 });
 
@@ -377,7 +379,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("GroupMembers", (string)null);
+                    b.ToTable("GroupMembers");
                 });
 
             modelBuilder.Entity("Domain.Entities.Groups.GroupScore", b =>
@@ -405,7 +407,7 @@ namespace Persistence.Migrations
                     b.HasIndex("GroupId")
                         .IsUnique();
 
-                    b.ToTable("GroupScores", (string)null);
+                    b.ToTable("GroupScores");
                 });
 
             modelBuilder.Entity("Domain.Entities.Groups.MemoryReel", b =>
@@ -433,7 +435,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("GroupId");
 
-                    b.ToTable("MemoryReels", (string)null);
+                    b.ToTable("MemoryReels");
                 });
 
             modelBuilder.Entity("Domain.Entities.Media.Album", b =>
@@ -462,7 +464,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("GroupId");
 
-                    b.ToTable("Albums", (string)null);
+                    b.ToTable("Albums");
                 });
 
             modelBuilder.Entity("Domain.Entities.Media.MediaItem", b =>
@@ -499,7 +501,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("PostId");
 
-                    b.ToTable("Media", (string)null);
+                    b.ToTable("Media");
                 });
 
             modelBuilder.Entity("Domain.Entities.Posts.AIModeration", b =>
@@ -531,7 +533,7 @@ namespace Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AIModerations", (string)null);
+                    b.ToTable("AIModerations");
                 });
 
             modelBuilder.Entity("Domain.Entities.Posts.Comment", b =>
@@ -562,7 +564,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Comments", (string)null);
+                    b.ToTable("Comments");
                 });
 
             modelBuilder.Entity("Domain.Entities.Posts.Like", b =>
@@ -591,7 +593,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Likes", null, t =>
+                    b.ToTable("Likes", t =>
                         {
                             t.HasCheckConstraint("CK_Likes_PostOrComment", "(PostId IS NOT NULL AND CommentId IS NULL) OR (PostId IS NULL AND CommentId IS NOT NULL)");
                         });
@@ -627,7 +629,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Posts", (string)null);
+                    b.ToTable("Posts");
                 });
 
             modelBuilder.Entity("Domain.Entities.Posts.Tag", b =>
@@ -656,7 +658,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Tags", null, t =>
+                    b.ToTable("Tags", t =>
                         {
                             t.HasCheckConstraint("CK_Tags_PostOrComment", "(PostId IS NOT NULL AND CommentId IS NULL) OR (PostId IS NULL AND CommentId IS NOT NULL)");
                         });
@@ -688,6 +690,10 @@ namespace Persistence.Migrations
                     b.Property<string>("MediaURL")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<int>("ViewsCount")
                         .HasColumnType("int");
 
@@ -695,7 +701,9 @@ namespace Persistence.Migrations
 
                     b.HasIndex("GroupId");
 
-                    b.ToTable("Stories", (string)null);
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Stories");
                 });
 
             modelBuilder.Entity("Domain.Entities.Stories.StoryView", b =>
@@ -722,7 +730,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("StoryViews", (string)null);
+                    b.ToTable("StoryViews");
                 });
 
             modelBuilder.Entity("Domain.Entities.Users.ApplicationUser", b =>
@@ -824,6 +832,9 @@ namespace Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ActorUserId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreateAt")
                         .HasColumnType("datetime2");
 
@@ -852,7 +863,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Notifications", (string)null);
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("Domain.Entities.Users.Recommendation", b =>
@@ -883,7 +894,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Recommendations", (string)null);
+                    b.ToTable("Recommendations");
                 });
 
             modelBuilder.Entity("Domain.Entities.Users.RefreshToken", b =>
@@ -917,7 +928,7 @@ namespace Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens", (string)null);
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -1357,7 +1368,15 @@ namespace Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Domain.Entities.Users.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Group");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Domain.Entities.Stories.StoryView", b =>

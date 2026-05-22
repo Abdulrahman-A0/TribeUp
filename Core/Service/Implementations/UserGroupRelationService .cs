@@ -65,6 +65,13 @@ namespace Service.Implementations
         public bool IsNone(int groupId)
             => GetRelation(groupId) == GroupRelationType.None;
 
+        // Returns IDs of groups where the user is at least a Follower
+        public IEnumerable<int> GetAccessibleGroupIds()
+        {
+            return _relations
+                .Where(kvp => kvp.Value >= GroupRelationType.Follower)
+                .Select(kvp => kvp.Key);
+        }
     }
 
 }

@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace Service.MappingProfiles
 {
-    public class GroupInvicationProfile : Profile
+    public class GroupInvitationProfile : Profile
     {
-        public GroupInvicationProfile()
+        public GroupInvitationProfile()
         {
 
             CreateMap<GroupInvitation, InvitationResultDTO>()

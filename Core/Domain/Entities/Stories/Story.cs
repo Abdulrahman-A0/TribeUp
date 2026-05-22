@@ -1,9 +1,7 @@
 ﻿using Domain.Entities.Groups;
+using Domain.Entities.Users;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Shared.Enums;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Entities.Stories
@@ -26,8 +24,8 @@ namespace Domain.Entities.Stories
         #endregion
         public string? Caption { get; set; }
         public string? MediaURL { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-        public DateTime? ExpiresAt { get; set; } = DateTime.Now.AddDays(1);
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? ExpiresAt { get; set; } = DateTime.UtcNow.AddDays(1);
         public int ViewsCount { get; set; } = 0;
         public AccessibilityType Accessibility { get; set; }
 
@@ -35,6 +33,10 @@ namespace Domain.Entities.Stories
         [ForeignKey(nameof(GroupId))]
         public virtual Group Group { get; set; }
         public int GroupId { get; set; }
+
+        public string UserId { get; set; }
+        [ForeignKey(nameof(UserId))]
+        public virtual ApplicationUser User { get; set; }
         public virtual ICollection<StoryView> StoryViews { get; set; } = new List<StoryView>();
     }
 }

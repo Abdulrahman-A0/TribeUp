@@ -13,6 +13,8 @@ namespace ServiceAbstraction.Contracts
         IProfileService ProfileService { get; }
         INotificationService NotificationService { get; }
         IGroupInvitationService GroupInvitationService { get; }
+        IGroupFollowerService GroupFollowerService { get; }
+        IStoryService StoryService { get; }
 
     }
 }

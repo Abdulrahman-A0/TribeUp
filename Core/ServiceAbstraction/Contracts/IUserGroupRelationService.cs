@@ -20,8 +20,11 @@ namespace ServiceAbstraction.Contracts
         bool IsMember(int groupId);
 
         bool IsFollower(int groupId);
-        
+
         bool IsNone(int groupId);
+
+        // Returns IDs of groups where the user is at least a Follower
+        IEnumerable<int> GetAccessibleGroupIds();
     }
 
 }

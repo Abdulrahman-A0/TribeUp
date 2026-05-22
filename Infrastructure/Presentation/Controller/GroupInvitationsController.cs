@@ -25,19 +25,15 @@ namespace Presentation.Controller
             => Ok(await serviceManager.GroupInvitationService.AcceptInvitationAsync(token, UserId));
 
 
-        [HttpGet("GroupInvitations/{groupId:int}")]
-        public async Task<ActionResult<PagedResult<InvitationResultDTO>>> GetInvitations(int groupId, int page = 1, int pageSize = 10)
-            => Ok(await serviceManager.GroupInvitationService.GetGroupInvitationsAsync(groupId, UserId, page, pageSize));
+        [HttpGet("GetActiveInvitation/{groupId:int}")]
+        public async Task<ActionResult<InvitationResultDTO>> GetActiveInvitation(int groupId)
+            => Ok(await serviceManager.GroupInvitationService.GetActiveInvitationAsync(groupId, UserId));
 
 
         [HttpDelete("RevokeInvitation/{invitationId:int}")]
         public async Task<ActionResult<bool>> Revoke(int invitationId)
             => Ok(await serviceManager.GroupInvitationService.RevokeInvitationAsync(invitationId, UserId));
 
-
-        [HttpDelete("RevokeAllInvitations/{groupId:int}")]
-        public async Task<ActionResult<bool>> RevokeAll(int groupId)
-            => Ok(await serviceManager.GroupInvitationService.RevokeAllGroupInvitationsAsync(groupId, UserId));
     }
 
 }

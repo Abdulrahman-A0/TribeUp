@@ -9,9 +9,9 @@ namespace Presentation.Controller
     [Authorize]
     public class ProfileController(IServiceManager serviceManager) : ApiController
     {
-        [HttpGet("Me")]
-        public async Task<ActionResult<UserProfileDTO>> GetMyProfileAsync()
-            => Ok(await serviceManager.ProfileService.GetMyProfileAsync(UserId));
+        //[HttpGet("Me")]
+        //public async Task<ActionResult<UserProfileDTO>> GetMyProfileAsync()
+        //    => Ok(await serviceManager.ProfileService.GetMyProfileAsync(UserId));
 
         [HttpGet("{userName}")]
         public async Task<ActionResult<UserProfileHeaderDTO>> GetProfileHeaderAsync(string userName)

@@ -13,7 +13,7 @@ namespace Domain.Entities.Groups
         public ApplicationUser User { get; set; } = null!;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? ExpiresAt { get; set; }
-        public int? MaxUses { get; set; }
+        public int MaxUses { get; set; }
         public int UsedCount { get; set; } = 0;
         public bool IsRevoked { get; set; } = false;
     }

@@ -11,6 +11,8 @@ namespace Service.Implementations
          Func<ICommentService> _commentFactory,
          Func<IProfileService> profileFactory,
          Func<IGroupInvitationService> invitationFactory,
+         Func<IGroupFollowerService> groupFollowerFactory,
+         Func<IStoryService> storyFactory,
          Func<INotificationService> notificationFactory) : IServiceManager
     {
         public IAuthenticationService AuthenticationService => authFactory.Invoke();
@@ -22,6 +24,8 @@ namespace Service.Implementations
         public IProfileService ProfileService => profileFactory.Invoke();
         public INotificationService NotificationService => notificationFactory.Invoke();
         public IGroupInvitationService GroupInvitationService => invitationFactory.Invoke();
+        public IStoryService StoryService => storyFactory.Invoke();
+        public IGroupFollowerService GroupFollowerService => groupFollowerFactory.Invoke();
 
     }
 }

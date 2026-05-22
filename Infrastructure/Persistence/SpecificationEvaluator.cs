@@ -16,10 +16,13 @@ namespace Persistence
     public static class SpecificationEvaluator
     {
         public static IQueryable<TEntity> CreateQuery<TEntity, TKey>(IQueryable<TEntity> inputQuery,
-            ISpecifications<TEntity, TKey> specifications) where TEntity : BaseEntity<TKey>
+            ISpecifications<TEntity, TKey> specifications, bool isCountQuery = false) where TEntity : BaseEntity<TKey>
         {
             if (specifications.Criteria is not null)
                 inputQuery = inputQuery.Where(specifications.Criteria);
+
+
+            if (isCountQuery) return inputQuery;
 
 
             if (specifications.IncludeExpressions is not null && specifications.IncludeExpressions.Count > 0)
@@ -35,17 +38,44 @@ namespace Persistence
                 }
             }
 
-            if (specifications.OrderBy is not null)
-                inputQuery = inputQuery.OrderBy(specifications.OrderBy);
 
-            if (specifications.OrderByDescending is not null)
+            if (specifications.OrderByExpressions != null && specifications.OrderByExpressions.Count > 0)
+            {
+                IOrderedQueryable<TEntity> orderedQuery = null!;
+
+                for (int i = 0; i < specifications.OrderByExpressions.Count; i++)
+                {
+                    var sort = specifications.OrderByExpressions[i];
+
+                    if (i == 0)
+                    {
+                        orderedQuery = sort.IsDescending
+                            ? inputQuery.OrderByDescending(sort.Expression)
+                            : inputQuery.OrderBy(sort.Expression);
+                    }
+                    else
+                    {
+                        orderedQuery = sort.IsDescending
+                            ? orderedQuery.ThenByDescending(sort.Expression)
+                            : orderedQuery.ThenBy(sort.Expression);
+                    }
+                }
+                inputQuery = orderedQuery ?? inputQuery;
+            }
+            // To keep older versions of "OrderBy" and "OrderByDescending" properties working
+            else if (specifications.OrderByDescending is not null)
+            {
                 inputQuery = inputQuery.OrderByDescending(specifications.OrderByDescending);
+            }
+            else if (specifications.OrderBy is not null)
+            {
+                inputQuery = inputQuery.OrderBy(specifications.OrderBy);
+            }
+
 
             if (specifications.IsPaginated)
             {
-                inputQuery = inputQuery
-                    .Skip(specifications.Skip)
-                    .Take(specifications.Take);
+                inputQuery = inputQuery.Skip(specifications.Skip).Take(specifications.Take);
             }
 
             return inputQuery;

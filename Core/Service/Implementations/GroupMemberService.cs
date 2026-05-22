@@ -46,11 +46,12 @@ namespace Service.Implementations
                 throw new ForbiddenActionException();
 
             var memberRepo = unitOfWork.GetRepository<GroupMembers, int>();
+
             var spec = new GroupMembersSpec(groupId, page, pageSize, searchTerm);
             var members = await memberRepo.GetAllAsync(spec);
 
             var totalCount = await memberRepo.CountAsync(m => m.GroupId == groupId &&
-            (string.IsNullOrEmpty(searchTerm) || m.User.UserName.ToLower().Contains(searchTerm.ToLower())));
+                (string.IsNullOrEmpty(searchTerm) || m.User.UserName.ToLower().Contains(searchTerm.ToLower())));
 
             var mappedMembers = mapper.Map<List<GroupMemberResultDTO>>(members);
 
@@ -121,7 +122,7 @@ namespace Service.Implementations
 
         public async Task<bool> PromoteToAdminAsync(int groupId, string actorUserId, int groupMemberId)
         {
-            if (!relationService.IsOwner(groupId))
+            if (!relationService.IsOwner(groupId) && !relationService.IsAdmin(groupId))
                 throw new ForbiddenActionException();
 
             var groupRepo = unitOfWork.GetRepository<Group, int>();
@@ -163,7 +164,7 @@ namespace Service.Implementations
 
         public async Task<bool> DemoteAdminAsync(int groupId, string actorUserId, int groupMemberId)
         {
-            if (!relationService.IsOwner(groupId))
+            if (!relationService.IsOwner(groupId) && !relationService.IsAdmin(groupId))
                 throw new ForbiddenActionException();
 
             var groupRepo = unitOfWork.GetRepository<Group, int>();
@@ -182,6 +183,9 @@ namespace Service.Implementations
 
             if (target.Role == RoleType.Owner)
                 throw new CannotDemoteCreatorException();
+
+            if (target.Role == RoleType.Admin && !relationService.IsOwner(groupId))
+                throw new OnlyOwnerCanDemoteAdminException();
 
             target.Role = RoleType.Member;
             memberRepo.Update(target);
@@ -228,7 +232,7 @@ namespace Service.Implementations
                 throw new CannotKickCreatorException();
 
             if (target.Role == RoleType.Admin && !relationService.IsOwner(groupId))
-                throw new ForbiddenActionException();
+                throw new OnlyOwnerCanKickAdminException();
 
             if (target.Role == RoleType.Member || target.Role == RoleType.Admin)
             {
@@ -236,7 +240,6 @@ namespace Service.Implementations
             }
 
             memberRepo.Delete(target);
-
             await unitOfWork.SaveChangesAsync();
 
             await notificationService.CreateAsync(new CreateNotificationDTO

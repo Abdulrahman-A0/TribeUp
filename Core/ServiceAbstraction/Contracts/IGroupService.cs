@@ -11,14 +11,13 @@ namespace ServiceAbstraction.Contracts
 {
     public interface IGroupService
     {
-        Task<List<GroupResultDTO>> GetAllGroupsAsync();
+        Task<PagedResult<GroupResultDTO>> GetMyGroupsAsync(int page, int pageSize, string userId);
         Task<GroupDetailsResultDTO> GetGroupByIdAsync(int groupId);
         Task<GroupResultDTO> CreateGroupAsync(CreateGroupDTO createGroupDTO, string userId);
         Task<GroupResultDTO> UpdateGroupAsync(int Id, UpdateGroupDTO updateGroupDTO, string userId);
         Task<bool> DeleteGroupAsync(int groupId, string userId);
         Task<GroupResultDTO> UpdateGroupPictureAsync(int groupId, UpdateGroupPictureDTO updateGroupPictureDTO, string userId);
         Task<bool> DeleteGroupPictureAsync(int groupId, string userId);
-        Task<List<GroupResultDTO>> GetMyGroupsAsync(string userId);
-        Task<PagedResult<GroupResultDTO>> ExploreGroupsAsync(int page, int pageSize, string userId);
+        Task<PagedResult<GroupResultDTO>> ExploreGroupsAsync(int page, int pageSize, string userId, string? searchTerm = null);
     }
 }

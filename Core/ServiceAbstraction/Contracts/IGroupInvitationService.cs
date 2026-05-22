@@ -12,13 +12,12 @@ namespace ServiceAbstraction.Contracts
     {
         Task<InvitationResultDTO> CreateInvitationAsync(int groupId, string userId, CreateInvitationDTO dto);
 
-        Task<PagedResult<InvitationResultDTO>> GetGroupInvitationsAsync(int groupId, string userId, int page, int pageSize);
+        Task<InvitationResultDTO?> GetActiveInvitationAsync(int groupId, string userId);
 
         Task<bool> RevokeInvitationAsync(int invitationId, string userId);
 
         Task<AcceptInvitationResponseDTO> AcceptInvitationAsync(string token, string userId);
 
-        Task<bool> RevokeAllGroupInvitationsAsync(int groupId, string userId);
     }
 
 }
