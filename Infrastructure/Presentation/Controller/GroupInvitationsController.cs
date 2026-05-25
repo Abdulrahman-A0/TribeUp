@@ -16,12 +16,20 @@ namespace Presentation.Controller
     : ApiController
     {
         [HttpPost("CreateInvitations/{groupId:int}")]
-        public async Task<ActionResult<InvitationResultDTO>>Create(int groupId, CreateInvitationDTO dto)
+        public async Task<ActionResult<InvitationResultDTO>> Create(int groupId, CreateInvitationDTO dto)
             => Ok(await serviceManager.GroupInvitationService.CreateInvitationAsync(groupId, UserId, dto));
 
 
+        [HttpGet("Details/{token}")]
+        public async Task<ActionResult<InvitationDetailsDTO>> GetInvitationDetails(string token)
+        {
+            var details = await serviceManager.GroupInvitationService.GetInvitationDetailsAsync(token);
+            return Ok(details);
+        }
+
+
         [HttpPost("AcceptInvitations/{token}")]
-        public async Task<ActionResult<AcceptInvitationResponseDTO>>Accept(string token)
+        public async Task<ActionResult<AcceptInvitationResponseDTO>> Accept(string token)
             => Ok(await serviceManager.GroupInvitationService.AcceptInvitationAsync(token, UserId));
 
 

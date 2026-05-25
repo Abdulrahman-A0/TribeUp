@@ -143,9 +143,35 @@ namespace Service.Implementations
             return new AcceptInvitationResponseDTO { Success = true, Message = "Joined successfully." };
         }
 
-        
 
 
+
+        public async Task<InvitationDetailsDTO> GetInvitationDetailsAsync(string token)
+        {
+            var spec = new GetInvitationByTokenSpecification(token);
+            var invitation = await _unitOfWork.GetRepository<GroupInvitation, int>()
+                .GetByIdAsync(spec);
+
+            if (invitation == null)
+                throw new DomainValidationException(new Dictionary<string, string[]> { ["Invitation"] = new[] { "Invalid invitation link." } });
+
+            if (invitation.IsRevoked)
+                throw new DomainValidationException(new Dictionary<string, string[]> { ["Invitation"] = new[] { "This invitation has been revoked." } });
+
+            if (invitation.ExpiresAt.HasValue && invitation.ExpiresAt < DateTime.UtcNow)
+                throw new DomainValidationException(new Dictionary<string, string[]> { ["Invitation"] = new[] { "This invitation has expired." } });
+
+            if (invitation.UsedCount >= invitation.MaxUses)
+                throw new DomainValidationException(new Dictionary<string, string[]> { ["Invitation"] = new[] { "This invitation's usage limit has been exceeded." } });
+
+            var dto = _mapper.Map<InvitationDetailsDTO>(invitation.Group);
+
+            dto.MembersCount = await _unitOfWork
+                                    .GetRepository<GroupMembers, int>()
+                                    .CountAsync(m => m.GroupId == invitation.GroupId);
+
+            return dto;
+        }
 
 
 

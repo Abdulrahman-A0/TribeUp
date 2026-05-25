@@ -14,6 +14,8 @@ namespace ServiceAbstraction.Contracts
 
         Task<InvitationResultDTO?> GetActiveInvitationAsync(int groupId, string userId);
 
+        Task<InvitationDetailsDTO> GetInvitationDetailsAsync(string token);
+
         Task<bool> RevokeInvitationAsync(int invitationId, string userId);
 
         Task<AcceptInvitationResponseDTO> AcceptInvitationAsync(string token, string userId);
