@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Domain.Entities.Media;
 using Domain.Entities.Posts;
+using Domain.Entities.Users;
 using Microsoft.Extensions.Configuration;
 using Service.Helper;
 using Service.MappingProfiles.MediaResolvers;
@@ -8,6 +9,7 @@ using Service.MappingProfiles.PermissionResolver;
 using ServiceAbstraction.Contracts;
 using Shared.DTOs.PostModule;
 using Shared.DTOs.Posts;
+using Shared.DTOs.ProfileModule;
 
 namespace Service.MappingProfiles
 {
@@ -98,6 +100,16 @@ namespace Service.MappingProfiles
                     opt => opt.MapFrom(src => src.User.UserName))
                 .ForMember(dest => dest.ProfilePicture,
                     opt => opt.MapFrom(src => src.User.ProfilePicture));
+
+            // Search Users
+            CreateMap<ApplicationUser, UsersByUsernameDTO>()
+             .ForMember(dest => dest.UserId,
+                  opt => opt.MapFrom(src => src.Id))
+             .ForMember(dest => dest.Username,    
+                  opt => opt.MapFrom(src => src.UserName))
+              .ForMember(dest => dest.ProfilePicture,
+                  opt => opt.MapFrom<UserProfilePictureResolver, string?>(
+                        src => src.ProfilePicture));
 
 
         }

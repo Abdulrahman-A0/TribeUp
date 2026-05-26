@@ -24,5 +24,6 @@ namespace ServiceAbstraction.Contracts
         Task<PagedResult<LikesResultDTO>> GetLikesByPostIdAsync(int postId, int page, int pageSize);
         Task<PagedResult<PostDTO>> GetDeniedPostsByGroupIdAsync(string userId, int groupId, int page, int pageSize);
         Task<CreateEntityResultDTO> ChangeModerationStatusAsync(string userId, int groupId, ModerationDTO dto);
+        Task<List<UsersByUsernameDTO>> SearchUserByUsernameAsync(string username);
     }
 }

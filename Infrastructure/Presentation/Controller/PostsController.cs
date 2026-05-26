@@ -18,6 +18,38 @@ namespace Presentation.Controller
             => Ok(await service.PostService.CreatePostAsync(UserId, UserName, dto, mediaFiles));
 
         /// <summary>
+        /// Search for users by username for the tagging feature.
+        /// </summary>
+        /// <remarks>
+        /// This endpoint is used during post/comment creation when the user types '@'.
+        /// It returns matching usernames to display them in an autocomplete dropdown.
+        ///
+        /// Example:
+        /// GET /api/users/search?username=ab
+        /// </remarks>
+        /// <param name="username">
+        /// The username or partial username entered after '@'.
+        /// </param>
+        /// <returns>
+        /// Returns a list of matching users including:
+        /// - UserId
+        /// - Username
+        /// - ProfilePicture
+        /// </returns>
+        /// <response code="200">
+        /// Users fetched successfully.
+        /// </response>
+        /// <response code="400">
+        /// Invalid username query.
+        /// </response>
+        
+        [HttpGet("SearchUsersByUsername")]
+        public async Task<ActionResult<UsersByUsernameDTO>> SearchUsers(
+            string username)
+            => Ok(await service.PostService.SearchUserByUsernameAsync(username));
+
+
+        /// <summary>
         /// Updates an existing post.
         /// </summary>
         /// <remarks>

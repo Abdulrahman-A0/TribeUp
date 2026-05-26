@@ -24,6 +24,7 @@ using Shared.DTOs.Posts;
 using Shared.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection.Metadata.Ecma335;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Service.Implementations
 {
@@ -177,7 +178,17 @@ namespace Service.Implementations
 
         }
 
-        // not working yet
+        public async Task<List<UsersByUsernameDTO>> SearchUserByUsernameAsync(string username)
+        {
+            var users = await _userManager.Users
+                 .Where(u => u.UserName!.StartsWith(username))
+                 .Take(5)
+                 .ToListAsync();
+
+            return _mapper.Map<List<UsersByUsernameDTO>>(users);
+        }
+
+
         public async Task<CreateEntityResultDTO> EditPostAsync(
            string userId,
            string username,
@@ -287,6 +298,7 @@ namespace Service.Implementations
             };
 
         }
+
 
         public async Task<DeleteEntityResultDTO> DeletePostAsync(
             string userId,
