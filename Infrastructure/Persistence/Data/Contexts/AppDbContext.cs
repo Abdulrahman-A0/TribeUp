@@ -41,6 +41,8 @@ namespace Persistence.Data.Contexts
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Recommendation> Recommendations { get; set; }
         public DbSet<GroupChatMessage> GroupChatMessages { get; set; }
+
+        public DbSet<EventParticipant> EventParticipants { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder builder)

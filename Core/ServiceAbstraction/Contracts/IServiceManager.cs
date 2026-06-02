@@ -16,6 +16,6 @@ namespace ServiceAbstraction.Contracts
         IGroupFollowerService GroupFollowerService { get; }
         IStoryService StoryService { get; }
         ILeaderboardService LeaderboardService { get; }
-
+        IEventService EventService { get; }
     }
 }

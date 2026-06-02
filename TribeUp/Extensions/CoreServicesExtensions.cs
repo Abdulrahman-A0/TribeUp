@@ -41,6 +41,7 @@ namespace TribeUp.Extensions
             services.AddScoped<IStoryService, StoryService>();
 
             services.AddScoped<ILeaderboardService, LeaderboardService>();
+            services.AddScoped<IEventService, EventService>();
 
             services.AddScoped<IUserGroupRelationService, UserGroupRelationService>();
 
@@ -86,6 +87,9 @@ namespace TribeUp.Extensions
             
             services.AddScoped<Func<ILeaderboardService>>(provider =>
             () => provider.GetRequiredService<ILeaderboardService>());
+            
+            services.AddScoped<Func<IEventService>>(provider =>
+            () => provider.GetRequiredService<IEventService>());
 
 
             return services;

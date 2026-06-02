@@ -29,6 +29,7 @@ namespace Domain.Entities.Users
         public ICollection<Recommendation> Recommendations { get; set; }
         public ICollection<StoryView> StoryViews { get; set; }
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+        public virtual ICollection<EventParticipant> EventParticipations { get; set; }= new HashSet<EventParticipant>();
         #endregion
     }
 }
