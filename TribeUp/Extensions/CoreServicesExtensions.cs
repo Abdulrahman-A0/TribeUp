@@ -43,6 +43,8 @@ namespace TribeUp.Extensions
             services.AddScoped<ILeaderboardService, LeaderboardService>();
             services.AddScoped<IEventService, EventService>();
 
+            services.AddScoped<IPollService, PollService>();
+
             services.AddScoped<IUserGroupRelationService, UserGroupRelationService>();
 
 
@@ -91,6 +93,8 @@ namespace TribeUp.Extensions
             services.AddScoped<Func<IEventService>>(provider =>
             () => provider.GetRequiredService<IEventService>());
 
+            services.AddScoped<Func<IPollService>>(provider =>
+            () => provider.GetRequiredService<IPollService>()); 
 
             return services;
         }
