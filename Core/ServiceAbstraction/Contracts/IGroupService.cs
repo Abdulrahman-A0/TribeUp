@@ -12,6 +12,7 @@ namespace ServiceAbstraction.Contracts
     public interface IGroupService
     {
         Task<PagedResult<GroupResultDTO>> GetMyGroupsAsync(int page, int pageSize, string userId);
+        Task<PagedResult<GroupResultDTO>> GetFollowedGroupsAsync(int page, int pageSize, string userId);
         Task<GroupDetailsResultDTO> GetGroupByIdAsync(int groupId);
         Task<GroupResultDTO> CreateGroupAsync(CreateGroupDTO createGroupDTO, string userId);
         Task<GroupResultDTO> UpdateGroupAsync(int Id, UpdateGroupDTO updateGroupDTO, string userId);
