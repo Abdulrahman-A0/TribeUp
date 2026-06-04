@@ -57,5 +57,27 @@ namespace Presentation.Controller
         public async Task<ActionResult<PagedResult<GroupResultDTO>>> ExploreGroupsAsync(int page = 1, int pageSize = 20, string? search = null)
             => Ok(await serviceManager.GroupService.ExploreGroupsAsync(page, pageSize, UserId, search));
 
+
+
+
+        /// <summary>
+        /// Retrieves all groups that the current user is following.
+        /// </summary>
+        /// <remarks>
+        /// This endpoint is designed specifically for the "Followed" tab in the UI.
+        /// It returns only the groups where the user is a follower (not a joined member).
+        /// </remarks>
+        /// <param name="page">The page number (default is 1).</param>
+        /// <param name="pageSize">The number of items per page (default is 10).</param>
+        /// <response code="200">Returns the paginated list of followed groups.</response>
+        [HttpGet("FollowedGroups")]
+        public async Task<ActionResult<PagedResult<GroupResultDTO>>> GetFollowedGroups(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            var result = await serviceManager.GroupService.GetFollowedGroupsAsync(page, pageSize, UserId);
+            return Ok(result);
+        }
+
     }
 }

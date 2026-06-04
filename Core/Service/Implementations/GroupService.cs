@@ -54,6 +54,35 @@ namespace Service.Implementations
 
 
 
+        public async Task<PagedResult<GroupResultDTO>> GetFollowedGroupsAsync(int page, int pageSize, string userId)
+        {
+            var groupRepo = unitOfWork.GetRepository<Group, int>();
+
+            var spec = new FollowedGroupsSpec(userId, page, pageSize);
+            var groups = await groupRepo.GetAllAsync(spec);
+
+            var totalCount = await groupRepo.CountAsync(g => g.GroupFollowers.Any(f => f.UserId == userId));
+
+            var mappedGroups = mapper.Map<List<GroupResultDTO>>(groups);
+
+            foreach (var groupDto in mappedGroups)
+            {
+                groupDto.UserRelation = _relationService.GetRelation(groupDto.Id);
+            }
+
+            return new PagedResult<GroupResultDTO>
+            {
+                Items = mappedGroups,
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = totalCount,
+                HasMore = (page * pageSize) < totalCount
+            };
+        }
+
+
+
+
 
         public async Task<GroupDetailsResultDTO> GetGroupByIdAsync(int groupId)
         {
