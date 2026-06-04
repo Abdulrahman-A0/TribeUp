@@ -337,7 +337,15 @@ namespace Service.Implementations
                 ?? throw new PostNotFoundException(postId);
 
             var mapped = _mapper.Map<PostDTO>(post);
+
             mapped.IsAuthor = post.UserId == userId;
+
+            mapped.IsDenied = await moderationRepo.AsQueryable()
+                .AnyAsync(m =>
+                    m.EntityType == ModeratedEntityType.Post &&
+                    m.EntityId == post.Id &&
+                    m.Status == ContentStatus.Denied)
+                && post.UserId == userId;
 
             return mapped;
         }
