@@ -197,16 +197,21 @@ namespace Service.Implementations
            List<IFormFile> newMediaFiles,
            List<int> deleteMediaIds)
         {
-            if (!_relationService.IsMember(dto.GroupId))
-                throw new ForbiddenActionException();
 
             var moderation = moderationRepo.AsQueryable();
             var spec = new PostByIdSpecification(userId, moderation, postId);
             var post = await postRepo.GetByIdAsync(spec)
                 ?? throw new PostNotFoundException(postId);
 
+            if (userId != post.UserId)
+                throw new ForbiddenActionException();
+            
             if (string.IsNullOrWhiteSpace(post.Caption) && !newMediaFiles.Any())
                 throw new ValidationException("Post must contain text or media.");
+
+            post.Caption = dto.Caption;
+            post.Accessibility = dto.Accessibility;
+
 
             var mediaToDelete = post.MediaItems
                 .Where(m => deleteMediaIds.Contains(m.Order))
