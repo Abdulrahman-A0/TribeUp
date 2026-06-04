@@ -47,8 +47,6 @@ namespace Service.MappingProfiles
                      opt => opt.Ignore())
                  .ForMember(dest => dest.IsDenied,
                      opt => opt.Ignore())
-                 .ForMember(dest => dest.IsDenied,
-                     opt => opt.Ignore())
                  .ForMember(dest => dest.PostPermissions,
                      opt => opt.MapFrom<PostPermissionsResolver>());
 
