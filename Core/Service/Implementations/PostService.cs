@@ -206,7 +206,7 @@ namespace Service.Implementations
             if (userId != post.UserId)
                 throw new ForbiddenActionException();
             
-            if (string.IsNullOrWhiteSpace(post.Caption) && !newMediaFiles.Any())
+            if (string.IsNullOrWhiteSpace(dto.Caption) && !newMediaFiles.Any())
                 throw new ValidationException("Post must contain text or media.");
 
             post.Caption = dto.Caption;
