@@ -52,18 +52,28 @@ public class LeaderboardService : ILeaderboardService
             switch (i + 1)
             {
                 case 1:
-                    groups[i].BadgeName = "Legend";
-                    groups[i].BadgeIcon = "legend.png";
+                    groups[i].BadgeName = "Immortal";
+                    groups[i].BadgeIcon = "Immortal.png";
                     break;
 
                 case 2:
-                    groups[i].BadgeName = "Master";
-                    groups[i].BadgeIcon = "master.png";
+                    groups[i].BadgeName = "Diamond";
+                    groups[i].BadgeIcon = "Diamond.png";
                     break;
 
                 case 3:
-                    groups[i].BadgeName = "Elite";
-                    groups[i].BadgeIcon = "elite.png";
+                    groups[i].BadgeName = "Platinum";
+                    groups[i].BadgeIcon = "Platinum.png";
+                    break;
+                
+                case 4:
+                    groups[i].BadgeName = "Gold";
+                    groups[i].BadgeIcon = "Gold.png";
+                    break;
+                
+                case 5:
+                    groups[i].BadgeName = "Silver";
+                    groups[i].BadgeIcon = "Silver.png";
                     break;
 
                 default:
