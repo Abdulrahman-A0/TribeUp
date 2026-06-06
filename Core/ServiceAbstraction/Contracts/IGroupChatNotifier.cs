@@ -1,4 +1,5 @@
-﻿using Shared.DTOs.GroupMessages;
+﻿using Shared.DTOs.GroupMessageModule;
+using Shared.DTOs.GroupMessages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,5 +11,7 @@ namespace ServiceAbstraction.Contracts
     public interface IGroupChatNotifier
     {
         Task NotifyGroupAsync(int groupId, GroupMessageResponseDTO message);
+        Task NotifyMessageEditedAsync(int groupId, EditedMessageResponseDTO editedMessage);
+        Task NotifyMessageDeletedAsync(int groupId, long messageId);
     }
 }
