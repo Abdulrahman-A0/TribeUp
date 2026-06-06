@@ -14,6 +14,7 @@ namespace Domain.Entities.Groups
         public string Content { get; set; } = string.Empty;
         public DateTime SentAt { get; set; } = DateTime.UtcNow;
         public bool IsDeleted { get; set; } = false;
+        public DateTime? EditedAt { get; set; }
 
         public virtual Group Group { get; set; } = null!;
         public int GroupId { get; set; }

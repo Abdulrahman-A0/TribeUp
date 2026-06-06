@@ -109,6 +109,7 @@ namespace Service.Implementations
                 throw new ForbiddenActionException();
 
             message.Content = dto.Content;
+            message.EditedAt = DateTime.UtcNow;
             repo.Update(message);
             await unitOfWork.SaveChangesAsync();
 
@@ -117,7 +118,7 @@ namespace Service.Implementations
                 Id = message.Id,
                 GroupId = message.GroupId,
                 Content = message.Content,
-                IsEdited = true
+                IsEdited = message.EditedAt.HasValue,
             };
 
             await groupChatNotifier.NotifyMessageEditedAsync(message.GroupId, response);
