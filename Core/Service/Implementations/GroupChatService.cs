@@ -1,14 +1,15 @@
 ﻿using AutoMapper;
 using Domain.Contracts;
 using Domain.Entities.Groups;
+using Domain.Exceptions.ForbiddenExceptions;
 using Domain.Exceptions.GroupExceptions;
+using Domain.Exceptions.GroupMessageExceptions;
 using Service.Specifications.GroupChatMessageSpecs;
 using Service.Specifications.GroupSpecs;
 using ServiceAbstraction.Contracts;
 using Shared.DTOs.GroupMessageModule;
 using Shared.DTOs.GroupMessages;
 using Shared.DTOs.Posts;
-using Domain.Exceptions.ForbiddenExceptions;
 
 namespace Service.Implementations
 {
@@ -96,6 +97,58 @@ namespace Service.Implementations
         }
 
 
+        
+        public async Task<EditedMessageResponseDTO> EditMessageAsync(long messageId, EditGroupMessageDTO dto, string userId)
+        {
+            var repo = unitOfWork.GetRepository<GroupChatMessage, long>();  
 
+            var message = await repo.GetByIdAsync(new GroupChatMessageByIdSpec(messageId))
+                ?? throw new MessageNotFoundException(messageId);
+
+            if(message.UserId != userId)
+                throw new ForbiddenActionException();
+
+            message.Content = dto.Content;
+            repo.Update(message);
+            await unitOfWork.SaveChangesAsync();
+
+            var response = new EditedMessageResponseDTO
+            {
+                Id = message.Id,
+                GroupId = message.GroupId,
+                Content = message.Content,
+                IsEdited = true
+            };
+
+            await groupChatNotifier.NotifyMessageEditedAsync(message.GroupId, response);
+            return response;
+        }
+
+
+
+
+
+        public async Task DeleteMessageAsync(long messageId, string userId)
+        {
+            var repo = unitOfWork.GetRepository<GroupChatMessage, long>();
+
+            var message = await repo.GetByIdAsync(new GroupChatMessageByIdSpec(messageId))
+                ?? throw new MessageNotFoundException(messageId);
+
+            bool isSender = message.UserId == userId;
+            bool isAdmin = _relationService.IsAdmin(message.GroupId);
+            bool isOwner = _relationService.IsOwner(message.GroupId);
+
+            if (!isSender && !isAdmin && !isOwner)
+                throw new ForbiddenActionException();
+
+            message.IsDeleted = true;
+
+            repo.Update(message);
+            await unitOfWork.SaveChangesAsync();
+            await groupChatNotifier.NotifyMessageDeletedAsync(message.GroupId, messageId);
+        }
+
+        
     }
 }
