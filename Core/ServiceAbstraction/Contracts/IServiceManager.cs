@@ -17,5 +17,6 @@ namespace ServiceAbstraction.Contracts
         IStoryService StoryService { get; }
         ILeaderboardService LeaderboardService { get; }
         IEventService EventService { get; }
+        IPollService PollService { get; }
     }
 }

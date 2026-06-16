@@ -5,9 +5,13 @@ namespace Domain.Entities.Engagement
 {
     public class PollVote : BaseEntity<int>
     {
-        public DateTime VotedAt { get; set; } = DateTime.Now;
+        public DateTime VotedAt { get; set; } = DateTime.UtcNow;
 
         #region Relations
+        public int PollId { get; set; }
+        [ForeignKey(nameof(PollId))]
+        public virtual Poll Poll { get; set; }
+
         public int OptionId { get; set; }
         [ForeignKey(nameof(OptionId))]
         public virtual PollOption PollOption { get; set; }

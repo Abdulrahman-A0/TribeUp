@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Presentation.Hubs;
 using ServiceAbstraction.Contracts;
+using Shared.DTOs.GroupMessageModule;
 using Shared.DTOs.GroupMessages;
 using System;
 using System.Collections.Generic;
@@ -25,6 +26,20 @@ namespace Presentation.SignalR
                     LastMessage = message.Content,
                     SentAt = message.SentAt
                 });
+        }
+
+        public async Task NotifyMessageEditedAsync(int groupId, EditedMessageResponseDTO editedMessage)
+        {
+            await hubContext.Clients
+                .Group($"group:{groupId}")
+                .SendAsync("ReceiveMessageEdit", editedMessage);
+        }
+
+        public async Task NotifyMessageDeletedAsync(int groupId, long messageId)
+        {
+            await hubContext.Clients
+                .Group($"group:{groupId}")
+                .SendAsync("ReceiveMessageDeletion", messageId);
         }
     }
 }

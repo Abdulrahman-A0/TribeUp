@@ -117,11 +117,96 @@ namespace Presentation.Controller
         public async Task<ActionResult<PagedResult<LikesResultDTO>>> GetLikes(int postId, int page = 1, int pageSize = 20)
             => Ok(await service.PostService.GetLikesByPostIdAsync(postId, page, pageSize));
 
-
+        /// <summary>
+        /// Retrieves all denied posts for a specific group.
+        /// </summary>
+        /// <remarks>
+        /// This endpoint returns posts that were rejected by the AI moderation system and are currently marked as Denied.
+        /// Only Group Admins and Owners can access this endpoint.
+        ///
+        /// Pagination is supported through the <c>page</c> and <c>pageSize</c> parameters.
+        ///
+        /// Parameters:
+        /// - groupId: The identifier of the group whose denied posts should be retrieved.
+        /// - page: The page number to retrieve. Must be greater than 0.
+        /// - pageSize: Number of posts per page. Must be greater than 0.
+        ///
+        /// Returned posts include the standard post information with <c>IsDenied = true</c>.
+        ///
+        /// Authorization:
+        /// - Owner
+        /// - Admin
+        ///
+        /// Possible Errors:
+        /// - 403 Forbidden: User is not an Admin or Owner of the group.
+        /// - 404 Not Found: Group does not exist.
+        /// - 400 Bad Request: Invalid page or pageSize value.
+        /// </remarks>
+        /// <param name="groupId">The target group identifier.</param>
+        /// <param name="page">Page number (starting from 1).</param>
+        /// <param name="pageSize">Number of records per page.</param>
+        /// <returns>A paginated list of denied posts.</returns>
+        
         [HttpGet("{groupId:int}/DeniedPostsByGroupId")]
         public async Task<ActionResult<PagedResult<PostDTO>>> GetDeniedPostsByGroupId(int groupId, int page = 1, int pageSize = 20)
             => Ok(await service.PostService.GetDeniedPostsByGroupIdAsync(UserId, groupId, page, pageSize));
 
+        /// <summary>
+        /// Updates the moderation status of a post or comment.
+        /// </summary>
+        /// <remarks>
+        /// This endpoint allows Group Admins and Owners to manually review content that was previously flagged by the AI moderation system.
+        ///
+        /// Depending on the selected status:
+        ///
+        /// - Accepted:
+        ///     - The content is approved.
+        ///     - Group score is increased.
+        ///     - Returns "Accepted by Admins."
+        ///
+        /// - Denied:
+        ///     - The content remains rejected.
+        ///     - Group score is decreased.
+        ///     - Returns "Denied by Admins."
+        ///
+        /// Supported Entity Types:
+        /// - 0 = Post
+        /// - 1 = Comment
+        ///
+        /// Supported Content Status Values:
+        /// - 0 = Accepted
+        /// - 1 = Denied
+        ///
+        /// Request Body Example:
+        ///
+        /// {
+        ///   "entityType": 0,
+        ///   "entityId": 15,
+        ///   "contentStatus": 0
+        /// }
+        ///
+        /// In this example:
+        /// - entityType = Post
+        /// - entityId = 15
+        /// - contentStatus = Accepted
+        ///
+        /// Authorization:
+        /// - Owner
+        /// - Admin
+        ///
+        /// Possible Errors:
+        /// - 403 Forbidden: User is not an Admin or Owner.
+        /// - 404 Not Found: Group does not exist.
+        /// - 404 Not Found: Moderation record was not found for the specified entity.
+        /// </remarks>
+        /// <param name="groupId">The group that owns the moderated content.</param>
+        /// <param name="dto">
+        /// Moderation request containing:
+        /// - EntityType (0 = Post, 1 = Comment)
+        /// - EntityId (Target post or comment identifier)
+        /// - ContentStatus (0 = Accepted, 1 = Denied)
+        /// </param>
+        /// <returns>The moderation result and updated status.</returns>
 
         [HttpPut("ChangeEntityContentStatus")]
         public async Task<ActionResult<CreateEntityResultDTO>> ChangeEntityContentStatus(int groupId, ModerationDTO dto)

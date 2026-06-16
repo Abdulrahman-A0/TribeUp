@@ -16,5 +16,8 @@ namespace ServiceAbstraction.Contracts
         Task<PagedResult<GroupMessageResponseDTO>> GetMessagesAsync(int groupId, int page, int pageSize, string userId);
 
         Task<List<GroupChatInboxDTO>> GetChatInboxAsync(string userId);
+
+        Task<EditedMessageResponseDTO> EditMessageAsync(long messageId, EditGroupMessageDTO dto, string userId);
+        Task DeleteMessageAsync(long messageId, string userId);
     }
 }

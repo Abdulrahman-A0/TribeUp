@@ -13,7 +13,7 @@ namespace Shared.DTOs.GroupMessages
         public int GroupId { get; init; }
         public string GroupName { get; init; }
         public string? GroupProfilePicture { get; init; }
-
+        public bool IsEdited { get; init; }
         public string SenderUserId { get; init; }
         public string SenderName { get; init; }
         public string? SenderProfilePicture { get; init; }

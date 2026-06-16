@@ -19,6 +19,7 @@ namespace Service.MappingProfiles
             // Group Info
             .ForMember(d => d.GroupId, o => o.MapFrom(s => s.GroupId))
             .ForMember(d => d.GroupName, o => o.MapFrom(s => s.Group.GroupName))
+            .ForMember(dest => dest.IsEdited, opt => opt.MapFrom(src => src.EditedAt.HasValue))
 
             .ForMember(d => d.GroupProfilePicture,
                 o => o.MapFrom(
