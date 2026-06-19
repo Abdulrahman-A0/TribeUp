@@ -100,7 +100,7 @@ namespace Service.Implementations
                     ActorUserId = userId,
                     Type = NotificationType.PostLike,
                     Title = $"New like on your comment",
-                    Message = $"{username} liked your post: \"{GetFirstWord(comment.Content)}\"",
+                    Message = $"{username} liked your comment: \"{GetFirstWord(comment.Content)}\"",
                     ReferenceId = comment.Id
                 });
 
