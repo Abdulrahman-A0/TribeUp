@@ -19,13 +19,17 @@ namespace Presentation.SignalR
                 .Group($"group:{groupId}")
                 .SendAsync("ReceiveGroupMessage", message);
 
-            await hubContext.Clients.Group($"group:{groupId}")
-                .SendAsync("UpdateInbox", new
-                {
-                    GroupId = groupId,
-                    LastMessage = message.Content,
-                    SentAt = message.SentAt
-                });
+            var inboxUpdate = new InboxUpdateEventDTO
+            {
+                GroupId = groupId,
+                LastMessage = message.Content,
+                LastMessageSenderName = message.SenderName,
+                SentAt = message.SentAt
+            };
+
+            await hubContext.Clients
+                .Group($"group:{groupId}")
+                .SendAsync("UpdateInbox", inboxUpdate);
         }
 
         public async Task NotifyMessageEditedAsync(int groupId, EditedMessageResponseDTO editedMessage)
