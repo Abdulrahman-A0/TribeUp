@@ -4,6 +4,7 @@ using Domain.Entities.Media;
 using Domain.Entities.Posts;
 using Domain.Entities.Stories;
 using Domain.Entities.Users;
+using Domain.Entities.VirtualRooms;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -43,6 +44,9 @@ namespace Persistence.Data.Contexts
         public DbSet<GroupChatMessage> GroupChatMessages { get; set; }
 
         public DbSet<EventParticipant> EventParticipants { get; set; }
+
+        public DbSet<VirtualRoom> VirtualRooms { get; set; }
+        public DbSet<RoomParticipant> RoomParticipants { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder builder)
