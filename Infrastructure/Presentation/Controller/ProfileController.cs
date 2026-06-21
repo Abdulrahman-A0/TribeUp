@@ -21,6 +21,12 @@ namespace Presentation.Controller
         public async Task<ActionResult<ProfileSettingsDTO>> GetProfileSettingsAsync()
             => Ok(await serviceManager.ProfileService.GetProfileSettingsAsync(UserId));
 
+
+        [HttpGet("Avatar")]
+        public async Task<ActionResult<AvatarResultDTO>> GetAvatarAsync()
+            => Ok(await serviceManager.ProfileService.GetAvatarAsync(UserId));
+
+
         [HttpPut("Name")]
         public async Task<IActionResult> UpdateProfile(UpdateProfileDTO updateProfileDTO)
         {

@@ -72,6 +72,7 @@ namespace Service.Implementations
         public async Task<bool> LeaveGroupAsync(int groupId, string userId)
         {
             var memberRepo = unitOfWork.GetRepository<GroupMembers, int>();
+            var groupRepo = unitOfWork.GetRepository<Group, int>();
 
             var memberSpec = new GroupMemberByGroupAndUserSpec(groupId, userId);
             var leavingMember = await memberRepo.GetByIdAsync(memberSpec)
@@ -82,37 +83,29 @@ namespace Service.Implementations
                 await groupScoreService.DecreaseOnActionAsync(groupId, 10);
             }
 
-            memberRepo.Delete(leavingMember);
+            var remainingMembersSpec = new RemainingGroupMembersSpec(groupId, userId);
+            var remainingMembers = await memberRepo.GetAllAsync(remainingMembersSpec);
 
-            var activeMembersSpec = new ActiveGroupMembersSpec(groupId);
-            var activeMembers = await memberRepo.GetAllAsync(activeMembersSpec);
-
-            var groupRepo = unitOfWork.GetRepository<Group, int>();
-            if (!activeMembers.Any())
+            if (!remainingMembers.Any())
             {
                 var group = await groupRepo.GetByIdAsync(groupId);
-                if (group != null) groupRepo.Delete(group);
-                return await unitOfWork.SaveChangesAsync() > 0;
-            }
-
-            if (leavingMember.Role == RoleType.Owner)
-            {
-                var adminsSpec = new GroupAdminsSpec(groupId);
-                var admins = await memberRepo.GetAllAsync(adminsSpec);
-
-                if (!admins.Any())
+                if (group != null)
                 {
-                    var oldestMemberSpec = new OldestGroupMemberSpec(groupId);
-                    var newOwner = (await memberRepo.GetAllAsync(oldestMemberSpec)).FirstOrDefault();
+                    groupRepo.Delete(group);
+                }
+            }
+            else if (leavingMember.Role == RoleType.Owner)
+            {
+                var nextOwner = remainingMembers.FirstOrDefault();
 
-                    if (newOwner != null)
-                    {
-                        newOwner.Role = RoleType.Owner;
-                        memberRepo.Update(newOwner);
-                    }
+                if (nextOwner != null)
+                {
+                    nextOwner.Role = RoleType.Owner;
+                    memberRepo.Update(nextOwner);
                 }
             }
 
+            memberRepo.Delete(leavingMember);
             return await unitOfWork.SaveChangesAsync() > 0;
         }
 

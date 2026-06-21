@@ -38,6 +38,8 @@ namespace Service.MappingProfiles
                 .ForMember(dest => dest.TribesCount, opt => opt.MapFrom(src => src.GroupMembers.Count));
 
 
+            CreateMap<ApplicationUser, AvatarResultDTO>();
+
         }
     }
 }

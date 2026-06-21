@@ -52,6 +52,14 @@ namespace Service.Implementations
             return mapper.Map<ProfileSettingsDTO>(user);
         }
 
+        public async Task<AvatarResultDTO> GetAvatarAsync(string userId)
+        {
+            var user = await userManager.FindByIdAsync(userId)
+                ?? throw new UserNotFoundException(userId);
+
+            return mapper.Map<AvatarResultDTO>(user);
+        }
+
         public async Task UpdateProfileAsync(string userId, UpdateProfileDTO updateProfileDTO)
         {
             var user = await userManager.FindByIdAsync(userId)
