@@ -16,7 +16,8 @@ namespace Service.Implementations
          Func<ILeaderboardService> leaderboardFactory,
          Func<INotificationService> notificationFactory,
          Func<IEventService> eventFactory,
-         Func<IPollService> pollFactory) : IServiceManager
+         Func<IPollService> pollFactory,
+         Func<IVirtualRoomService> virtualRoomFactory) : IServiceManager
     {
         public IAuthenticationService AuthenticationService => authFactory.Invoke();
         public IGroupService GroupService => groupServiceFactory.Invoke();
@@ -32,5 +33,6 @@ namespace Service.Implementations
         public ILeaderboardService LeaderboardService => leaderboardFactory.Invoke();
         public IEventService EventService => eventFactory.Invoke();
         public IPollService PollService => pollFactory.Invoke();
+        public IVirtualRoomService VirtualRoomService => virtualRoomFactory.Invoke();
     }
 }

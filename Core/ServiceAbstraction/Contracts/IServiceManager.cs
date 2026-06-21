@@ -18,5 +18,6 @@ namespace ServiceAbstraction.Contracts
         ILeaderboardService LeaderboardService { get; }
         IEventService EventService { get; }
         IPollService PollService { get; }
+        IVirtualRoomService VirtualRoomService { get; }
     }
 }

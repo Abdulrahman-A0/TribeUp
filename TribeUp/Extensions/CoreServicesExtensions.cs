@@ -47,6 +47,8 @@ namespace TribeUp.Extensions
 
             services.AddScoped<IUserGroupRelationService, UserGroupRelationService>();
 
+            services.AddScoped<IVirtualRoomService, VirtualRoomService>();
+
 
             services.AddScoped<Func<IAuthenticationService>>(provider =>
             () => provider.GetRequiredService<IAuthenticationService>());
@@ -86,15 +88,18 @@ namespace TribeUp.Extensions
 
             services.AddScoped<Func<IStoryService>>(provider =>
             () => provider.GetRequiredService<IStoryService>());
-            
+
             services.AddScoped<Func<ILeaderboardService>>(provider =>
             () => provider.GetRequiredService<ILeaderboardService>());
-            
+
             services.AddScoped<Func<IEventService>>(provider =>
             () => provider.GetRequiredService<IEventService>());
 
             services.AddScoped<Func<IPollService>>(provider =>
-            () => provider.GetRequiredService<IPollService>()); 
+            () => provider.GetRequiredService<IPollService>());
+
+            services.AddScoped<Func<IVirtualRoomService>>(provider =>
+            () => provider.GetRequiredService<IVirtualRoomService>());
 
             return services;
         }
