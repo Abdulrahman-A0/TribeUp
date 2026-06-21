@@ -23,6 +23,7 @@ namespace TribeUp.Extensions
         {
             app.MapHub<NotificationHub>("/hubs/notifications");
             app.MapHub<GroupChatHub>("/hubs/group-chat");
+            app.MapHub<VirtualRoomHub>("/hubs/virtual-room");
             return app;
         }
     }
