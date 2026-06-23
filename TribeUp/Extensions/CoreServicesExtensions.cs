@@ -15,6 +15,7 @@ namespace TribeUp.Extensions
             services.Configure<JwtOptions>(configuration.GetSection("JWT"));
             services.Configure<EmailOptions>(configuration.GetSection("Email"));
             services.Configure<AppSettings>(configuration.GetSection("AppSettings"));
+            services.Configure<LiveKitOptions>(configuration.GetSection("LiveKit"));
 
             services.AddScoped<IServiceManager, ServiceManager>();
 
