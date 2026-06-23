@@ -30,5 +30,12 @@ namespace Presentation.Controllers
             var participants = await serviceManager.VirtualRoomService.GetActiveParticipantsAsync(groupId);
             return Ok(participants);
         }
+
+        [HttpGet("voice-token")]
+        public ActionResult<LiveKitTokenDTO> GetVoiceToken(int groupId)
+        {
+            var result = serviceManager.VoiceChatService.GenerateToken(groupId, UserId, UserName);
+            return Ok(result);
+        }
     }
 }
