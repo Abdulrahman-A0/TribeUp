@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ServiceAbstraction.Contracts;
+using Shared.DTOs.LeaderboardModule;
 
 namespace Presentation.Controller
 {
@@ -26,11 +27,11 @@ namespace Presentation.Controller
         /// <response code="500">
         /// An unexpected server error occurred.
         /// </response>
-        
+
         [HttpGet]
-        public async Task<IActionResult> GetLeaderboard(
+        public async Task<ActionResult<IEnumerable<LeaderboardGroupDTO>>> GetLeaderboard(
         [FromQuery] int top = 5)
-            => Ok(await service.LeaderboardService.GetTopGroupsAsync(top));
+        => Ok(await service.LeaderboardService.GetTopGroupsAsync(top));
 
     }
 }
