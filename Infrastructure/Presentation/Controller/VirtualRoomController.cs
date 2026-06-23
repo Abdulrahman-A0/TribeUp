@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Presentation.Controller;
 using ServiceAbstraction.Contracts;
+using Shared.DTOs.VirtualRoomModule;
 
 namespace Presentation.Controllers
 {
@@ -10,7 +11,7 @@ namespace Presentation.Controllers
     public class VirtualRoomController(IServiceManager serviceManager) : ApiController
     {
         [HttpPost("join")]
-        public async Task<IActionResult> JoinRoom(int groupId)
+        public async Task<ActionResult<RoomDetailsDTO>> JoinRoom(int groupId)
         {
             var result = await serviceManager.VirtualRoomService.JoinRoomAsync(groupId, UserId);
             return Ok(result);
@@ -24,7 +25,7 @@ namespace Presentation.Controllers
         }
 
         [HttpGet("participants")]
-        public async Task<IActionResult> GetParticipants(int groupId)
+        public async Task<ActionResult<IEnumerable<ParticipantDTO>>> GetParticipants(int groupId)
         {
             var participants = await serviceManager.VirtualRoomService.GetActiveParticipantsAsync(groupId);
             return Ok(participants);
