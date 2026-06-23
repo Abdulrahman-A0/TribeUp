@@ -19,5 +19,6 @@ namespace ServiceAbstraction.Contracts
         IEventService EventService { get; }
         IPollService PollService { get; }
         IVirtualRoomService VirtualRoomService { get; }
+        IVoiceChatService VoiceChatService { get; }
     }
 }

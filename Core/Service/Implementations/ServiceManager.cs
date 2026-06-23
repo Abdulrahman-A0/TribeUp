@@ -17,7 +17,8 @@ namespace Service.Implementations
          Func<INotificationService> notificationFactory,
          Func<IEventService> eventFactory,
          Func<IPollService> pollFactory,
-         Func<IVirtualRoomService> virtualRoomFactory) : IServiceManager
+         Func<IVirtualRoomService> virtualRoomFactory,
+         Func<IVoiceChatService> voiceChatFactory) : IServiceManager
     {
         public IAuthenticationService AuthenticationService => authFactory.Invoke();
         public IGroupService GroupService => groupServiceFactory.Invoke();
@@ -34,5 +35,6 @@ namespace Service.Implementations
         public IEventService EventService => eventFactory.Invoke();
         public IPollService PollService => pollFactory.Invoke();
         public IVirtualRoomService VirtualRoomService => virtualRoomFactory.Invoke();
+        public IVoiceChatService VoiceChatService => voiceChatFactory.Invoke();
     }
 }

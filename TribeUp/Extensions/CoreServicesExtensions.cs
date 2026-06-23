@@ -50,6 +50,8 @@ namespace TribeUp.Extensions
 
             services.AddScoped<IVirtualRoomService, VirtualRoomService>();
 
+            services.AddScoped<IVoiceChatService, VoiceChatService>();
+
 
             services.AddScoped<Func<IAuthenticationService>>(provider =>
             () => provider.GetRequiredService<IAuthenticationService>());
@@ -101,6 +103,9 @@ namespace TribeUp.Extensions
 
             services.AddScoped<Func<IVirtualRoomService>>(provider =>
             () => provider.GetRequiredService<IVirtualRoomService>());
+
+            services.AddScoped<Func<IVoiceChatService>>(provider =>
+            () => provider.GetRequiredService<IVoiceChatService>());
 
             return services;
         }
