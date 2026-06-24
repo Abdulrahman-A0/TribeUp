@@ -76,7 +76,7 @@ namespace Service.Implementations
             await repo.AddAsync(invitation);
             await _unitOfWork.SaveChangesAsync();
 
-            var frontUrl = _configuration["URLs:NetlifyUrl"];
+            var frontUrl = _configuration["URLs:VercelUrl"];
             return _mapper.Map<InvitationResultDTO>(invitation, opt => opt.Items["FrontUrl"] = frontUrl);
         }
 
@@ -188,7 +188,7 @@ namespace Service.Implementations
             var invitation = await repo.GetByIdAsync(spec)
                              ?? throw new ActiveInvitationNotFoundException();
 
-            var frontUrl = _configuration["URLs:NetlifyUrl"];
+            var frontUrl = _configuration["URLs:VercelUrl"];
 
             return _mapper.Map<InvitationResultDTO>(invitation, opt =>
             {
