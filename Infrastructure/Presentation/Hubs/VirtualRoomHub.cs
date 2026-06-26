@@ -28,6 +28,18 @@ namespace Presentation.Hubs
             await Clients.OthersInGroup(GetRoomName(groupId)).SendAsync("PlayerMoved", userId, position, rotationY);
         }
 
+        public async Task Sit(string groupId, string userId, bool isSitting)
+        {
+            await Clients.OthersInGroup(groupId)
+                         .SendAsync("PlayerSat", userId, isSitting);
+        }
+
+        public async Task ChangeSlide(string groupId, string userId, string username, int slideIndex)
+        {
+            await Clients.OthersInGroup(groupId)
+                         .SendAsync("SlideChanged", slideIndex, username);
+        }
+
         private static string GetRoomName(int groupId) => $"vr_room_{groupId}";
     }
 }
