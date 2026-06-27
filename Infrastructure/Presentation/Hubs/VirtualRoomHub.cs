@@ -28,15 +28,15 @@ namespace Presentation.Hubs
             await Clients.OthersInGroup(GetRoomName(groupId)).SendAsync("PlayerMoved", userId, position, rotationY);
         }
 
-        public async Task Sit(string groupId, string userId, bool isSitting)
+        public async Task Sit(int groupId, string userId, bool isSitting)
         {
-            await Clients.OthersInGroup(groupId)
+            await Clients.OthersInGroup(GetRoomName(groupId))
                          .SendAsync("PlayerSat", userId, isSitting);
         }
 
-        public async Task ChangeSlide(string groupId, string userId, string username, int slideIndex)
+        public async Task ChangeSlide(int groupId, string userId, string username, int slideIndex)
         {
-            await Clients.OthersInGroup(groupId)
+            await Clients.OthersInGroup(GetRoomName(groupId))
                          .SendAsync("SlideChanged", slideIndex, username);
         }
 
