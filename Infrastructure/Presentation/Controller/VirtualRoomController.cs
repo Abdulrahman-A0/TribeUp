@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Presentation.Controller;
 using ServiceAbstraction.Contracts;
@@ -35,6 +36,14 @@ namespace Presentation.Controllers
         public ActionResult<LiveKitTokenDTO> GetVoiceToken(int groupId)
         {
             var result = serviceManager.VoiceChatService.GenerateToken(groupId, UserId, UserName);
+            return Ok(result);
+        }
+
+        [HttpPost("upload-slide-pdf")]
+        public async Task<ActionResult<UploadSlidePdfResultDTO>> UploadSlidePdf(int groupId, IFormFile file)
+        {
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            var result = await serviceManager.VirtualRoomService.UploadSlidePdfAsync(groupId, file, baseUrl);
             return Ok(result);
         }
     }

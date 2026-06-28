@@ -74,6 +74,10 @@ namespace Service.Implementations
                     else
                         errors["File"] = new[] { "Unsupported media type" };
                     break;
+
+                case MediaType.SlidePdf:
+                    ValidatePdf(file, errors);
+                    break;
             }
 
             if (errors.Any())
@@ -108,6 +112,15 @@ namespace Service.Implementations
                 errors["File"] = new[] { "Video must be under 50MB" };
         }
 
+        private static void ValidatePdf(IFormFile file, Dictionary<string, string[]> errors)
+        {
+            if (file.ContentType != "application/pdf")
+                errors["File"] = new[] { "Only PDF files are allowed" };
+
+            if (file.Length > 10 * 1024 * 1024)
+                errors["File"] = new[] { "PDF must be under 10MB" };
+        }
+
         private string ResolvePath(MediaType type)
         {
             return type switch
@@ -126,6 +139,9 @@ namespace Service.Implementations
 
                 MediaType.StoryMedia =>
                     Path.Combine(environment.WebRootPath, "images", "StoryUploads"),
+
+                MediaType.SlidePdf =>
+                Path.Combine(environment.WebRootPath, "slides", "PdfUploads"),
 
                 _ => throw new ArgumentOutOfRangeException(nameof(type))
             };

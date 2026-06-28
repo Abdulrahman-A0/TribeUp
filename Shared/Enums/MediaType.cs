@@ -6,6 +6,7 @@
         GroupProfile,
         PostMedia,
         UserCover,
-        StoryMedia
+        StoryMedia,
+        SlidePdf
     }
 }

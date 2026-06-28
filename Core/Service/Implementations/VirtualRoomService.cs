@@ -4,10 +4,12 @@ using Domain.Entities.Users;
 using Domain.Entities.VirtualRooms;
 using Domain.Exceptions.ForbiddenExceptions;
 using Domain.Exceptions.UserExceptions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Service.Specifications.VirtualRoomSpecifications;
 using ServiceAbstraction.Contracts;
 using Shared.DTOs.VirtualRoomModule;
+using Shared.Enums;
 
 namespace Service.Implementations
 {
@@ -16,7 +18,8 @@ namespace Service.Implementations
         IUnitOfWork unitOfWork,
         IMapper mapper,
         IUserGroupRelationService groupRelationService,
-        UserManager<ApplicationUser> userManager
+        UserManager<ApplicationUser> userManager,
+        IFileStorageService fileStorageService
         ) : IVirtualRoomService
     {
         public async Task<RoomDetailsDTO> JoinRoomAsync(int groupId, string userId)
@@ -119,6 +122,17 @@ namespace Service.Implementations
             if (room == null) return Enumerable.Empty<ParticipantDTO>();
 
             return mapper.Map<IEnumerable<ParticipantDTO>>(room.Participants);
+        }
+
+        public async Task<UploadSlidePdfResultDTO> UploadSlidePdfAsync(int groupId, IFormFile file, string baseUrl)
+        {
+            if (!groupRelationService.IsMember(groupId))
+                throw new ForbiddenActionException();
+
+            var relativePath = await fileStorageService.SaveAsync(file, MediaType.SlidePdf);
+
+            var url = $"{baseUrl}/{relativePath.Replace("\\", "/")}";
+            return new UploadSlidePdfResultDTO(url);
         }
 
 

@@ -40,6 +40,12 @@ namespace Presentation.Hubs
                          .SendAsync("SlideChanged", slideIndex, username);
         }
 
+        public async Task SharePdf(int groupId, string pdfUrl)
+        {
+            await Clients.OthersInGroup(GetRoomName(groupId))
+                         .SendAsync("PdfShared", pdfUrl);
+        }
+
         private static string GetRoomName(int groupId) => $"vr_room_{groupId}";
     }
 }
