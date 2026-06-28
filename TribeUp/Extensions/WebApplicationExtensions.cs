@@ -26,5 +26,21 @@ namespace TribeUp.Extensions
             app.MapHub<VirtualRoomHub>("/hubs/virtual-room");
             return app;
         }
+
+        public static WebApplication UseStaticFiles(this WebApplication app)
+        {
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                OnPrepareResponse = ctx =>
+                {
+                    if (ctx.Context.Request.Path.StartsWithSegments("/slides"))
+                    {
+                        ctx.Context.Response.Headers.Append(
+                            "Access-Control-Allow-Origin", "*");
+                    }
+                }
+            });
+            return app;
+        }
     }
 }
